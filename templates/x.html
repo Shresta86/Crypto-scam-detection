@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -570,93 +569,30 @@
 
         </div>
 
-
-        <!-- MONEY FLOW -->
-
-        <div
-            id="flowSection"
-            class="section"
-            style="display:none;"
-        >
-
-            <div class="section-header">
-
-                <div>
-
-                    <div class="section-title">
-                        Money Flow
-                    </div>
-
-                    <div class="section-subtitle">
-                        Automatically discovered wallet connections
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="flow-container">
-
-                <div
-                    id="walletChain"
-                    class="flow"
-                ></div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ASSOCIATED WALLETS -->
+        <!-- GRAPH PAGE BUTTON -->
 
         <div
-            id="associatedSection"
+            id="graphButtonSection"
             class="section"
-            style="display:none;"
+            style="display:none; text-align:center;"
         >
 
-            <div class="section-header">
-
-                <div>
-
-                    <div class="section-title">
-                        Associated Wallets
-                    </div>
-
-                    <div class="section-subtitle">
-                        Addresses discovered through outgoing transactions
-                    </div>
-
-                </div>
-
+            <div class="section-title">
+                Wallet Relationship Graph
             </div>
 
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>Hop</th>
-                            <th>From Wallet</th>
-                            <th>To Wallet</th>
-                            <th>Amount</th>
-                            <th>Transaction Hash</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="associatedBody"></tbody>
-
-                </table>
-
+            <div class="section-subtitle">
+                Open the visual representation of the traced wallet relationships.
             </div>
+
+            <button
+                onclick="openGraphPage()"
+                style="margin-top:18px; height:45px;"
+            >
+                View Wallet Graph →
+            </button>
 
         </div>
-
 
         <!-- TRANSACTIONS -->
 
@@ -691,7 +627,6 @@
 
                         <tr>
                             <th>Wallet</th>
-                            <th>Hop</th>
                             <th>Direction</th>
                             <th>Counterparty</th>
                             <th>Amount</th>
@@ -739,11 +674,10 @@ async function traceWallet() {
 
     document.getElementById("summarySection").style.display = "none";
 
-    document.getElementById("flowSection").style.display = "none";
 
-    document.getElementById("associatedSection").style.display = "none";
 
     document.getElementById("transactionsSection").style.display = "none";
+    document.getElementById("graphButtonSection").style.display = "none";
 
 
     try {
@@ -751,18 +685,17 @@ async function traceWallet() {
         const response = await fetch("/trace", {
 
             method: "POST",
-
+        
             headers: {
                 "Content-Type": "application/json"
             },
-
+        
             body: JSON.stringify({
                 wallet: wallet
             })
-
+        
         });
-
-
+        
         const data = await response.json();
 
 
@@ -775,8 +708,23 @@ async function traceWallet() {
         }
 
 
+        sessionStorage.setItem(
+            "traceGraph",
+            JSON.stringify({
+                graph: data.graph,
+                paths: data.paths || [],
+                transactions: data.transactions || [],
+                start_wallet: data.start_wallet,
+                max_hops: data.max_hops,
+                wallets_traced: data.wallets_traced
+            })
+        );
+
         message.innerText =
             "✓ Investigation completed";
+
+        document.getElementById("graphButtonSection").style.display =
+            "block";
 
 
         /* SUMMARY */
@@ -799,145 +747,6 @@ async function traceWallet() {
 
         document.getElementById("transactionCount").innerText =
             data.transactions.length;
-
-
-        /* FLOW */
-
-        const paths = data.paths || [];
-
-        const walletChain =
-            document.getElementById("walletChain");
-
-        walletChain.innerHTML = "";
-
-
-        let flowHTML = `
-
-            <div class="node reported">
-
-                <div class="node-label">
-                    Reported Wallet
-                </div>
-
-                <div class="node-address">
-                    ${data.start_wallet}
-                </div>
-
-                <span class="node-hop">
-                    Starting Point
-                </span>
-
-            </div>
-
-        `;
-
-
-        if (paths.length === 0) {
-
-            flowHTML += `
-
-                <div class="arrow">
-                    →
-                </div>
-
-                <div class="empty">
-                    No outgoing wallet connections discovered
-                </div>
-
-            `;
-
-        } else {
-
-            paths.forEach(path => {
-
-                flowHTML += `
-
-                    <div class="arrow">
-                        →
-                    </div>
-
-                    <div class="node">
-
-                        <div class="node-label">
-                            Associated Wallet
-                        </div>
-
-                        <div class="node-address">
-                            ${path.to}
-                        </div>
-
-                        <span class="node-hop">
-                            Hop ${path.hop}
-                            • ${path.amount} ETH
-                        </span>
-
-                    </div>
-
-                `;
-
-            });
-
-        }
-
-
-        walletChain.innerHTML = flowHTML;
-
-        document.getElementById("flowSection").style.display =
-            "block";
-
-
-        /* ASSOCIATED WALLETS */
-
-        const associatedBody =
-            document.getElementById("associatedBody");
-
-        associatedBody.innerHTML = "";
-
-
-        paths.forEach(path => {
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>
-                    <span class="hop-badge">
-                        Hop ${path.hop}
-                    </span>
-                </td>
-
-                <td class="address">
-                    ${path.from}
-                </td>
-
-                <td class="address">
-                    ${path.to}
-                </td>
-
-                <td>
-                    ${path.amount} ETH
-                </td>
-
-                <td class="address">
-                    ${path.hash}
-                </td>
-
-            `;
-
-
-            associatedBody.appendChild(row);
-
-        });
-
-
-        if (paths.length > 0) {
-
-            document.getElementById("associatedSection")
-                .style.display = "block";
-
-        }
 
 
         /* TRANSACTIONS */
@@ -970,12 +779,6 @@ async function traceWallet() {
 
                 <td class="address">
                     ${tx.wallet}
-                </td>
-
-                <td>
-                    <span class="hop-badge">
-                        Hop ${tx.hop}
-                    </span>
                 </td>
 
                 <td class="${directionClass}">
@@ -1024,6 +827,13 @@ async function traceWallet() {
             "❌ Couldn't connect to server.";
 
     }
+
+}
+
+
+function openGraphPage() {
+
+    window.location.href = "/graph";
 
 }
 

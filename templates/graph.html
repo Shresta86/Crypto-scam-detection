@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TraceX | Wallet Relationship Graph</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #080b12;
+            color: #e8edf5;
+
+            min-height: 100vh;
+        }
+
+
+        /* NAVBAR */
+
+        .navbar {
+
+            height: 70px;
+
+            border-bottom:
+                1px solid #1b2230;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 45px;
+
+            background: #090c13;
+        }
+
+
+        .logo {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            font-size: 20px;
+
+            font-weight: 700;
+        }
+
+
+        .logo-icon {
+
+            width: 35px;
+            height: 35px;
+
+            border-radius: 9px;
+
+            background: #1d6cff;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 17px;
+        }
+
+
+        .logo span {
+
+            color: #6da2ff;
+        }
+
+
+        .back-button {
+
+            background: #182131;
+
+            border:
+                1px solid #273244;
+
+            color: #dce3ed;
+
+            padding:
+                10px 18px;
+
+            border-radius: 7px;
+
+            cursor: pointer;
+
+            font-size: 13px;
+        }
+
+
+        .back-button:hover {
+
+            background: #22304a;
+        }
+
+
+        /* PAGE */
+
+        .container {
+
+            width: 94%;
+
+            max-width: 1500px;
+
+            margin: auto;
+
+            padding: 35px 0;
+        }
+
+
+        .eyebrow {
+
+            color: #5e96ff;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            margin-bottom: 10px;
+        }
+
+
+        h1 {
+
+            font-size: 32px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .subtitle {
+
+            color: #8d98aa;
+
+            font-size: 14px;
+
+            margin-bottom: 25px;
+        }
+
+
+        /* STATS */
+
+        .stats {
+
+            display: flex;
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .stat-card {
+
+            background: #0e131d;
+
+            border:
+                1px solid #1c2636;
+
+            border-radius: 10px;
+
+            padding: 14px 20px;
+
+            min-width: 150px;
+        }
+
+
+        .stat-title {
+
+            color: #7f8a9c;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .stat-value {
+
+            font-size: 20px;
+
+            font-weight: 700;
+        }
+
+
+        /* GRAPH */
+
+        .graph-card {
+
+            background: #0e131d;
+
+            border:
+                1px solid #1c2636;
+
+            border-radius: 14px;
+
+            padding: 20px;
+        }
+
+
+        #walletGraph {
+
+            width: 100%;
+
+            height: 720px;
+
+            border-radius: 10px;
+
+            background: #080b12;
+        }
+
+
+        /* LEGEND */
+
+        .legend {
+
+            display: flex;
+
+            gap: 25px;
+
+            margin-top: 18px;
+
+            color: #8d98aa;
+
+            font-size: 12px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .legend-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+        }
+
+
+        .dot {
+
+            width: 11px;
+
+            height: 11px;
+
+            border-radius: 50%;
+        }
+
+
+        .suspect {
+
+            background: #ff5969;
+        }
+
+
+        .wallet {
+
+            background: #6da2ff;
+        }
+
+
+        .exchange {
+
+            background: #36d98b;
+        }
+
+
+        /* DETAILS PANEL */
+
+        .details-panel {
+
+            margin-top: 20px;
+
+            background: #0e131d;
+
+            border:
+                1px solid #1c2636;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            display: none;
+        }
+
+
+        .details-title {
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            margin-bottom: 15px;
+        }
+
+
+        .detail-row {
+
+            display: flex;
+
+            gap: 10px;
+
+            margin-bottom: 10px;
+
+            font-size: 13px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .detail-label {
+
+            color: #7f8a9c;
+
+            min-width: 100px;
+        }
+
+
+        .detail-value {
+
+            color: #e8edf5;
+
+            word-break: break-all;
+        }
+
+
+
+        /* HOP-BY-HOP TRACE */
+        .hop-section {
+            margin-top: 25px;
+            background: #0e131d;
+            border: 1px solid #1c2636;
+            border-radius: 14px;
+            padding: 25px;
+        }
+        .hop-header { margin-bottom: 20px; }
+        .hop-title { font-size: 18px; font-weight: 700; }
+        .hop-subtitle { color: #7f8a9c; font-size: 12px; margin-top: 5px; }
+        .hop-card {
+            border: 1px solid #1c2636; background: #090d15;
+            border-radius: 10px; padding: 18px; margin-top: 12px;
+        }
+        .hop-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 15px; flex-wrap: wrap; margin-bottom: 12px;
+        }
+        .hop-badge {
+            display: inline-block; background: #182131; color: #8aaeff;
+            padding: 6px 10px; border-radius: 5px; font-size: 11px; font-weight: 700;
+        }
+        .hop-count { color: #7f8a9c; font-size: 12px; }
+        .hop-path {
+            display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+            align-items: center; gap: 12px; padding: 12px 0;
+            border-top: 1px solid #171f2c;
+        }
+        .hop-wallet { font-family: monospace; font-size: 12px; color: #c8d1df; word-break: break-all; }
+        .hop-arrow { color: #397cff; font-size: 18px; }
+        .hop-meta { grid-column: 1 / -1; color: #7f8a9c; font-size: 11px; line-height: 1.6; }
+        .hop-hash { font-family: monospace; word-break: break-all; color: #aab8cc; }
+        .no-hops { color: #7f8a9c; font-size: 13px; padding: 15px 0 5px; }
+
+        .message {
+
+            padding: 30px;
+
+            color: #8d98aa;
+
+            text-align: center;
+        }
+
+
+        /* MOBILE */
+
+        @media (max-width: 700px) {
+
+            .navbar {
+
+                padding: 0 20px;
+            }
+
+
+            .container {
+
+                width: 94%;
+            }
+
+
+            h1 {
+
+                font-size: 26px;
+            }
+
+
+            #walletGraph {
+
+                height: 600px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                ⌁
+            </div>
+
+            Trace<span>X</span>
+
+        </div>
+
+
+        <button onclick="history.back()">
+            ← Back to Investigation
+        </button>
+
+    </nav>
+
+
+
+    <main class="container">
+
+
+        <div class="eyebrow">
+            Blockchain Investigation
+        </div>
+
+
+        <h1>
+            Wallet Relationship Graph
+        </h1>
+
+
+        <div class="subtitle">
+            Interactive visualization of wallet-to-wallet fund movement
+        </div>
+
+
+
+        <!-- STATS -->
+
+        <div class="stats">
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Wallets Traced
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="walletCount">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Connections
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="connectionCount">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Maximum Hops
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="hopCount">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Transactions
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="transactionCount">
+
+                    -
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- GRAPH -->
+
+        <div class="graph-card">
+
+            <div id="walletGraph"></div>
+
+
+            <div class="legend">
+
+                <div class="legend-item">
+
+                    <div class="dot suspect"></div>
+
+                    Suspect Wallet
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <div class="dot wallet"></div>
+
+                    Associated Wallet
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <div class="dot exchange"></div>
+
+                    Known Exchange
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- HOP-BY-HOP TRACE -->
+
+        <div class="hop-section">
+            <div class="hop-header">
+                <div class="hop-title">Hop-by-Hop Trace</div>
+                <div class="hop-subtitle">Follow the discovered movement of funds from the reported wallet.</div>
+            </div>
+            <div id="hopDetails"></div>
+        </div>
+
+
+        <!-- DETAILS -->
+
+        <div
+            class="details-panel"
+            id="detailsPanel">
+
+            <div
+                class="details-title"
+                id="detailsTitle">
+
+                Selection Details
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Type
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailType">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Address
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailAddress">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Hop
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailHop">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Amount
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailAmount">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Timestamp
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailTime">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <div class="detail-label">
+                    Transaction
+                </div>
+
+                <div
+                    class="detail-value"
+                    id="detailHash">
+
+                    -
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+
+<script>
+
+
+    /* GET GRAPH DATA */
+
+    const traceData = JSON.parse(
+
+        sessionStorage.getItem(
+            "traceGraph"
+        ) || "null"
+
+    );
+
+    const graphData = traceData && traceData.graph
+        ? traceData.graph
+        : traceData;
+
+    const tracePaths = traceData && traceData.paths
+        ? traceData.paths
+        : [];
+
+
+    if (
+        !graphData ||
+        !graphData.nodes ||
+        !graphData.edges
+    ) {
+
+        document.getElementById(
+            "walletGraph"
+        ).innerHTML = `
+
+            <div class="message">
+
+                No graph data available.
+
+                Please return to the investigation page
+                and run a wallet trace first.
+
+            </div>
+
+        `;
+
+    }
+
+    else {
+
+
+        /* HOP-BY-HOP DETAILS */
+
+        const hopDetails = document.getElementById("hopDetails");
+
+        if (!tracePaths.length) {
+
+            hopDetails.innerHTML =
+                '<div class="no-hops">No wallet connections were discovered.</div>';
+
+        } else {
+
+            const groupedHops = {};
+
+            tracePaths.forEach(path => {
+
+                const hop = Number(path.hop || 1);
+
+                if (!groupedHops[hop]) {
+                    groupedHops[hop] = [];
+                }
+
+                groupedHops[hop].push(path);
+
+            });
+
+            hopDetails.innerHTML = Object.keys(groupedHops)
+                .sort((a, b) => Number(a) - Number(b))
+                .map(hop => {
+
+                    const paths = groupedHops[hop];
+
+                    return `
+                        <div class="hop-card">
+                            <div class="hop-card-header">
+                                <span class="hop-badge">HOP ${hop}</span>
+                                <span class="hop-count">
+                                    ${paths.length} connection${paths.length === 1 ? "" : "s"}
+                                </span>
+                            </div>
+
+                            ${paths.map(path => `
+                                <div class="hop-path">
+                                    <div class="hop-wallet">${path.from}</div>
+                                    <div class="hop-arrow">→</div>
+                                    <div class="hop-wallet">${path.to}</div>
+
+                                    <div class="hop-meta">
+                                        <strong>${path.amount} ETH</strong> ·
+                                        ${path.type || "normal"} ·
+                                        ${path.timestamp || "Unknown time"}<br>
+                                        Transaction:
+                                        <span class="hop-hash">
+                                            ${path.hash || "Unknown"}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join("")}
+                        </div>
+                    `;
+
+                }).join("");
+
+        }
+
+
+        /*
+         * BASIC STATS
+         */
+
+        document.getElementById(
+            "walletCount"
+        ).innerText =
+            graphData.nodes.length;
+
+
+        document.getElementById(
+            "connectionCount"
+        ).innerText =
+            graphData.edges.length;
+
+
+        document.getElementById(
+            "transactionCount"
+        ).innerText =
+            graphData.edges.length;
+
+
+
+        /*
+         * FIND SUSPECT WALLET
+         */
+
+        const suspectNode =
+            graphData.nodes.find(
+                node =>
+                    node.type === "suspect"
+            );
+
+
+        const suspectId =
+            suspectNode
+                ? suspectNode.id
+                : null;
+
+
+
+        /*
+         * CALCULATE HOPS
+         */
+
+        const hopMap = {};
+
+        if (suspectId) {
+
+            hopMap[suspectId] = 0;
+
+            let changed = true;
+
+            while (changed) {
+
+                changed = false;
+
+                graphData.edges.forEach(edge => {
+
+                    if (
+                        hopMap[edge.source] !== undefined
+                    ) {
+
+                        const nextHop =
+                            hopMap[edge.source] + 1;
+
+
+                        if (
+                            hopMap[edge.target] === undefined ||
+                            nextHop < hopMap[edge.target]
+                        ) {
+
+                            hopMap[edge.target] =
+                                nextHop;
+
+                            changed = true;
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+        }
+
+
+        let maximumHop = 0;
+
+        Object.values(hopMap).forEach(hop => {
+
+            if (hop > maximumHop) {
+
+                maximumHop = hop;
+
+            }
+
+        });
+
+
+        document.getElementById(
+            "hopCount"
+        ).innerText = maximumHop;
+
+
+
+        /*
+         * CREATE NODES
+         */
+
+        const nodes =
+            new vis.DataSet(
+
+                graphData.nodes.map(node => {
+
+
+                    const hop =
+                        hopMap[node.id];
+
+
+                    let nodeLabel;
+
+
+                    if (node.type === "suspect") {
+
+                        nodeLabel =
+                            "SUSPECT\n" +
+                            node.id.slice(0, 8) +
+                            "...";
+
+                    }
+
+                    else if (node.type === "exchange") {
+
+                        nodeLabel =
+                            node.label +
+                            "\n" +
+                            node.id.slice(0, 8) +
+                            "...";
+
+                    }
+
+                    else {
+
+                        nodeLabel =
+                            "Wallet\n" +
+                            node.id.slice(0, 8) +
+                            "...";
+
+                    }
+
+
+                    return {
+
+                        id: node.id,
+
+                        label: nodeLabel,
+
+                        title:
+                            node.id,
+
+                        shape: "dot",
+
+                        size:
+                            node.type === "suspect"
+                                ? 32
+                                : node.type === "exchange"
+                                    ? 28
+                                    : 22,
+
+                        color: {
+
+                            background:
+                                node.type === "suspect"
+                                    ? "#ff5969"
+                                    : node.type === "exchange"
+                                        ? "#36d98b"
+                                        : "#6da2ff",
+
+                            border: "#ffffff",
+
+                            highlight: {
+
+                                background: "#ffffff",
+
+                                border:
+                                    node.type === "suspect"
+                                        ? "#ff5969"
+                                        : "#6da2ff"
+
+                            }
+
+                        },
+
+                        font: {
+
+                            color: "#ffffff",
+
+                            size:
+                                node.type === "suspect"
+                                    ? 15
+                                    : 12,
+
+                            face: "Inter",
+
+                            strokeWidth: 0
+
+                        },
+
+                        borderWidth:
+                            node.type === "suspect"
+                                ? 3
+                                : 2
+
+                    };
+
+                })
+
+            );
+
+
+
+        /*
+         * CREATE EDGES
+         */
+
+        const edges =
+            new vis.DataSet(
+
+                graphData.edges.map(
+                    (edge, index) => {
+
+                        const amount =
+                            Number(edge.amount || 0);
+
+
+                        const hop =
+                            edge.hop !== undefined
+                                ? edge.hop
+                                : "";
+
+
+                        return {
+
+                            id: index,
+
+                            from: edge.source,
+
+                            to: edge.target,
+
+                            arrows: {
+
+                                to: {
+
+                                    enabled: true,
+
+                                    scaleFactor: 0.7
+
+                                }
+
+                            },
+
+
+                            label:
+                                amount.toFixed(4) +
+                                " ETH",
+
+
+                            title:
+
+                                "Amount: " +
+                                amount +
+                                " ETH\n\n" +
+
+                                "Hop: " +
+                                hop +
+                                "\n\n" +
+
+                                "Type: " +
+                                (edge.type || "normal") +
+                                "\n\n" +
+
+                                "Time: " +
+                                (edge.timestamp || "Unknown") +
+                                "\n\n" +
+
+                                "Transaction:\n" +
+                                edge.hash,
+
+
+                            width:
+                                amount > 1
+                                    ? 3
+                                    : 2,
+
+
+                            color: {
+
+                                color: "#397cff",
+
+                                highlight: "#ffffff",
+
+                                hover: "#ffffff"
+
+                            },
+
+
+                            font: {
+
+                                color: "#ffffff",
+
+                                size: 11,
+
+                                strokeWidth: 0,
+
+                                align: "middle"
+
+                            },
+
+
+                            smooth: {
+
+                                enabled: true,
+
+                                type: "curvedCW",
+
+                                roundness: 0.15
+
+                            }
+
+                        };
+
+                    }
+
+                )
+
+            );
+
+
+
+        /*
+         * GRAPH OPTIONS
+         */
+
+        const options = {
+
+
+            physics: {
+
+                enabled: true,
+            
+                stabilization: {
+                    enabled: true,
+                    iterations: 80,
+                    updateInterval: 50
+                },
+            
+                barnesHut: {
+                    gravitationalConstant: -3000,
+                    centralGravity: 0.3,
+                    springLength: 150,
+                    springConstant: 0.04,
+                    damping: 0.8,
+                    avoidOverlap: 0.5
+                }
+            
+            },
+
+            interaction: {
+
+                hover: true,
+
+                navigationButtons: true,
+
+                zoomView: true,
+
+                dragView: true,
+
+                dragNodes: true,
+
+                tooltipDelay: 100
+
+            },
+
+
+            nodes: {
+
+                shadow: {
+
+                    enabled: true,
+
+                    size: 12,
+
+                    x: 0,
+
+                    y: 0
+
+                }
+
+            },
+
+
+            edges: {
+
+                selectionWidth: 3,
+
+                hoverWidth: 3
+
+            }
+
+
+        };
+
+
+
+        /*
+         * CREATE NETWORK
+         */
+
+        const network =
+            new vis.Network(
+
+                document.getElementById(
+                    "walletGraph"
+                ),
+
+                {
+                    nodes: nodes,
+                    edges: edges
+                },
+
+                options
+
+            );
+
+
+
+        /*
+         * CLICK NODE
+         */
+
+        network.on(
+            "click",
+            function(params) {
+
+
+                const panel =
+                    document.getElementById(
+                        "detailsPanel"
+                    );
+
+
+                /*
+                 * NODE SELECTED
+                 */
+
+                if (
+                    params.nodes &&
+                    params.nodes.length > 0
+                ) {
+
+                    const nodeId =
+                        params.nodes[0];
+
+
+                    const node =
+                        graphData.nodes.find(
+                            n =>
+                                n.id === nodeId
+                        );
+
+
+                    if (!node) {
+                        return;
+                    }
+
+
+                    document.getElementById(
+                        "detailsTitle"
+                    ).innerText =
+                        node.type === "suspect"
+                            ? "Suspect Wallet"
+                            : node.type === "exchange"
+                                ? "Exchange Wallet"
+                                : "Associated Wallet";
+
+
+                    document.getElementById(
+                        "detailType"
+                    ).innerText =
+                        node.type;
+
+
+                    document.getElementById(
+                        "detailAddress"
+                    ).innerText =
+                        node.id;
+
+
+                    document.getElementById(
+                        "detailHop"
+                    ).innerText =
+                        hopMap[node.id] !== undefined
+                            ? "Hop " + hopMap[node.id]
+                            : "Unknown";
+
+
+                    document.getElementById(
+                        "detailAmount"
+                    ).innerText =
+                        "-";
+
+
+                    document.getElementById(
+                        "detailTime"
+                    ).innerText =
+                        "-";
+
+
+                    document.getElementById(
+                        "detailHash"
+                    ).innerText =
+                        "-";
+
+
+                    panel.style.display =
+                        "block";
+
+                }
+
+
+
+                /*
+                 * EDGE SELECTED
+                 */
+
+                else if (
+                    params.edges &&
+                    params.edges.length > 0
+                ) {
+
+                    const edgeId =
+                        params.edges[0];
+
+
+                    const edge =
+                        graphData.edges[edgeId];
+
+
+                    if (!edge) {
+                        return;
+                    }
+
+
+                    document.getElementById(
+                        "detailsTitle"
+                    ).innerText =
+                        "Transaction Details";
+
+
+                    document.getElementById(
+                        "detailType"
+                    ).innerText =
+                        edge.type || "normal";
+
+
+                    document.getElementById(
+                        "detailAddress"
+                    ).innerText =
+                        edge.source +
+                        " → " +
+                        edge.target;
+
+
+                    document.getElementById(
+                        "detailHop"
+                    ).innerText =
+                        edge.hop !== undefined
+                            ? "Hop " + edge.hop
+                            : "Unknown";
+
+
+                    document.getElementById(
+                        "detailAmount"
+                    ).innerText =
+                        edge.amount +
+                        " ETH";
+
+
+                    document.getElementById(
+                        "detailTime"
+                    ).innerText =
+                        edge.timestamp ||
+                        "Unknown";
+
+
+                    document.getElementById(
+                        "detailHash"
+                    ).innerText =
+                        edge.hash ||
+                        "Unknown";
+
+
+                    panel.style.display =
+                        "block";
+
+                }
+
+            }
+
+        );
+
+
+
+        /*
+         * FIT GRAPH AFTER LOADING
+         */
+
+        network.once(
+            "stabilizationIterationsDone",
+            function() {
+
+                network.fit({
+
+                    animation: {
+
+                        duration: 800,
+
+                        easingFunction: "easeInOutQuad"
+
+                    }
+
+                });
+
+            }
+
+        );
+
+    }
+
+</script>
+
+
+</body>
+
+</html>
