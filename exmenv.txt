@@ -1,0 +1,1 @@
+ ETHERSCAN_API_KEY=generate a key and put in .env
