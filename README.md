@@ -89,6 +89,6 @@ Wallet C
 - Investigation report generation
 - Better investigator dashboard
 - Multi-chain blockchain support
-- 
+
 TraceX is an investigative assistance prototype. A connection between wallets or an interaction with an exchange does not by itself prove that a wallet is fraudulent. Findings should be supported by verifiable blockchain transaction evidence.
 
