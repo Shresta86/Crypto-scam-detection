@@ -1,0 +1,1717 @@
+[
+  {
+    "address": "0x1151314c646ce4e0efd76d1af4760ae66a9fe30f",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 1"
+  },
+  {
+    "address": "0x36a85757645e8e8aec062a1dee289c7d615901ca",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 10"
+  },
+  {
+    "address": "0xc56fefd1028b0534bfadcdb580d3519b5586246e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 11"
+  },
+  {
+    "address": "0x0b73f67a49273fc4b9a65dbd25d7d0918e734e63",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 12"
+  },
+  {
+    "address": "0x482f02e8bc15b5eabc52c6497b425b3ca3c821e8",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 13"
+  },
+  {
+    "address": "0xe92d1a43df510f82c66382592a047d288f85226f",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 19"
+  },
+  {
+    "address": "0x742d35cc6634c0532925a3b844bc454e4438f44e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 2"
+  },
+  {
+    "address": "0x8103683202aa8da10536036edef04cdd865c225e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 20"
+  },
+  {
+    "address": "0x876eabf441b2ee5b5b0554fd502a8e0600950cfa",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 3"
+  },
+  {
+    "address": "0xdcd0272462140d0a3ced6c4bf970c7641f08cd2c",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 4"
+  },
+  {
+    "address": "0x4fdd5eb2fb260149a3903859043e962ab89d8ed4",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 5"
+  },
+  {
+    "address": "0x1b29dd8ff0eb3240238bf97cafd6edea05d5ba82",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 6"
+  },
+  {
+    "address": "0x30a2ebf10f34c6c4874b0bdd5740690fd2f3b70c",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 7"
+  },
+  {
+    "address": "0x3f7e77b627676763997344a1ad71acb765fc8ac5",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 8"
+  },
+  {
+    "address": "0x59448fe20378357f206880c58068f095ae63d5a5",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex 9"
+  },
+  {
+    "address": "0x7727e5113d1d161373623e5f49fd568b4f543a9e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Contract 1"
+  },
+  {
+    "address": "0x0e55c54249f25f70d519b7fb1c20e3331e7ba76d",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Contract 2"
+  },
+  {
+    "address": "0x5dbdebcae07cc958ba5290ff9deaae554e29e7b4",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 1"
+  },
+  {
+    "address": "0x2ee3b2df6534abc759ffe994f7b8dcdfaa02cd31",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 2"
+  },
+  {
+    "address": "0xe1f3c653248de6894d683cb2f10de7ca2253046f",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 3"
+  },
+  {
+    "address": "0x2903cadbe271e057edef157340b52a5898d7424f",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 4"
+  },
+  {
+    "address": "0x36928500bc1dcd7af6a2b4008875cc336b927d57",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 5"
+  },
+  {
+    "address": "0x14d06788090769f669427b6aea1c0240d2321f34",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Deployer 6"
+  },
+  {
+    "address": "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Hot Wallet"
+  },
+  {
+    "address": "0x2af5d2ad76741191d15dfe7bf6ac92d4bd912ca3",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: LEO Token"
+  },
+  {
+    "address": "0xab7c74abc0c4d48d1bdad5dcb26153fc8780f83e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: MultiSig 1"
+  },
+  {
+    "address": "0xc6cde7c39eb2f0f0095f41570af89efc2c1ea828",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: MultiSig 2"
+  },
+  {
+    "address": "0xc61b9bb3a7a0767e3179713f3a5c7a9aedce193c",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: MultiSig 3"
+  },
+  {
+    "address": "0xcafb10ee663f465f9d10588ac44ed20ed608c11e",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Old Address 1"
+  },
+  {
+    "address": "0x7180eb39a6264938fdb3effd7341c4727c382153",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Old Address 2"
+  },
+  {
+    "address": "0x69c6dcc8f83b196605fa1076897af0e7e2b6b044",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Old Contract 1"
+  },
+  {
+    "address": "0x8d5a41e85f4ce2433beef476305d307b9205d98d",
+    "exchange": "bitfinex",
+    "nameTag": "Bitfinex: Old Contract 2"
+  },
+  {
+    "address": "0xc581b735a1688071a1746c968e0798d642ede491",
+    "exchange": "bitfinex",
+    "nameTag": "Euro Tether: EURT Token"
+  },
+  {
+    "address": "0xabdf147870235fcfc34153828c769a70b3fae01f",
+    "exchange": "bitfinex",
+    "nameTag": "EURT:undefined"
+  },
+  {
+    "address": "0x4922a015c4407f87432b179bb209e125432e4a2a",
+    "exchange": "bitfinex",
+    "nameTag": "Tether Gold: Old XAUt Token"
+  },
+  {
+    "address": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+    "exchange": "bitfinex",
+    "nameTag": "Tether Gold: XAUt Token"
+  },
+  {
+    "address": "0x6e109e9dd7fa1a58bc3eff667e8e41fc3cc07aef",
+    "exchange": "bitfinex",
+    "nameTag": "Tether: CNHT Token"
+  },
+  {
+    "address": "0xed03ed872159e199065401b6d0d487d78d9464aa",
+    "exchange": "bitfinex",
+    "nameTag": "Tether: MXNt Token"
+  },
+  {
+    "address": "0x5754284f345afc66a98fbb0a0afe71e0f007b949",
+    "exchange": "bitfinex",
+    "nameTag": "Tether: Treasury"
+  },
+  {
+    "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "exchange": "bitfinex",
+    "nameTag": "Tether: USDT Stablecoin"
+  },
+  {
+    "address": "0x51971c86b04516062c1e708cdc048cb04fbe959f",
+    "exchange": "bitget",
+    "nameTag": "Bitget 2"
+  },
+  {
+    "address": "0x97b9d2102a9a65a26e1ee82d59e42d1b73b68689",
+    "exchange": "bitget",
+    "nameTag": "Bitget 3"
+  },
+  {
+    "address": "0x0639556f03714a74a5feeaf5736a4a64ff70d206",
+    "exchange": "bitget",
+    "nameTag": "Bitget 4"
+  },
+  {
+    "address": "0x5bdf85216ec1e38d6458c870992a69e38e03f7ef",
+    "exchange": "bitget",
+    "nameTag": "Bitget 5"
+  },
+  {
+    "address": "0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23",
+    "exchange": "bitget",
+    "nameTag": "Bitget 6"
+  },
+  {
+    "address": "0x00bdb5699745f5b860228c8f939abf1b9ae374ed",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 1"
+  },
+  {
+    "address": "0x1522900b6dafac587d499a862861c0869be6e428",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 2"
+  },
+  {
+    "address": "0x9a9bed3eb03e386d66f8a29dc67dc29bbb1ccb72",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 3"
+  },
+  {
+    "address": "0x059799f2261d37b829c2850cee67b5b975432271",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 4"
+  },
+  {
+    "address": "0x4c766def136f59f6494f0969b1355882080cf8e0",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 5"
+  },
+  {
+    "address": "0xc5b611f502a0dcf6c3188fd494061ae29b2baa4f",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 6"
+  },
+  {
+    "address": "0x0b0f7ebf967146566799229394171fc47f1a765a",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp 7"
+  },
+  {
+    "address": "0x964771f6df31eea2d927fa71d7bd78e81bcdce05",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp: Contract 1"
+  },
+  {
+    "address": "0x538d72ded42a76a30f730292da939e0577f22f57",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp: Deployer"
+  },
+  {
+    "address": "0xfca70e67b3f93f679992cd36323eeb5a5370c8e4",
+    "exchange": "bitstamp",
+    "nameTag": "Bitstamp: Old Address 1"
+  },
+  {
+    "address": "0xfbb1b73c4f0bda4f67dca266ce6ef42f520fbb98",
+    "exchange": "bittrex",
+    "nameTag": "Bittrex"
+  },
+  {
+    "address": "0xe94b04a0fed112f3664e45adb2b8915693dd5ff3",
+    "exchange": "bittrex",
+    "nameTag": "Bittrex 2"
+  },
+  {
+    "address": "0x66f820a414680b5bcda5eeca5dea238543f42054",
+    "exchange": "bittrex",
+    "nameTag": "Bittrex 3"
+  },
+  {
+    "address": "0xa3c1e324ca1ce40db73ed6026c4a177f099b5770",
+    "exchange": "bittrex",
+    "nameTag": "Bittrex: Controller"
+  },
+  {
+    "address": "0x71660c4005ba85c37ccec55d0c4493e66fe775d3",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 1"
+  },
+  {
+    "address": "0xa9d1e08c7793af67e9d92fe308d5697fb81d3e43",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 10"
+  },
+  {
+    "address": "0x77696bb39917c91a0c3908d577d5e322095425ca",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 11"
+  },
+  {
+    "address": "0x7c195d981abfdc3ddecd2ca0fed0958430488e34",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 12"
+  },
+  {
+    "address": "0x95a9bd206ae52c4ba8eecfc93d18eacdd41c88cc",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 13"
+  },
+  {
+    "address": "0xb739d0895772dbb71a89a3754a160269068f0d45",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 14"
+  },
+  {
+    "address": "0x4a4e859565d9b563afc8e63641542455cff0dfd2",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 15"
+  },
+  {
+    "address": "0xe1a0ddeb9b5b55e489977b438764e60e314e917c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 16"
+  },
+  {
+    "address": "0x19ab546e77d0cd3245b2aad46bd80dc4707d6307",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 17"
+  },
+  {
+    "address": "0xc070a61d043189d99bbf4baa58226bf0991c7b11",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 18"
+  },
+  {
+    "address": "0xc8373edfad6d5c5f600b6b2507f78431c5271ff5",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 19"
+  },
+  {
+    "address": "0x503828976d22510aad0201ac7ec88293211d23da",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 2"
+  },
+  {
+    "address": "0xb624219480543c54603fb6b07d5eb347e51bffe0",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 20"
+  },
+  {
+    "address": "0x20fe51a9229eef2cf8ad9e89d91cab9312cf3b7a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 21"
+  },
+  {
+    "address": "0x333d17d3b42bf7930dbc6e852ca7bcf560a69003",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 22"
+  },
+  {
+    "address": "0x9810762578accf1f314320cca5b72506ae7d7630",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 23"
+  },
+  {
+    "address": "0x3dd1d15b3c78d6acfd75a254e857cbe5b9ff0af2",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 24"
+  },
+  {
+    "address": "0xf491d040110384dbcf7f241ffe2a546513fd873d",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 25"
+  },
+  {
+    "address": "0xc7bf35c9a3bdd1b1c19a6963de669cb45191a019",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 26"
+  },
+  {
+    "address": "0x05e3a758fdd29d28435019ac453297ea37b61b62",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 27"
+  },
+  {
+    "address": "0xa3682fe8fd73b90a7564585a436ec2d2aeb612ee",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 28"
+  },
+  {
+    "address": "0x739120ade7ed878fca5bbdb806263a8258fe2360",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 29"
+  },
+  {
+    "address": "0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 3"
+  },
+  {
+    "address": "0x8af8485e1f178be06386cd3877fde20626e0284f",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 30"
+  },
+  {
+    "address": "0x6dcbce46a8b494c885d0e7b6817d2b519df64467",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 31"
+  },
+  {
+    "address": "0xa656f7d2a93a6f5878aa768f24eb38ec8c827fe2",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 32"
+  },
+  {
+    "address": "0xd34ea7278e6bd48defe656bbe263aef11101469c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 34"
+  },
+  {
+    "address": "0xe68ee8a12c611fd043fb05d65e1548dc1383f2b9",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 35"
+  },
+  {
+    "address": "0x28c5b0445d0728bc25f143f8eba5c5539fae151a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 36"
+  },
+  {
+    "address": "0xc9aaa6ca0e05b87d53a3e51edbc44b406eeaf299",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 37"
+  },
+  {
+    "address": "0x7ed53f6e3de6b2b4156fa8e618506e60d8e65843",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 38"
+  },
+  {
+    "address": "0x5122e9aa635c13afd2fc31de3953e0896bac7ab4",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 39"
+  },
+  {
+    "address": "0x3cd751e6b0078be393132286c442345e5dc49699",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 4"
+  },
+  {
+    "address": "0xd839c179a4606f46abd7a757f7bb77d7593ae249",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 40"
+  },
+  {
+    "address": "0x1985ea6e9c68e1c272d8209f3b478ac2fdb25c87",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 41"
+  },
+  {
+    "address": "0xb4807865a786e9e9e26e6a9610f2078e7fc507fb",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 42"
+  },
+  {
+    "address": "0x731307f3b12cc56191ade83ea630a377d9a941f6",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 43"
+  },
+  {
+    "address": "0x28e71d0b7f7f29106a1be2a5b289cab331e7b56f",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 44"
+  },
+  {
+    "address": "0xb5d85cbf7cb3ee0d56b3bb207d5fc4b82f43f511",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 5"
+  },
+  {
+    "address": "0xeb2629a2734e272bcc07bda959863f316f4bd4cf",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 6"
+  },
+  {
+    "address": "0xd688aea8f7d450909ade10c47faa95707b0682d9",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 7"
+  },
+  {
+    "address": "0x02466e547bfdab679fc49e96bbfc62b9747d997c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 8"
+  },
+  {
+    "address": "0x6b76f8b1e9e59913bfe758821887311ba1805cab",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase 9"
+  },
+  {
+    "address": "0x6f52730dba7b02beefcaf0d6998c9ae901ea04f9",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 1"
+  },
+  {
+    "address": "0xb8487eed31cf5c559bf3f4edd166b949553d0d11",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 10"
+  },
+  {
+    "address": "0x5ffc99b5b23c5ab8f463f6090342879c286a29be",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 11"
+  },
+  {
+    "address": "0x3d2e397f94e415d7773e72e44d5b5338a99e77d9",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 12"
+  },
+  {
+    "address": "0xe04cf52e9fafa3d9bf14c407afff94165ef835f7",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 13"
+  },
+  {
+    "address": "0x19d599012788b991ff542f31208bab21ea38403e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 14"
+  },
+  {
+    "address": "0xcad50671877eb564d42ddd76b5fec46ac60ef1bd",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 15"
+  },
+  {
+    "address": "0xeba20d0f74ecc13130579d21bb53d63c96258652",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 2"
+  },
+  {
+    "address": "0x281055afc982d96fab65b3a49cac8b878184cb16",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 3"
+  },
+  {
+    "address": "0xf27daff52c38b2c373ad2b9392652ddf433303c4",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 4"
+  },
+  {
+    "address": "0x93745feeb3c42f6ab0f9890cbce65b360145b4ab",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 5"
+  },
+  {
+    "address": "0x90e63c3d53e0ea496845b7a03ec7548b70014a91",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 6"
+  },
+  {
+    "address": "0x6c37a68dbb44c3f437d15dc405c67bf5778b8637",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 7"
+  },
+  {
+    "address": "0x9a1ed80ebc9936cee2d3db944ee6bd8d407e7f9f",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 8"
+  },
+  {
+    "address": "0x4fd166478b440fb2a0bc64321ec35ed48f9cdb16",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Cold 9"
+  },
+  {
+    "address": "0xedc7001e99a37c3d23b5f7974f837387e09f9c93",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Deposit 2"
+  },
+  {
+    "address": "0x382ffce2287252f930e1c8dc9328dac5bf282ba1",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Fees"
+  },
+  {
+    "address": "0xceb69f6342ece283b2f5c9088ff249b5d0ae66ea",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime 2"
+  },
+  {
+    "address": "0x1e7016f7c23859d097668c27b72c170ed7129a10",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime 3"
+  },
+  {
+    "address": "0xdfd76bbfeb9eb8322f3696d3567e03f894c40d6c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime 4"
+  },
+  {
+    "address": "0xa86309988947559b6e72ef716c5058f479386c0f",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime: Custody Deposit Funder 1"
+  },
+  {
+    "address": "0x1565f0c48c06bc006095591a4c3fe4a6f39712cf",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime: Deposit Funder 1"
+  },
+  {
+    "address": "0x72cef07728b199e7ad11ff03f02d2d65f91ad553",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase Prime: Deposit Funder 2"
+  },
+  {
+    "address": "0xa7927364e94e162102e7cf2447e33e01fc629e68",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: AAVE Hot 1"
+  },
+  {
+    "address": "0x75590f473d2a7b377c1ba991790900f28532f329",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: AAVE Hot 2"
+  },
+  {
+    "address": "0xbe3c68821d585cf1552214897a1c091014b1eb0a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Account Blacklister"
+  },
+  {
+    "address": "0xefe9a82d56cd965d7b332c7ac1feb15c53cd4340",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Batch Deposit 1"
+  },
+  {
+    "address": "0x2cc5146929a893d1d73bc34fb37815cc1a44ae33",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Circle Deposit 1"
+  },
+  {
+    "address": "0x7915f087685fffd71608e5d118f3b70c27d9ef4e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Coinbase Commerce"
+  },
+  {
+    "address": "0xf6874c88757721a02f47592140905c4336dfbc61",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Coinbase Commerce 2"
+  },
+  {
+    "address": "0x0bf5ec06f44e9aa068732b1c203f007855a5eed8",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 1"
+  },
+  {
+    "address": "0x829e3c7781a6ac8cd864cd8437a664ec07da75a8",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 2"
+  },
+  {
+    "address": "0x6aac5e7c12d3c9259cff8e10b5bbdb1064c382a5",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 3"
+  },
+  {
+    "address": "0xf0eefa46ee509eb8fab42f62917db8a93432e2ef",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 4"
+  },
+  {
+    "address": "0x0af5035a8dff53f5a89bfc083fdec94c7332ad7a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 5"
+  },
+  {
+    "address": "0x38024b883c72f23d6d6c1f3f869034e849e8b121",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Cold Migration 6"
+  },
+  {
+    "address": "0x881d4032abe4188e2237efcd27ab435e81fc6bb1",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce"
+  },
+  {
+    "address": "0x6c8dd0e9cc58c07429e065178d88444b60e60b80",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee"
+  },
+  {
+    "address": "0xbc8ec259e3026ae0d87bc442d034d6882ce4a35c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee 2"
+  },
+  {
+    "address": "0x02d24cab4f2c3bf6e6eb07ea07e45f96baccffe7",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee 3"
+  },
+  {
+    "address": "0xce352e98934499be70f641353f16a47d9e1e3abd",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee 4"
+  },
+  {
+    "address": "0x90e18a6920985dbacc3d76cf27a3f2131923c720",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee 5"
+  },
+  {
+    "address": "0x4b23d52eff7c67f5992c2ab6d3f69b13a6a33561",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Commerce Fee 6"
+  },
+  {
+    "address": "0xd2276af80582cac230edc4c42e9a9c096f3c09aa",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit 1"
+  },
+  {
+    "address": "0x91d66b38ae24292e9e12dd962bbb3aecf4ab769a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 1"
+  },
+  {
+    "address": "0x47d43ac7eea761c4959b2a4318e620603be7fd4f",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 10"
+  },
+  {
+    "address": "0x8535d5ed435e405a881545ffb2f8d6b81f6c9d41",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 11"
+  },
+  {
+    "address": "0x4f86d1d365434bfbc1e818534d353ffc1a06f8fe",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 12"
+  },
+  {
+    "address": "0x55e6513dbcdd1dcaf4c6710ac423c698a56eb68a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 13"
+  },
+  {
+    "address": "0xe49916b3ff411fc6a83dc31f130e2e85be4a9385",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 14"
+  },
+  {
+    "address": "0x33ae106bc06effa33e6db5813b619710f2dfb5d4",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 2"
+  },
+  {
+    "address": "0x660629fe43b0825acf3402e10a999c563075a32c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 3"
+  },
+  {
+    "address": "0xf2f07ef4a923f48fc4d47f0af115f8895177f075",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 4"
+  },
+  {
+    "address": "0x76a1b88be943bc5dc6c9b641a0835970a2cc2dc4",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 5"
+  },
+  {
+    "address": "0xd69b42d93af96cf278b1149bffb2d668d0154b7d",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 6"
+  },
+  {
+    "address": "0x1553767e6ab6d26695b34366f61340b48d8b7a62",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 7"
+  },
+  {
+    "address": "0xff9fbb429c186029c28f1e30361271ea002847ad",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 8"
+  },
+  {
+    "address": "0x04d4876932c7c375efcaeb7ae0ad00591acf09f6",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Deposit Funder 9"
+  },
+  {
+    "address": "0x1bbe1be1fb532a010762665cfcbed31595367e5d",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: ERC20 Distributor"
+  },
+  {
+    "address": "0x9620e530995d4b497f16652419dbb60f7834010a",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: GRT Hot 1"
+  },
+  {
+    "address": "0x251e93d51c5f2a1e60b7bc90bc8b2534b68e8f40",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 1"
+  },
+  {
+    "address": "0xe0e65c40bcb1225d4ab3a13f3a9e21abbd83f9d0",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 10"
+  },
+  {
+    "address": "0x3f1137cf8e6468669959c3b99a9250a400a76574",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 11"
+  },
+  {
+    "address": "0x0a74db66f8248554d406832e305555043fe3bfd7",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 12"
+  },
+  {
+    "address": "0x898f293e97d59b375939ec3654ac548be2759d41",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 13"
+  },
+  {
+    "address": "0x221cec08c3df34763eed468705dc779cbe750ceb",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 14"
+  },
+  {
+    "address": "0xa818c01c2fdf04f24f8d6bda3512e901f33a575e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 15"
+  },
+  {
+    "address": "0x707e8eaf4c1586fea01f8fd0242daac009d4f60e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 16"
+  },
+  {
+    "address": "0xc9ebc59a7590e52b0904817f172ac82fc66a530b",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 17"
+  },
+  {
+    "address": "0xd6974e28ecee4005a4d03c4c6ed0aac71fb46b94",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 18"
+  },
+  {
+    "address": "0x204ad5bed7eb66e002329a018bb96d87a8db1aa8",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 19"
+  },
+  {
+    "address": "0x80cf6275294bddce597789c855691cf4cdf01386",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 2"
+  },
+  {
+    "address": "0xdf61e3281fb5b1c3da3ff92865875d7751ad830b",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 3"
+  },
+  {
+    "address": "0x292bf41e2506f88aa3e73721aabc75b4f08e664e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 4"
+  },
+  {
+    "address": "0x2bdcda44d935c12c3a76972c4339975782842a12",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 5"
+  },
+  {
+    "address": "0x9dcaf485e72f812dee725ce64b6667a7a83f73dd",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 6"
+  },
+  {
+    "address": "0xe3d6d8bcdc4eb4e24ad7523d98c394960e8c1d32",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 7"
+  },
+  {
+    "address": "0x3c070dceac7f99aec493de5b56619d71fa31e131",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 8"
+  },
+  {
+    "address": "0xb35d425a3f49c49181ef8e72583efb070b54202e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: LINK Hot 9"
+  },
+  {
+    "address": "0x55c4bf24450ecb6f818f6be5881a4fc491deb01e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: MANA Hot 1"
+  },
+  {
+    "address": "0xf27182c5568beafb967140286e25807250eacc4c",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: MANA Hot 2"
+  },
+  {
+    "address": "0x46ce00ec0866e7a045d2f2778558efee05c4fb08",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: MATIC Hot 1"
+  },
+  {
+    "address": "0xa090e606e30bd747d4e6245a1517ebe430f0057e",
+    "exchange": "coinbase",
+    "nameTag": "Coinbase: Miscellaneous"
+  },
+  {
+    "address": "0x167a9333bf582556f35bd4d16a7e80e191aa6476",
+    "exchange": "coinone",
+    "nameTag": "Coinone"
+  },
+  {
+    "address": "0x1e2fcfd26d36183f1a5d90f0e6296915b02bcb40",
+    "exchange": "coinone",
+    "nameTag": "Coinone 2"
+  },
+  {
+    "address": "0x7a1ba53c0e2d218df39e76e4efbf0455978cc23e",
+    "exchange": "coinone",
+    "nameTag": "Coinone: Deposit Funder"
+  },
+  {
+    "address": "0x35da6abcb08f2b6164fe380bb6c47bd8f2304d55",
+    "exchange": "coinone",
+    "nameTag": "Coinone: Old Address 1"
+  },
+  {
+    "address": "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b",
+    "exchange": "crypto-com",
+    "nameTag": "Cronos Coin: CRO Token"
+  },
+  {
+    "address": "0x6262998ced04146fa42253a5c0af90ca02dfd2a3",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com"
+  },
+  {
+    "address": "0x46340b20830761efd32832a74d7169b29feb9758",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com 2"
+  },
+  {
+    "address": "0x72a53cdbbcc1b9efa39c834a540550e23463aacb",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com 3"
+  },
+  {
+    "address": "0x7758e507850da48cd47df1fb5f875c23e3340c50",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com 4"
+  },
+  {
+    "address": "0xcffad3200574698b78f32232aa9d63eabd290703",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com 5"
+  },
+  {
+    "address": "0xf3b0073e3a7f747c7a38b36b805247b222c302a3",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com 6"
+  },
+  {
+    "address": "0x013ff63e21e8556c1a04aff005ec0912aa955d6a",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: CDCNFT 2"
+  },
+  {
+    "address": "0x767be428d8bf8fa99bc0b84d96d6f135845a11ff",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: CDCNFT Token"
+  },
+  {
+    "address": "0xc42f0e95ff6c861164a86415eb6b3dabe7e13843",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: Deployer"
+  },
+  {
+    "address": "0x494adb1ecac39d9df00fcda84ed2c1dc775107e7",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: Deployer 2"
+  },
+  {
+    "address": "0x32047ac688997feb8fbf1d5d4aee39ec0202086d",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: Deployer 3"
+  },
+  {
+    "address": "0xae45a8240147e6179ec7c9f92c5a18f9a97b3fca",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: Deposit Funder"
+  },
+  {
+    "address": "0xb63b606ac810a52cca15e44bb630fd42d8d1d83d",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MCO Token"
+  },
+  {
+    "address": "0xdc4c0fda463435d19962e8dd465d5eba86fd02ec",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MCO Wallet"
+  },
+  {
+    "address": "0x51ca21ed46a9df3cb6f34624cbd482d312996730",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig"
+  },
+  {
+    "address": "0x71507ee19cbc0c87ff2b5e05d161efe2aac4ee07",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 2"
+  },
+  {
+    "address": "0x22e4f709fd5e7fe246fbf7e714ae89bdab7e2a5d",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 3"
+  },
+  {
+    "address": "0xdda508f9f3c1b4ca39c8794df3a080298ebe9c55",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 4"
+  },
+  {
+    "address": "0x35f517cab9a37bc31091c2f155d965af84e0bc85",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 5"
+  },
+  {
+    "address": "0x67703f7d089f3ac7c8c13a18b2381cbd7ee3eded",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 6"
+  },
+  {
+    "address": "0x20a0bee429d6907e556205ef9d48ab6fe6a55531",
+    "exchange": "crypto-com",
+    "nameTag": "Crypto.com: MultiSig 7"
+  },
+  {
+    "address": "0xd24400ae8bfebb18ca49be86258a3c749cf46853",
+    "exchange": "gemini",
+    "nameTag": "Gemini"
+  },
+  {
+    "address": "0x6fc82a5fe25a5cdb58bc74600a40a69c065263f8",
+    "exchange": "gemini",
+    "nameTag": "Gemini 2"
+  },
+  {
+    "address": "0x61edcdf5bb737adffe5043706e7c5bb1f1a56eea",
+    "exchange": "gemini",
+    "nameTag": "Gemini 3"
+  },
+  {
+    "address": "0x5f65f7b609678448494de4c87521cdf6cef1e932",
+    "exchange": "gemini",
+    "nameTag": "Gemini 4"
+  },
+  {
+    "address": "0xb302bfe9c246c6e150af70b1caaa5e3df60dac05",
+    "exchange": "gemini",
+    "nameTag": "Gemini 5"
+  },
+  {
+    "address": "0x8d6f396d210d385033b348bcae9e4f9ea4e045bd",
+    "exchange": "gemini",
+    "nameTag": "Gemini 6"
+  },
+  {
+    "address": "0xd69b0089d9ca950640f5dc9931a41a5965f00303",
+    "exchange": "gemini",
+    "nameTag": "Gemini 7"
+  },
+  {
+    "address": "0x07ee55aa48bb72dcc6e9d78256648910de513eca",
+    "exchange": "gemini",
+    "nameTag": "Gemini: Contract 1"
+  },
+  {
+    "address": "0xdd51f01d9fc0fd084c1a4737bbfa5becb6ced9bc",
+    "exchange": "gemini",
+    "nameTag": "Gemini: Deployer 1"
+  },
+  {
+    "address": "0x4c2f150fc90fed3d8281114c2349f1906cde5346",
+    "exchange": "gemini",
+    "nameTag": "Gemini: Deployer 2"
+  },
+  {
+    "address": "0x4b7ee45f30767f36f06f79b32bf1fca6f726deda",
+    "exchange": "gemini",
+    "nameTag": "Gemini: eFIL Token"
+  },
+  {
+    "address": "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd",
+    "exchange": "gemini",
+    "nameTag": "Gemini: GUSD Token"
+  },
+  {
+    "address": "0xdec042a90de005b22754e94a8a979c4b8c67fde5",
+    "exchange": "gemini",
+    "nameTag": "Gemini: Old Contract 1"
+  },
+  {
+    "address": "0x0d0707963952f2fba59dd06f2b425ace40b492fe",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io"
+  },
+  {
+    "address": "0x7793cd85c11a924478d358d49b05b37e91b5810f",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io 2"
+  },
+  {
+    "address": "0x1c4b70a3968436b9a0a9cf5205c787eb81bb558c",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io 3"
+  },
+  {
+    "address": "0x234ee9e35f8e9749a002fc42970d570db716453b",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io 4"
+  },
+  {
+    "address": "0xc882b111a75c0c657fc507c04fbfcd2cc984f071",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io 5"
+  },
+  {
+    "address": "0xd793281182a0e3e023116004778f45c29fc14f19",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io: Contract"
+  },
+  {
+    "address": "0x6596da8b65995d5feacff8c2936f0b7a2051b0d0",
+    "exchange": "gate-io",
+    "nameTag": "Gate.io: Deposit Funder"
+  },
+  {
+    "address": "0x9c67e141c0472115aa1b98bd0088418be68fd249",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC 1"
+  },
+  {
+    "address": "0x59a5208b32e627891c389ebafc644145224006e8",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC 2"
+  },
+  {
+    "address": "0xa12431d0b9db640034b0cdfceef9cce161e62be4",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC 3"
+  },
+  {
+    "address": "0xfdeda15e2922c5ed41fc1fdf36da2fb2623666b3",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC: Deposit Funder"
+  },
+  {
+    "address": "0xad68942a95fdd56594aa5cf862b358790e37834c",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC: Deposit Funder 2"
+  },
+  {
+    "address": "0x0113a6b755fbad36b4249fd63002e2035e401143",
+    "exchange": "hitbtc",
+    "nameTag": "HitBTC: Deposit Funder 3"
+  },
+  {
+    "address": "0x2910543af39aba0cd09dbb2d50200b3e800a63d2",
+    "exchange": "kraken",
+    "nameTag": "Kraken"
+  },
+  {
+    "address": "0xae2d4617c862309a3d75a0ffb358c7a5009c673f",
+    "exchange": "kraken",
+    "nameTag": "Kraken 10"
+  },
+  {
+    "address": "0x43984d578803891dfa9706bdeee6078d80cfc79e",
+    "exchange": "kraken",
+    "nameTag": "Kraken 11"
+  },
+  {
+    "address": "0x66c57bf505a85a74609d2c83e94aabb26d691e1f",
+    "exchange": "kraken",
+    "nameTag": "Kraken 12"
+  },
+  {
+    "address": "0xda9dfa130df4de4673b89022ee50ff26f6ea73cf",
+    "exchange": "kraken",
+    "nameTag": "Kraken 13"
+  },
+  {
+    "address": "0xa83b11093c858c86321fbc4c20fe82cdbd58e09e",
+    "exchange": "kraken",
+    "nameTag": "Kraken 14"
+  },
+  {
+    "address": "0xce27fc71139d02f9a3d5cc1356add185750660ac",
+    "exchange": "kraken",
+    "nameTag": "Kraken 15"
+  },
+  {
+    "address": "0x0d0452f487d1edc869d1488ae984590ca2900d2f",
+    "exchange": "kraken",
+    "nameTag": "Kraken 16"
+  },
+  {
+    "address": "0x6d0cf1f651f5ae585d24dcaa188d44e389e93d26",
+    "exchange": "kraken",
+    "nameTag": "Kraken 17"
+  },
+  {
+    "address": "0x735fd3c55a8be1aeb3544c7e29eba3ea23500a1c",
+    "exchange": "kraken",
+    "nameTag": "Kraken 18"
+  },
+  {
+    "address": "0xfedac45de308e24b8282193c512f029250943d8a",
+    "exchange": "kraken",
+    "nameTag": "Kraken 19"
+  },
+  {
+    "address": "0x0a869d79a7052c7f1b55a8ebabbea3420f0d1e13",
+    "exchange": "kraken",
+    "nameTag": "Kraken 2"
+  },
+  {
+    "address": "0x098cbdd8eb01b19d37539644821772e9bde12d55",
+    "exchange": "kraken",
+    "nameTag": "Kraken 20"
+  },
+  {
+    "address": "0x9ee32359b180ff684a315053e418aaf223932cb9",
+    "exchange": "kraken",
+    "nameTag": "Kraken 21"
+  },
+  {
+    "address": "0x491f5512751f5db45c5415049d423affaae70392",
+    "exchange": "kraken",
+    "nameTag": "Kraken 22"
+  },
+  {
+    "address": "0x34036f30371847c9fd8036b7ea5af1b3126306dc",
+    "exchange": "kraken",
+    "nameTag": "Kraken 23"
+  },
+  {
+    "address": "0x62ac55b745f9b08f1a81dcbbe630277095cf4be1",
+    "exchange": "kraken",
+    "nameTag": "Kraken 24"
+  },
+  {
+    "address": "0x10593a64b7b7bb0ea29b8c01f1619ca8ff294b2f",
+    "exchange": "kraken",
+    "nameTag": "Kraken 25"
+  },
+  {
+    "address": "0x60637c83bd6aea40d637d91cca8d724272b2d5fa",
+    "exchange": "kraken",
+    "nameTag": "Kraken 26"
+  },
+  {
+    "address": "0xa939bffb33bed18dc0063737cb9ea41a1fdb2fe3",
+    "exchange": "kraken",
+    "nameTag": "Kraken 27"
+  },
+  {
+    "address": "0x5c5f75b6fba2903adf66c7bddcea99b4cce44a8a",
+    "exchange": "kraken",
+    "nameTag": "Kraken 28"
+  },
+  {
+    "address": "0xa861678bee80035114b47615142e9302139a8c32",
+    "exchange": "kraken",
+    "nameTag": "Kraken 29"
+  },
+  {
+    "address": "0xe853c56864a2ebe4576a807d26fdc4a0ada51919",
+    "exchange": "kraken",
+    "nameTag": "Kraken 3"
+  },
+  {
+    "address": "0xe52ecf8d97e290dad5963296c5d1f81472f2ec48",
+    "exchange": "kraken",
+    "nameTag": "Kraken 30"
+  },
+  {
+    "address": "0x5203aeaaee721195707b01e613b6c3259b3a5cf6",
+    "exchange": "kraken",
+    "nameTag": "Kraken 31"
+  },
+  {
+    "address": "0x71beefcf9f31872ccec0bc9789f211609685205a",
+    "exchange": "kraken",
+    "nameTag": "Kraken 32"
+  },
+  {
+    "address": "0x16b2b042f15564bb8585259f535907f375bdc415",
+    "exchange": "kraken",
+    "nameTag": "Kraken 33"
+  },
+  {
+    "address": "0x8ab54f9e6df35b26168847ea93dab9659ecf286d",
+    "exchange": "kraken",
+    "nameTag": "Kraken 34"
+  },
+  {
+    "address": "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0",
+    "exchange": "kraken",
+    "nameTag": "Kraken 4"
+  },
+  {
+    "address": "0xfa52274dd61e1643d2205169732f29114bc240b3",
+    "exchange": "kraken",
+    "nameTag": "Kraken 5"
+  },
+  {
+    "address": "0x53d284357ec70ce289d6d64134dfac8e511c8a3d",
+    "exchange": "kraken",
+    "nameTag": "Kraken 6"
+  },
+  {
+    "address": "0x89e51fa8ca5d66cd220baed62ed01e8951aa7c40",
+    "exchange": "kraken",
+    "nameTag": "Kraken 7"
+  },
+  {
+    "address": "0xc6bed363b30df7f35b601a5547fe56cd31ec63da",
+    "exchange": "kraken",
+    "nameTag": "Kraken 8"
+  },
+  {
+    "address": "0x29728d0efd284d85187362faa2d4d76c2cfc2612",
+    "exchange": "kraken",
+    "nameTag": "Kraken 9"
+  },
+  {
+    "address": "0x2e7542ec36df6429d8c397f88c4cf0c925948f44",
+    "exchange": "kraken",
+    "nameTag": "Kraken: Deployer 1"
+  },
+  {
+    "address": "0xa24787320ede4cc19d800bf87b41ab9539c4da9d",
+    "exchange": "kraken",
+    "nameTag": "Kraken: Deployer 2"
+  },
+  {
+    "address": "0xe9f7ecae3a53d2a67105292894676b00d1fab785",
+    "exchange": "kraken",
+    "nameTag": "Kraken: Hot Wallet"
+  },
+  {
+    "address": "0xe1498a9ef5c6aa51790a642f70c31238326b1724",
+    "exchange": "kraken",
+    "nameTag": "Kraken: MANA Token Wallet"
+  },
+  {
+    "address": "0x6cc5f688a315f3dc28a7781717a9a798a59fda7b",
+    "exchange": "okx",
+    "nameTag": "OKX"
+  },
+  {
+    "address": "0xc5451b523d5fffe1351337a221688a62806ad91a",
+    "exchange": "okx",
+    "nameTag": "OKX 10"
+  },
+  {
+    "address": "0x42436286a9c8d63aafc2eebbca193064d68068f2",
+    "exchange": "okx",
+    "nameTag": "OKX 11"
+  },
+  {
+    "address": "0x69a722f0b5da3af02b4a205d6f0c285f4ed8f396",
+    "exchange": "okx",
+    "nameTag": "OKX 12"
+  },
+  {
+    "address": "0xc708a1c712ba26dc618f972ad7a187f76c8596fd",
+    "exchange": "okx",
+    "nameTag": "OKX 13"
+  },
+  {
+    "address": "0x6fb624b48d9299674022a23d92515e76ba880113",
+    "exchange": "okx",
+    "nameTag": "OKX 14"
+  },
+  {
+    "address": "0xf59869753f41db720127ceb8dbb8afaf89030de4",
+    "exchange": "okx",
+    "nameTag": "OKX 15"
+  },
+  {
+    "address": "0x65a0947ba5175359bb457d3b34491edf4cbf7997",
+    "exchange": "okx",
+    "nameTag": "OKX 16"
+  },
+  {
+    "address": "0x4d19c0a5357bc48be0017095d3c871d9afc3f21d",
+    "exchange": "okx",
+    "nameTag": "OKX 17"
+  },
+  {
+    "address": "0x5c52cc7c96bde8594e5b77d5b76d042cb5fae5f2",
+    "exchange": "okx",
+    "nameTag": "OKX 18"
+  },
+  {
+    "address": "0xe9172daf64b05b26eb18f07ac8d6d723acb48f99",
+    "exchange": "okx",
+    "nameTag": "OKX 19"
+  },
+  {
+    "address": "0x236f9f97e0e62388479bf9e5ba4889e46b0273c3",
+    "exchange": "okx",
+    "nameTag": "OKX 2"
+  },
+  {
+    "address": "0x7eb6c83ab7d8d9b8618c0ed973cbef71d1921ef2",
+    "exchange": "okx",
+    "nameTag": "OKX 20"
+  },
+  {
+    "address": "0xbda23b750dd04f792ad365b5f2a6f1d8593796f2",
+    "exchange": "okx",
+    "nameTag": "OKX 21"
+  },
+  {
+    "address": "0x276cdba3a39abf9cedba0f1948312c0681e6d5fd",
+    "exchange": "okx",
+    "nameTag": "OKX 22"
+  },
+  {
+    "address": "0x3d55ccb2a943d88d39dd2e62daf767c69fd0179f",
+    "exchange": "okx",
+    "nameTag": "OKX 23"
+  },
+  {
+    "address": "0xbf94f0ac752c739f623c463b5210a7fb2cbb420b",
+    "exchange": "okx",
+    "nameTag": "OKX 24"
+  },
+  {
+    "address": "0xf7858da8a6617f7c6d0ff2bcafdb6d2eedf64840",
+    "exchange": "okx",
+    "nameTag": "OKX 25"
+  },
+  {
+    "address": "0x68841a1806ff291314946eebd0cda8b348e73d6d",
+    "exchange": "okx",
+    "nameTag": "OKX 26"
+  },
+  {
+    "address": "0xd7efcbb86efdd9e8de014dafa5944aae36e817e4",
+    "exchange": "okx",
+    "nameTag": "OKX 27"
+  },
+  {
+    "address": "0xa7efae728d2936e78bda97dc267687568dd593f3",
+    "exchange": "okx",
+    "nameTag": "OKX 3"
+  },
+  {
+    "address": "0x2c8fbb630289363ac80705a1a61273f76fd5a161",
+    "exchange": "okx",
+    "nameTag": "OKX 4"
+  },
+  {
+    "address": "0x59fae149a8f8ec74d5bc038f8b76d25b136b9573",
+    "exchange": "okx",
+    "nameTag": "OKX 5"
+  },
+  {
+    "address": "0x98ec059dc3adfbdd63429454aeb0c990fba4a128",
+    "exchange": "okx",
+    "nameTag": "OKX 6"
+  },
+  {
+    "address": "0x5041ed759dd4afc3a72b8192c143f72f4724081a",
+    "exchange": "okx",
+    "nameTag": "OKX 7"
+  },
+  {
+    "address": "0xcba38020cd7b6f51df6afaf507685add148f6ab6",
+    "exchange": "okx",
+    "nameTag": "OKX 8"
+  },
+  {
+    "address": "0x461249076b88189f8ac9418de28b365859e46bfd",
+    "exchange": "okx",
+    "nameTag": "OKX 9"
+  },
+  {
+    "address": "0x3b3ae790df4f312e745d270119c6052904fb6790",
+    "exchange": "okx",
+    "nameTag": "OKX DEX: Aggregation Router"
+  },
+  {
+    "address": "0xc5a93444cc4da6efb9e6fc6e5d3cb55a53b52396",
+    "exchange": "okx",
+    "nameTag": "OKX: Deposit Funder"
+  },
+  {
+    "address": "0x24c654f6b143dc5cae3c02fbb527ca63aa555dbc",
+    "exchange": "okx",
+    "nameTag": "OKX: Deposit Funder 10"
+  },
+  {
+    "address": "0x4a8f1f5b2a3652131eac54a6f183a4a2cf44a9a6",
+    "exchange": "okx",
+    "nameTag": "OKX: Deposit Funder 2"
+  },
+  {
+    "address": "0x89fd00b8d2dcee0f40d8699970115bb861241a54",
+    "exchange": "okx",
+    "nameTag": "OKX: Deposit Funder 3"
+  },
+  {
+    "address": "0xaad8ad7dfa05bc354e011890dd61636842c2cb96",
+    "exchange": "okx",
+    "nameTag": "OKX: Deposit Funder 4"
+  },
+  {
+    "address": "0x75231f58b43240c9718dd58b4967c5114342a86c",
+    "exchange": "okx",
+    "nameTag": "OKX: OKB Token"
+  },
+  {
+    "address": "0x32be343b94f860124dc4fee278fdcbd38c102d88",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex"
+  },
+  {
+    "address": "0x209c4784ab1e8183cf58ca33cb740efbf3fc18ef",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex 2"
+  },
+  {
+    "address": "0xb794f5ea0ba39494ce839613fffba74279579268",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex 3"
+  },
+  {
+    "address": "0xa910f92acdaf488fa6ef02174fb86208ad7722ba",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex 4"
+  },
+  {
+    "address": "0xaa9fa73dfe17ecaa2c89b39f0bb2779613c5fc3b",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: BAT"
+  },
+  {
+    "address": "0x2fa2bc2ce6a4f92952921a4caa46b3727d24a1ec",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: BNT"
+  },
+  {
+    "address": "0x31a2feb9b5d3b5f4e76c71d6c92fc46ebb3cb1c1",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: CVC"
+  },
+  {
+    "address": "0x6b71834d65c5c4d8ed158d54b47e6ea4ff4e5437",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: FOAM"
+  },
+  {
+    "address": "0x48d466b7c0d32b61e8a82cd2bcf060f7c3f966df",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: GNO"
+  },
+  {
+    "address": "0x0536806df512d6cdde913cf95c9886f65b1d3462",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: GNT"
+  },
+  {
+    "address": "0x8d451ae5ee8f557a9ce7a9d7be8a8cb40002d5cb",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: KNC"
+  },
+  {
+    "address": "0xbd2ec7c608a06fe975dbdca729e84dedb34ecc21",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: LOOM"
+  },
+  {
+    "address": "0xc0e30823e5e628df8bc9bf2636a347e1512f0ecb",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: MANA"
+  },
+  {
+    "address": "0x65f9b2e4d7aaeb40ffea8c6f5844d5ad7da257e0",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: NXC"
+  },
+  {
+    "address": "0x36b01066b7fa4a0fdb2968ea0256c848e9135674",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: OMG"
+  },
+  {
+    "address": "0xab11204cfeaccffa63c2d23aef2ea9accdb0a0d5",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: REP"
+  },
+  {
+    "address": "0x6795cf8eb25585eadc356ae32ac6641016c550f2",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: SNT"
+  },
+  {
+    "address": "0xfbf2173154f7625713be22e0504404ebfe021eae",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: STORJ"
+  },
+  {
+    "address": "0x6f803466bcd17f44fa18975bf7c509ba64bf3825",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: USDC"
+  },
+  {
+    "address": "0xead6be34ce315940264519f250d8160f369fa5cd",
+    "exchange": "poloniex",
+    "nameTag": "Poloniex: ZRX"
+  },
+  {
+    "address": "0x390de26d772d2e2005c6d1d24afc902bae37a4bb",
+    "exchange": "upbit",
+    "nameTag": "Upbit"
+  },
+  {
+    "address": "0x4bc7c6ce8ea48a7d597714ce8ec466936612c60f",
+    "exchange": "upbit",
+    "nameTag": "Upbit 10"
+  },
+  {
+    "address": "0x00028f59e485a665cb4263c231eb4b7e8a2021a7",
+    "exchange": "upbit",
+    "nameTag": "Upbit 11"
+  },
+  {
+    "address": "0xcb1ee1888b2045f4b79eb777243e76f5fefe2bc3",
+    "exchange": "upbit",
+    "nameTag": "Upbit 12"
+  },
+  {
+    "address": "0xa3670e11a2f3784558632a4c30ddcfc4b74301b3",
+    "exchange": "upbit",
+    "nameTag": "Upbit 13"
+  },
+  {
+    "address": "0xba826fec90cefdf6706858e5fbafcb27a290fbe0",
+    "exchange": "upbit",
+    "nameTag": "Upbit 2"
+  },
+  {
+    "address": "0x5e032243d507c743b061ef021e2ec7fcc6d3ab89",
+    "exchange": "upbit",
+    "nameTag": "Upbit 3"
+  },
+  {
+    "address": "0x99ddedb236f545061cb0481909428905be9c47e1",
+    "exchange": "upbit",
+    "nameTag": "Upbit 4"
+  },
+  {
+    "address": "0x4e8eddc514dc4ffbda51db5be0d3e8d82ee4871e",
+    "exchange": "upbit",
+    "nameTag": "Upbit 5"
+  },
+  {
+    "address": "0x015f46294fd72f5448eb602ef8a252574bd9cbcd",
+    "exchange": "upbit",
+    "nameTag": "Upbit 6"
+  },
+  {
+    "address": "0x8913f85a2ae4ba3bf76d2a2a0418f391f2cc1519",
+    "exchange": "upbit",
+    "nameTag": "Upbit 7"
+  },
+  {
+    "address": "0x19d39241e02d612264b9090b74e14acdfb54b8f8",
+    "exchange": "upbit",
+    "nameTag": "Upbit 8"
+  },
+  {
+    "address": "0x32e1931b8c180050a6ed597046502ba50f17ba4d",
+    "exchange": "upbit",
+    "nameTag": "Upbit 9"
+  },
+  {
+    "address": "0xc9cf0ec93d764f5c9571fd12f764bae7fc87c84e",
+    "exchange": "upbit",
+    "nameTag": "Upbit: Cold Wallet"
+  }
+]
