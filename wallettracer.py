@@ -5,39 +5,23 @@ import networkx as nx
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
+from fraud_intelligence import identify_exchange
 
 
 load_dotenv()
 
 app = Flask(__name__)
 
-API_KEY = os.getenv("ETHERSCAN_API_KEY")
-
 BASE_URL = "https://api.etherscan.io/v2/api"
 
+
+def get_api_key():
+
+    load_dotenv()
+
+    return os.getenv("ETHERSCAN_API_KEY")
+
 CHAIN_ID = 1
-
-
-EXCHANGE_ADDRESSES = {
-    "Binance": set(),
-    "Coinbase": set(),
-    "Kraken": set()
-}
-
-
-def identify_exchange(address):
-
-    if not address:
-        return None
-
-    address = address.lower()
-
-    for exchange, addresses in EXCHANGE_ADDRESSES.items():
-
-        if address in {a.lower() for a in addresses}:
-            return exchange
-
-    return None
 
 
 def format_timestamp(timestamp):
@@ -48,7 +32,9 @@ def format_timestamp(timestamp):
     ).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
-def get_wallet_transactions(wallet_address, limit=100):
+def get_wallet_transactions(wallet_address, limit=100, api_key=None):
+
+    api_key = api_key or get_api_key()
 
     params = {
 
@@ -70,7 +56,7 @@ def get_wallet_transactions(wallet_address, limit=100):
 
         "sort": "desc",
 
-        "apikey": API_KEY
+        "apikey": api_key
 
     }
 
@@ -157,7 +143,9 @@ def get_wallet_transactions(wallet_address, limit=100):
     return transactions
 
 
-def get_internal_transactions(wallet_address, limit=100):
+def get_internal_transactions(wallet_address, limit=100, api_key=None):
+
+    api_key = api_key or get_api_key()
 
     params = {
 
@@ -179,7 +167,7 @@ def get_internal_transactions(wallet_address, limit=100):
 
         "sort": "desc",
 
-        "apikey": API_KEY
+        "apikey": api_key
 
     }
 
@@ -273,7 +261,149 @@ def get_internal_transactions(wallet_address, limit=100):
     return transactions
 
 
-def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
+def get_token_transactions(wallet_address, limit=100, api_key=None):
+
+    api_key = api_key or get_api_key()
+
+    if not api_key:
+        return []
+
+    params = {
+
+        "chainid": CHAIN_ID,
+
+        "module": "account",
+
+        "action": "tokentx",
+
+        "address": wallet_address,
+
+        "page": 1,
+
+        "offset": limit,
+
+        "sort": "asc",
+
+        "apikey": api_key
+
+    }
+
+    try:
+
+        response = requests.get(
+            BASE_URL,
+            params=params,
+            timeout=20
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+    except (requests.RequestException, ValueError, TypeError):
+
+        return []
+
+
+    if (
+        not isinstance(data, dict)
+        or data.get("status") != "1"
+        or not isinstance(data.get("result"), list)
+    ):
+
+        return []
+
+
+    transactions = []
+    wallet_lower = wallet_address.lower()
+
+
+    for tx in data["result"]:
+
+        if not isinstance(tx, dict):
+            continue
+
+        from_address = tx.get("from", "")
+
+        to_address = tx.get("to", "")
+
+        timestamp_value = tx.get("timeStamp")
+
+        if not from_address or not to_address or not timestamp_value:
+            continue
+
+
+        try:
+
+            decimals = int(tx.get("tokenDecimal"))
+
+            if decimals < 0:
+                continue
+
+            raw_value = int(tx.get("value"))
+            amount = raw_value / 10**decimals
+            timestamp = format_timestamp(timestamp_value)
+
+        except (TypeError, ValueError, OverflowError):
+
+            continue
+
+
+        if from_address.lower() == wallet_lower:
+
+            direction = "OUT"
+
+            counterparty = to_address
+
+        elif to_address.lower() == wallet_lower:
+
+            direction = "IN"
+
+            counterparty = from_address
+
+        else:
+
+            continue
+
+
+        transactions.append({
+
+            "hash": tx.get("hash", ""),
+
+            "from": from_address,
+
+            "to": to_address,
+
+            "direction": direction,
+
+            "counterparty": counterparty,
+
+            "amount": amount,
+
+            "timestamp": timestamp,
+
+            "exchange": identify_exchange(counterparty),
+
+            "type": "erc20",
+
+            "token_symbol": tx.get("tokenSymbol", ""),
+
+            "token_name": tx.get("tokenName", ""),
+
+            "contract_address": tx.get("contractAddress", ""),
+
+            "decimals": decimals,
+
+            "raw_value": str(raw_value)
+
+        })
+
+
+    return transactions
+
+
+def trace_wallet(start_wallet, max_hops=5, max_wallets=50, api_key=None):
+
+    api_key = api_key or get_api_key()
 
     visited = set()
 
@@ -302,7 +432,8 @@ def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
 
         normal_transactions = get_wallet_transactions(
             current_wallet,
-            limit=100
+            limit=100,
+            api_key=api_key
         )
 
 
@@ -310,7 +441,14 @@ def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
 
         internal_transactions = get_internal_transactions(
             current_wallet,
-            limit=100
+            limit=100,
+            api_key=api_key
+        )
+
+        token_transactions = get_token_transactions(
+            current_wallet,
+            limit=100,
+            api_key=api_key
         )
 
 
@@ -319,6 +457,7 @@ def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
         transactions = (
             normal_transactions
             + internal_transactions
+            + token_transactions
         )
 
 
@@ -339,7 +478,13 @@ def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
 
                 tx["to"].lower(),
 
-                tx["amount"]
+                tx["amount"],
+
+                tx.get("type", "normal"),
+
+                tx.get("contract_address", ""),
+
+                tx.get("raw_value", "")
 
             )
 
@@ -403,7 +548,13 @@ def trace_wallet(start_wallet, max_hops=5, max_wallets=50):
 
                         "hop": hop + 1,
 
-                        "type": tx["type"]
+                        "type": tx["type"],
+
+                        "token_symbol": tx.get("token_symbol"),
+
+                        "token_name": tx.get("token_name"),
+
+                        "contract_address": tx.get("contract_address")
 
                     })
 
@@ -513,7 +664,13 @@ def build_wallet_graph(trace_result):
 
             hop=path["hop"],
 
-            type=path.get("type", "normal")
+            type=path.get("type", "normal"),
+
+            token_symbol=path.get("token_symbol"),
+
+            token_name=path.get("token_name"),
+
+            contract_address=path.get("contract_address")
 
         )
 
@@ -575,7 +732,13 @@ def build_wallet_graph(trace_result):
             "type": data.get(
                 "type",
                 "normal"
-            )
+            ),
+
+            "token_symbol": data.get("token_symbol"),
+
+            "token_name": data.get("token_name"),
+
+            "contract_address": data.get("contract_address")
 
         })
 
@@ -639,7 +802,9 @@ def trace():
         }), 400
 
 
-    if not API_KEY:
+    current_api_key = get_api_key()
+
+    if not current_api_key:
 
         return jsonify({
 
@@ -655,7 +820,9 @@ def trace():
 
         max_hops=3,
 
-        max_wallets=20
+        max_wallets=20,
+
+        api_key=current_api_key
 
     )
 
@@ -665,9 +832,39 @@ def trace():
 
     result["graph"] = graph
 
+    from fraud_intelligence import (
+        analyze_suspicious_indicators,
+        calculate_risk_score,
+        get_risk_level
+    )
+
+    indicators = analyze_suspicious_indicators(
+        result["transactions"],
+        result["paths"]
+    )
+    risk_score = calculate_risk_score(
+        result["transactions"],
+        result["paths"],
+        indicators
+    )
+    result["risk_score"] = risk_score
+    result["risk_level"] = get_risk_level(risk_score)
+    result["indicators"] = indicators
+    result["suspicious_indicators"] = indicators
+    result["exchange_count"] = len({
+        transaction.get("exchange")
+        for transaction in result["transactions"]
+        if transaction.get("exchange")
+    })
+
 
     return jsonify(result)
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(
+        host="127.0.0.1",
+        port=5001,
+        debug=False,
+        use_reloader=False
+    )
