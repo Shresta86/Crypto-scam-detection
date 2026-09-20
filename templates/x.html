@@ -3,33 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>TraceX | Blockchain Investigation</title>
-
     <style>
+        :root {
+            --bg-900: #080b12;
+            --bg-800: #090d15;
+            --bg-700: #0e131d;
+            --panel: #0f1725;
+            --panel-strong: #111b2b;
+            --panel-soft: #121d2b;
+            --border: #1d2a3a;
+            --border-strong: #273244;
+            --text: #e7edf7;
+            --text-soft: #98a7ba;
+            --text-muted: #6f8198;
+            --primary: #2a6cff;
+            --primary-strong: #3d7eff;
+            --success: #35d59b;
+            --warning: #ffb454;
+            --danger: #ff6475;
+            --info: #5fa4ff;
+            --shadow: rgba(10, 14, 22, 0.48);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #080b12;
-            color: #e8edf5;
-            min-height: 100vh;
+        html {
+            scroll-behavior: smooth;
         }
 
-        /* ---------------- NAVBAR ---------------- */
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg-900);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
 
         .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             height: 70px;
-            border-bottom: 1px solid #1b2230;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 45px;
-            background: #090c13;
+            background: rgba(9, 12, 19, 0.95);
+            backdrop-filter: blur(8px);
         }
 
         .logo {
@@ -45,11 +76,12 @@
             width: 35px;
             height: 35px;
             border-radius: 9px;
-            background: #1d6cff;
+            background: linear-gradient(135deg, var(--primary), #1747d0);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 17px;
+            box-shadow: 0 10px 18px rgba(42, 108, 255, 0.3);
         }
 
         .logo span {
@@ -61,31 +93,29 @@
             align-items: center;
             gap: 8px;
             font-size: 13px;
-            color: #8d98aa;
+            color: var(--text-soft);
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
-            background: #36d98b;
+            background: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 10px #36d98b;
+            box-shadow: 0 0 10px var(--success);
         }
 
-        /* ---------------- MAIN ---------------- */
-
         .container {
-            width: min(1250px, 92%);
+            width: min(1280px, 92%);
             margin: auto;
-            padding: 55px 0;
+            padding: 52px 0 72px;
         }
 
         .hero {
-            margin-bottom: 35px;
+            margin-bottom: 26px;
         }
 
         .eyebrow {
-            color: #5e96ff;
+            color: var(--info);
             font-size: 12px;
             font-weight: 700;
             letter-spacing: 2px;
@@ -94,89 +124,165 @@
         }
 
         h1 {
-            font-size: 42px;
+            font-size: clamp(2rem, 3vw, 3rem);
             letter-spacing: -1px;
+            line-height: 1.1;
             margin-bottom: 12px;
         }
 
         .hero p {
-            color: #8d98aa;
-            max-width: 650px;
+            color: var(--text-soft);
+            max-width: 720px;
             line-height: 1.6;
             font-size: 15px;
         }
 
-        /* ---------------- SEARCH ---------------- */
+        .search-card,
+        .section,
+        .toolbar,
+        .summary-card,
+        .investigation-panel,
+        .risk-card,
+        .suspicious-card {
+            background: linear-gradient(180deg, rgba(15, 23, 37, 0.95), rgba(10, 15, 22, 0.96));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 32px var(--shadow);
+        }
 
         .search-card {
-            background: #0e131d;
-            border: 1px solid #1c2636;
-            border-radius: 14px;
-            padding: 25px;
-            margin-bottom: 30px;
+            padding: 24px 22px 18px;
+            margin-bottom: 26px;
         }
 
         .search-label {
             display: block;
-            font-size: 13px;
-            color: #aab4c4;
-            margin-bottom: 10px;
-            font-weight: 600;
+            font-size: 12px;
+            color: #b3bfd3;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
         }
 
         .input-row {
             display: flex;
             gap: 12px;
+            align-items: stretch;
         }
 
-        input {
+        input[type="text"],
+        .search-input {
             flex: 1;
-            background: #080b12;
-            border: 1px solid #273244;
-            color: white;
+            background: rgba(8, 11, 18, 0.9);
+            border: 1px solid var(--border-strong);
+            color: var(--text);
             padding: 15px 17px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
+            min-height: 48px;
             outline: none;
-            transition: 0.2s;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         }
 
-        input:focus {
-            border-color: #397cff;
-            box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
+        input[type="text"]:focus,
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(42, 108, 255, 0.12);
         }
 
         button {
-            background: #246bff;
             border: none;
+            border-radius: 10px;
             color: white;
-            padding: 0 27px;
-            border-radius: 8px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             cursor: pointer;
-            transition: 0.2s;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, background 0.18s ease;
         }
 
         button:hover {
-            background: #3a7cff;
             transform: translateY(-1px);
         }
 
-        #message {
-            margin-top: 14px;
-            color: #8d98aa;
-            font-size: 13px;
+        .primary-button,
+        .action-button,
+        .graph-button,
+        .report-button {
+            background: linear-gradient(180deg, var(--primary-strong), var(--primary));
+            box-shadow: 0 10px 18px rgba(42, 108, 255, 0.2);
         }
 
-        /* ---------------- CARDS ---------------- */
+        .primary-button {
+            padding: 0 26px;
+            min-width: 180px;
+            min-height: 48px;
+        }
+
+        .action-button,
+        .graph-button,
+        .report-button {
+            min-height: 46px;
+            padding: 0 18px;
+        }
+
+        .graph-button {
+            background: linear-gradient(180deg, #2d75ff, #1c5ed9);
+            min-width: 200px;
+        }
+
+        .report-button {
+            background: linear-gradient(180deg, #1d2938, #0f1726);
+            border: 1px solid var(--border-strong);
+            color: var(--text);
+            box-shadow: none;
+        }
+
+        .message {
+            min-height: 18px;
+            margin-top: 14px;
+            color: var(--text-soft);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message.info {
+            color: var(--text-soft);
+        }
+
+        .message.success {
+            color: var(--success);
+        }
+
+        .message.error {
+            color: var(--danger);
+        }
+
+        .message.loading {
+            color: var(--info);
+        }
+
+        .loading-spinner {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(95, 164, 255, 0.3);
+            border-top-color: var(--info);
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         .section {
-            background: #0e131d;
-            border: 1px solid #1c2636;
-            border-radius: 14px;
-            padding: 25px;
-            margin-bottom: 25px;
+            padding: 26px 22px 22px;
+            margin-bottom: 24px;
         }
 
         .section-header {
@@ -184,43 +290,52 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .section-title {
-            font-size: 17px;
-            font-weight: 650;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
         }
 
         .section-subtitle {
-            color: #687487;
+            color: var(--text-soft);
             font-size: 12px;
-            margin-top: 5px;
+            margin-top: 6px;
         }
-
-        /* ---------------- SUMMARY ---------------- */
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
         }
 
         .summary-card {
-            background: #090d15;
-            border: 1px solid #1c2636;
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(9, 13, 21, 0.8);
+            border: 1px solid var(--border);
+            padding: 18px 18px 16px;
+            border-radius: 12px;
+            min-height: 122px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .summary-label {
-            color: #697588;
-            font-size: 12px;
-            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 11px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 700;
         }
 
         .summary-value {
-            font-size: 19px;
-            font-weight: 650;
+            font-size: clamp(1.1rem, 1.4vw, 1.7rem);
+            font-weight: 700;
+            line-height: 1.3;
             word-break: break-all;
         }
 
@@ -228,191 +343,366 @@
             font-size: 14px;
         }
 
-        /* ---------------- FLOW ---------------- */
-
-        .flow-container {
-            overflow-x: auto;
-            padding: 15px 5px 20px;
+        .summary-value.muted {
+            color: var(--text-soft);
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 600;
         }
 
-        .flow {
+        .risk-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .risk-card,
+        .suspicious-card {
+            background: rgba(9, 13, 21, 0.8);
+            border: 1px solid var(--border);
+            padding: 18px 18px 16px;
+            border-radius: 12px;
+            min-height: 140px;
+        }
+
+        .risk-card h3,
+        .suspicious-card h3 {
+            font-size: 11px;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .risk-value,
+        .indicator-value {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .indicator-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .indicator-list li {
+            position: relative;
+            padding-left: 18px;
+            color: var(--text-soft);
+            font-size: 13px;
+        }
+
+        .indicator-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--warning);
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .graph-actions {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .toolbar {
             display: flex;
             align-items: center;
-            min-width: max-content;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: rgba(9, 13, 21, 0.8);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            margin-bottom: 18px;
         }
 
-        .node {
-            width: 235px;
-            background: #090d15;
-            border: 1px solid #273244;
-            border-radius: 12px;
-            padding: 18px;
-            position: relative;
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .node.reported {
-            border-color: #b53d4b;
-            background: #130d12;
-        }
-
-        .node-label {
-            font-size: 11px;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .node.reported .node-label {
-            color: #ff6475;
-        }
-
-        .node-address {
-            font-family: monospace;
+        .filter-button {
+            background: transparent;
+            color: var(--text-soft);
+            border: 1px solid var(--border-strong);
+            padding: 9px 14px;
+            border-radius: 8px;
+            min-height: 38px;
             font-size: 12px;
-            color: #dce3ed;
-            word-break: break-all;
-            line-height: 1.5;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
         }
 
-        .node-hop {
-            display: inline-block;
-            margin-top: 12px;
-            background: #182131;
-            color: #7ea8ff;
-            padding: 5px 9px;
-            border-radius: 5px;
-            font-size: 11px;
+        .filter-button.active {
+            background: rgba(42, 108, 255, 0.14);
+            border-color: rgba(91, 144, 255, 0.7);
+            color: var(--text);
+            box-shadow: inset 0 0 0 1px rgba(91, 144, 255, 0.3);
         }
 
-        .arrow {
-            color: #397cff;
-            font-size: 24px;
-            padding: 0 14px;
+        .search-wrap {
+            min-width: min(320px, 100%);
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
         }
 
-        /* ---------------- TABLE ---------------- */
+        .search-wrap input {
+            width: min(320px, 100%);
+            background: rgba(8, 11, 18, 0.9);
+            border: 1px solid var(--border-strong);
+            color: var(--text);
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
 
         .table-wrapper {
             overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(8, 11, 18, 0.5);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+            min-width: 1100px;
         }
 
         th {
             text-align: left;
-            color: #657185;
+            color: var(--text-muted);
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
-            letter-spacing: 0.7px;
-            padding: 12px;
-            border-bottom: 1px solid #202a39;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(17, 27, 43, 0.7);
         }
 
         td {
-            padding: 15px 12px;
-            border-bottom: 1px solid #171f2c;
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(27, 36, 49, 0.9);
             font-size: 12px;
-            color: #b8c1cf;
+            color: var(--text-soft);
+            vertical-align: top;
         }
 
-        tr:hover td {
-            background: #111722;
+        tbody tr:hover td {
+            background: rgba(17, 27, 43, 0.42);
         }
 
         .address {
-            font-family: monospace;
-            max-width: 220px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            color: #cadeff;
             word-break: break-all;
-            color: #aab8cc;
+            max-width: 220px;
         }
 
-        .in {
-            color: #39d98a;
+        .direction {
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .direction.in {
+            color: var(--success);
+        }
+
+        .direction.out {
+            color: var(--danger);
+        }
+
+        .exchange-pill {
+            display: inline-block;
+            background: rgba(255, 100, 117, 0.12);
+            color: #ff9aa7;
+            border: 1px solid rgba(255, 100, 117, 0.2);
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 11px;
             font-weight: 700;
         }
 
-        .out {
-            color: #ff5969;
-            font-weight: 700;
-        }
-
-        .exchange {
-            color: #ff5969;
-            font-weight: 700;
+        .exchange-pill.empty {
+            background: rgba(148, 163, 184, 0.06);
+            color: var(--text-muted);
+            border-color: rgba(148, 163, 184, 0.18);
         }
 
         .hop-badge {
             display: inline-block;
             padding: 5px 8px;
-            background: #182131;
-            color: #8aaeff;
-            border-radius: 5px;
+            background: rgba(95, 164, 255, 0.1);
+            border: 1px solid rgba(95, 164, 255, 0.2);
+            color: #a8c7ff;
+            border-radius: 6px;
             font-size: 11px;
+            font-weight: 700;
         }
 
-        /* ---------------- EMPTY ---------------- */
+        .transaction-type {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: capitalize;
+            background: rgba(53, 213, 155, 0.08);
+            color: #94f0ca;
+            border: 1px solid rgba(53, 213, 155, 0.18);
+        }
+
+        .transaction-type.internal {
+            background: rgba(95, 164, 255, 0.08);
+            color: #aad0ff;
+            border-color: rgba(95, 164, 255, 0.18);
+        }
+
+        .exchange-row {
+            transform: translateX(0);
+        }
 
         .empty {
-            border: 1px dashed #293446;
-            border-radius: 10px;
-            padding: 30px;
+            border: 1px dashed var(--border-strong);
+            border-radius: 12px;
+            padding: 34px 20px;
             text-align: center;
-            color: #697588;
+            color: var(--text-soft);
             font-size: 13px;
+            background: rgba(8, 11, 18, 0.25);
         }
 
-        /* ---------------- RESPONSIVE ---------------- */
+        .disclaimer {
+            margin-top: 20px;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 180, 84, 0.25);
+            background: rgba(255, 180, 84, 0.06);
+            color: #f4d09c;
+            font-size: 13px;
+            line-height: 1.6;
+        }
 
-        @media (max-width: 800px) {
+        @media (max-width: 980px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
 
+            .risk-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
             .navbar {
                 padding: 0 20px;
             }
 
             .container {
                 width: 94%;
-                padding-top: 35px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
-
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
+                padding-top: 34px;
             }
 
             .input-row {
                 flex-direction: column;
             }
 
-            button {
-                height: 48px;
+            .primary-button {
+                width: 100%;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-wrap {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .search-wrap input {
+                width: 100%;
+            }
+
+            .graph-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .graph-button,
+            .report-button {
+                width: 100%;
             }
         }
 
-        @media (max-width: 500px) {
-
+        @media (max-width: 520px) {
             .summary-grid {
                 grid-template-columns: 1fr;
             }
         }
+
+        @media print {
+            body {
+                background: white;
+                color: #111827;
+            }
+
+            .navbar,
+            .search-card,
+            .graph-actions,
+            .toolbar,
+            .disclaimer,
+            .no-print {
+                display: none !important;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .section,
+            .summary-card,
+            .risk-card,
+            .suspicious-card,
+            .table-wrapper {
+                background: white !important;
+                color: #111827 !important;
+                border-color: #d1d5db !important;
+                box-shadow: none !important;
+            }
+
+            th,
+            td {
+                color: #111827 !important;
+                border-color: #d1d5db !important;
+            }
+        }
     </style>
 </head>
-
-
 <body>
-
-    <!-- NAVBAR -->
-
-    <nav class="navbar">
-
+    <nav class="navbar no-print">
         <div class="logo">
             <div class="logo-icon">⌁</div>
             Trace<span>X</span>
@@ -422,422 +712,405 @@
             <div class="status-dot"></div>
             Blockchain API Online
         </div>
-
     </nav>
 
-
     <main class="container">
-
-
-        <!-- HERO -->
-
         <div class="hero">
-
-            <div class="eyebrow">
-                Blockchain Investigation Platform
-            </div>
-
-            <h1>
-                Trace the movement of funds.
-            </h1>
-
+            <div class="eyebrow">Blockchain Investigation Platform</div>
+            <h1>Trace the movement of funds.</h1>
             <p>
                 Investigate victim-reported cryptocurrency wallets,
                 identify connected addresses and follow the movement
                 of funds across the blockchain.
             </p>
-
         </div>
 
-
-        <!-- SEARCH -->
-
-        <div class="search-card">
-
-            <label class="search-label">
-                SUSPICIOUS WALLET ADDRESS
-            </label>
-
+        <div class="search-card no-print">
+            <label class="search-label">Suspicious Wallet Address</label>
             <div class="input-row">
-
-                <input
-                    id="wallet"
-                    type="text"
-                    placeholder="0x..."
-                >
-
-                <button onclick="traceWallet()">
-                    Start Investigation
-                </button>
-
+                <input id="wallet" type="text" placeholder="0x..." />
+                <button class="primary-button" onclick="traceWallet()">Start Investigation</button>
             </div>
-
-            <div id="message"></div>
-
+            <div id="message" class="message info"></div>
         </div>
 
-
-        <!-- SUMMARY -->
-
-        <div
-            id="summarySection"
-            class="section"
-            style="display:none;"
-        >
-
+        <div id="summarySection" class="section" style="display:none;">
             <div class="section-header">
-
                 <div>
-                    <div class="section-title">
-                        Investigation Overview
-                    </div>
-
-                    <div class="section-subtitle">
-                        Blockchain activity discovered from the reported address
-                    </div>
+                    <div class="section-title">Investigation Overview</div>
+                    <div class="section-subtitle">Blockchain activity discovered from the reported address</div>
                 </div>
-
             </div>
-
 
             <div class="summary-grid">
-
                 <div class="summary-card">
-
-                    <div class="summary-label">
-                        REPORTED WALLET
-                    </div>
-
-                    <div
-                        id="reportedWallet"
-                        class="summary-value small"
-                    >
-                        -
-                    </div>
-
+                    <div class="summary-label">Reported Wallet</div>
+                    <div id="reportedWallet" class="summary-value small">-</div>
                 </div>
 
-
                 <div class="summary-card">
-
-                    <div class="summary-label">
-                        WALLETS TRACED
-                    </div>
-
-                    <div
-                        id="walletCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
+                    <div class="summary-label">Wallets Traced</div>
+                    <div id="walletCount" class="summary-value">0</div>
                 </div>
 
-
                 <div class="summary-card">
-
-                    <div class="summary-label">
-                        MAXIMUM HOPS
-                    </div>
-
-                    <div
-                        id="hopCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
+                    <div class="summary-label">Maximum Hops</div>
+                    <div id="hopCount" class="summary-value">0</div>
                 </div>
 
-
                 <div class="summary-card">
-
-                    <div class="summary-label">
-                        TRANSACTIONS
-                    </div>
-
-                    <div
-                        id="transactionCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
+                    <div class="summary-label">Transactions</div>
+                    <div id="transactionCount" class="summary-value">0</div>
                 </div>
 
+                <div class="summary-card">
+                    <div class="summary-label">Exchanges Detected</div>
+                    <div id="exchangeCount" class="summary-value">0</div>
+                </div>
             </div>
 
+            <div class="risk-grid">
+                <div class="risk-card">
+                    <h3>Risk Assessment</h3>
+                    <div id="riskValue" class="risk-value">Risk Score<br>Awaiting fraud intelligence analysis</div>
+                </div>
+
+                <div class="suspicious-card">
+                    <h3>Suspicious Indicators</h3>
+                    <div id="suspiciousIndicators" class="indicator-value">Awaiting fraud intelligence analysis</div>
+                </div>
+            </div>
         </div>
 
-        <!-- GRAPH PAGE BUTTON -->
+        <div id="graphButtonSection" class="section no-print" style="display:none;">
+            <div class="section-title">Wallet Relationship Graph</div>
+            <div class="section-subtitle">Open the visual representation of the traced wallet relationships.</div>
 
-        <div
-            id="graphButtonSection"
-            class="section"
-            style="display:none; text-align:center;"
-        >
-
-            <div class="section-title">
-                Wallet Relationship Graph
+            <div class="graph-actions">
+                <button class="graph-button" onclick="openGraphPage()">View Wallet Graph →</button>
+                <button class="report-button" onclick="generateInvestigationReport()">Generate Investigation Report</button>
             </div>
-
-            <div class="section-subtitle">
-                Open the visual representation of the traced wallet relationships.
-            </div>
-
-            <button
-                onclick="openGraphPage()"
-                style="margin-top:18px; height:45px;"
-            >
-                View Wallet Graph →
-            </button>
-
         </div>
 
-        <!-- TRANSACTIONS -->
-
-        <div
-            id="transactionsSection"
-            class="section"
-            style="display:none;"
-        >
-
+        <div id="transactionsSection" class="section" style="display:none;">
             <div class="section-header">
-
                 <div>
-
-                    <div class="section-title">
-                        Transaction Activity
-                    </div>
-
-                    <div class="section-subtitle">
-                        Detailed blockchain transactions discovered during investigation
-                    </div>
-
+                    <div class="section-title">Transaction Evidence</div>
+                    <div class="section-subtitle">Blockchain evidence discovered during the investigation</div>
                 </div>
-
             </div>
 
+            <div class="toolbar no-print">
+                <div class="filter-group" id="transactionFilters" aria-label="Transaction filters">
+                    <button class="filter-button active" data-filter="all" type="button">All</button>
+                    <button class="filter-button" data-filter="IN" type="button">In</button>
+                    <button class="filter-button" data-filter="OUT" type="button">Out</button>
+                    <button class="filter-button" data-filter="exchange" type="button">Exchange</button>
+                </div>
+
+                <div class="search-wrap">
+                    <input id="tableSearch" class="search-input" type="text" placeholder="Search wallet, counterparty, or hash" aria-label="Search transactions" />
+                </div>
+            </div>
 
             <div class="table-wrapper">
-
                 <table>
-
                     <thead>
-
                         <tr>
                             <th>Wallet</th>
                             <th>Direction</th>
                             <th>Counterparty</th>
                             <th>Amount</th>
                             <th>Exchange</th>
-                            <th>Time</th>
+                            <th>Hop</th>
+                            <th>Type</th>
+                            <th>Timestamp</th>
                             <th>Transaction Hash</th>
                         </tr>
-
                     </thead>
-
                     <tbody id="transactionBody"></tbody>
-
                 </table>
-
             </div>
 
+            <div id="noResults" class="empty" style="display:none; margin-top: 14px;">
+                No transactions match the current filter and search criteria.
+            </div>
         </div>
 
+        <div class="disclaimer no-print">
+            TraceX provides investigative assistance. Wallet connections or exchange interactions alone do not prove fraudulent activity. Findings should be supported by verifiable blockchain transaction evidence.
+        </div>
     </main>
 
+    <script>
+        const state = {
+            allTransactions: [],
+            activeFilter: "all",
+            searchTerm: ""
+        };
 
-<script>
-
-async function traceWallet() {
-
-    const wallet =
-        document.getElementById("wallet").value.trim();
-
-    const message =
-        document.getElementById("message");
-
-
-    if (!wallet) {
-
-        message.innerText =
-            "Please enter a wallet address.";
-
-        return;
-    }
-
-
-    message.innerText =
-        "⏳ Investigating blockchain activity...";
-
-
-    document.getElementById("summarySection").style.display = "none";
-
-
-
-    document.getElementById("transactionsSection").style.display = "none";
-    document.getElementById("graphButtonSection").style.display = "none";
-
-
-    try {
-
-        const response = await fetch("/trace", {
-
-            method: "POST",
-        
-            headers: {
-                "Content-Type": "application/json"
-            },
-        
-            body: JSON.stringify({
-                wallet: wallet
-            })
-        
-        });
-        
-        const data = await response.json();
-
-
-        if (!response.ok || data.error) {
-
-            message.innerText =
-                "❌ " + (data.error || "Investigation failed.");
-
-            return;
+        function updateMessage(text, type = "info") {
+            const message = document.getElementById("message");
+            message.className = "message " + type;
+            message.innerHTML = text;
         }
 
+        function escapeHtml(value) {
+            const text = String(value ?? "");
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-        sessionStorage.setItem(
-            "traceGraph",
-            JSON.stringify({
-                graph: data.graph,
-                paths: data.paths || [],
-                transactions: data.transactions || [],
-                start_wallet: data.start_wallet,
-                max_hops: data.max_hops,
-                wallets_traced: data.wallets_traced
-            })
-        );
+        function normalizeText(value) {
+            return String(value ?? "").trim();
+        }
 
-        message.innerText =
-            "✓ Investigation completed";
+        function countUniqueExchanges(transactions) {
+            const exchanges = new Set();
 
-        document.getElementById("graphButtonSection").style.display =
-            "block";
+            (transactions || []).forEach((tx) => {
+                const value = normalizeText(tx && tx.exchange);
+                if (value) {
+                    exchanges.add(value);
+                }
+            });
 
+            return exchanges.size;
+        }
 
-        /* SUMMARY */
+        function renderRiskAssessment(data) {
+            const riskValue = document.getElementById("riskValue");
+            let riskText = "Awaiting fraud intelligence analysis";
 
-        document.getElementById("summarySection").style.display =
-            "block";
+            if (data && typeof data === "object") {
+                const riskScore = data.risk_score;
+                const riskLevel = data.risk_level;
 
+                if (riskScore !== undefined && riskScore !== null && String(riskScore).trim() !== "") {
+                    riskText = String(riskScore);
+                    if (riskLevel !== undefined && riskLevel !== null && String(riskLevel).trim() !== "") {
+                        riskText += " / " + String(riskLevel);
+                    }
+                } else if (riskLevel !== undefined && riskLevel !== null && String(riskLevel).trim() !== "") {
+                    riskText = String(riskLevel);
+                }
+            }
 
-        document.getElementById("reportedWallet").innerText =
-            data.start_wallet;
+            riskValue.innerHTML = "Risk Score<br>" + escapeHtml(riskText);
+        }
 
+        function renderSuspiciousIndicators(data) {
+            const container = document.getElementById("suspiciousIndicators");
+            const indicators = data && Array.isArray(data.indicators)
+                ? data.indicators
+                : (data && Array.isArray(data.suspicious_indicators)
+                    ? data.suspicious_indicators
+                    : null);
 
-        document.getElementById("walletCount").innerText =
-            data.wallets_traced;
+            if (Array.isArray(indicators) && indicators.length > 0) {
+                const items = indicators
+                    .map((item) => {
+                        if (item && typeof item === "object") {
+                            const name = escapeHtml(item.name || "Observed activity");
+                            const description = escapeHtml(item.description || "");
+                            const count = item.count !== undefined
+                                ? " (count: " + escapeHtml(item.count) + ")"
+                                : "";
+                            return "<li><strong>" + name + "</strong>: " + description + count + "</li>";
+                        }
+                        return "<li>" + escapeHtml(item) + "</li>";
+                    })
+                    .join("");
+                container.innerHTML = "<ul class='indicator-list'>" + items + "</ul>";
+                return;
+            }
 
+            const stringIndicators = data && typeof data.indicators === "string"
+                ? data.indicators
+                : (data && typeof data.suspicious_indicators === "string"
+                    ? data.suspicious_indicators
+                    : "Awaiting fraud intelligence analysis");
 
-        document.getElementById("hopCount").innerText =
-            data.max_hops;
+            if (stringIndicators && String(stringIndicators).trim() !== "") {
+                container.innerHTML = escapeHtml(stringIndicators);
+                return;
+            }
 
+            container.textContent = "Awaiting fraud intelligence analysis";
+        }
 
-        document.getElementById("transactionCount").innerText =
-            data.transactions.length;
+        function applyFilters() {
+            const searchTerm = state.searchTerm.toLowerCase();
+            const filtered = state.allTransactions.filter((tx) => {
+                const direction = normalizeText(tx && tx.direction);
+                const exchangeText = normalizeText(tx && tx.exchange);
+                const walletText = normalizeText(tx && tx.wallet);
+                const counterpartyText = normalizeText(tx && tx.counterparty);
+                const hashText = normalizeText(tx && tx.hash);
 
+                const matchesFilter = state.activeFilter === "all"
+                    ? true
+                    : state.activeFilter === "exchange"
+                        ? Boolean(exchangeText)
+                        : direction === state.activeFilter;
 
-        /* TRANSACTIONS */
+                const matchesSearch = !searchTerm || [walletText, counterpartyText, hashText].some((value) => value.toLowerCase().includes(searchTerm));
 
-        const transactionBody =
-            document.getElementById("transactionBody");
+                return matchesFilter && matchesSearch;
+            });
 
-        transactionBody.innerHTML = "";
+            renderTransactionTable(filtered);
+        }
 
+        function renderTransactionTable(transactions) {
+            const tbody = document.getElementById("transactionBody");
+            const noResults = document.getElementById("noResults");
 
-        data.transactions.forEach(tx => {
+            tbody.innerHTML = "";
 
-            const row =
-                document.createElement("tr");
+            if (!transactions || transactions.length === 0) {
+                noResults.style.display = "block";
+                return;
+            }
 
+            noResults.style.display = "none";
 
-            const directionClass =
-                tx.direction === "OUT"
-                    ? "out"
-                    : "in";
+            transactions.forEach((tx) => {
+                const row = document.createElement("tr");
+                const direction = normalizeText(tx && tx.direction);
+                const exchange = normalizeText(tx && tx.exchange);
+                const type = normalizeText(tx && tx.type) || "normal";
+                const rowClass = exchange ? "exchange-row" : "";
+                const directionClass = direction === "OUT" ? "direction out" : "direction in";
 
+                row.className = rowClass;
 
-            const exchange =
-                tx.exchange
-                    ? `🚨 ${tx.exchange}`
-                    : "—";
+                row.innerHTML = `
+                    <td class="address">${escapeHtml(tx && tx.wallet)}</td>
+                    <td class="${directionClass}">${escapeHtml(direction)}</td>
+                    <td class="address">${escapeHtml(tx && tx.counterparty)}</td>
+                    <td>${escapeHtml(tx && tx.amount)} ETH</td>
+                    <td>${exchange ? '<span class="exchange-pill">' + escapeHtml(exchange) + '</span>' : '<span class="exchange-pill empty">—</span>'}</td>
+                    <td><span class="hop-badge">${escapeHtml(tx && tx.hop !== undefined ? tx.hop : "-")}</span></td>
+                    <td><span class="transaction-type ${type === 'internal' ? 'internal' : ''}">${escapeHtml(type)}</span></td>
+                    <td>${escapeHtml(tx && tx.timestamp)}</td>
+                    <td class="address">${escapeHtml(tx && tx.hash)}</td>
+                `;
 
+                tbody.appendChild(row);
+            });
+        }
 
-            row.innerHTML = `
+        function setupFilters() {
+            const filterButtons = document.querySelectorAll(".filter-button");
+            filterButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    filterButtons.forEach((btn) => btn.classList.remove("active"));
+                    button.classList.add("active");
+                    state.activeFilter = button.dataset.filter || "all";
+                    applyFilters();
+                });
+            });
 
-                <td class="address">
-                    ${tx.wallet}
-                </td>
+            const tableSearch = document.getElementById("tableSearch");
+            tableSearch.addEventListener("input", (event) => {
+                state.searchTerm = event.target.value.trim();
+                applyFilters();
+            });
+        }
 
-                <td class="${directionClass}">
-                    ${tx.direction}
-                </td>
+        async function traceWallet() {
+            const wallet = document.getElementById("wallet").value.trim();
 
-                <td class="address">
-                    ${tx.counterparty}
-                </td>
+            if (!wallet) {
+                updateMessage("Please enter a wallet address.", "error");
+                return;
+            }
 
-                <td>
-                    ${tx.amount} ETH
-                </td>
+            updateMessage('<span class="loading-spinner"></span> Investigating blockchain activity...', "loading");
+            document.getElementById("summarySection").style.display = "none";
+            document.getElementById("transactionsSection").style.display = "none";
+            document.getElementById("graphButtonSection").style.display = "none";
 
-                <td class="exchange">
-                    ${exchange}
-                </td>
+            try {
+                const response = await fetch("/trace", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ wallet: wallet })
+                });
 
-                <td>
-                    ${tx.timestamp}
-                </td>
+                const data = await response.json();
 
-                <td class="address">
-                    ${tx.hash}
-                </td>
+                if (!response.ok || data.error) {
+                    updateMessage("❌ " + (data.error || "Investigation failed."), "error");
+                    return;
+                }
 
-            `;
+                sessionStorage.setItem(
+                    "traceGraph",
+                    JSON.stringify({
+                        graph: data.graph,
+                        paths: data.paths || [],
+                        transactions: data.transactions || [],
+                        start_wallet: data.start_wallet,
+                        max_hops: data.max_hops,
+                        wallets_traced: data.wallets_traced,
+                        risk_score: data.risk_score,
+                        risk_level: data.risk_level,
+                        indicators: data.indicators,
+                        suspicious_indicators: data.suspicious_indicators
+                    })
+                );
 
+                updateMessage("✓ Investigation completed", "success");
 
-            transactionBody.appendChild(row);
+                document.getElementById("summarySection").style.display = "block";
+                document.getElementById("graphButtonSection").style.display = "block";
 
+                document.getElementById("reportedWallet").innerText = data.start_wallet || "-";
+                document.getElementById("walletCount").innerText = data.wallets_traced || 0;
+                document.getElementById("hopCount").innerText = data.max_hops || 0;
+                document.getElementById("transactionCount").innerText = (data.transactions || []).length;
+                document.getElementById("exchangeCount").innerText = countUniqueExchanges(data.transactions || []);
+
+                renderRiskAssessment(data);
+                renderSuspiciousIndicators(data);
+
+                state.allTransactions = data.transactions || [];
+                state.activeFilter = "all";
+                state.searchTerm = "";
+                document.getElementById("tableSearch").value = "";
+                document.querySelectorAll(".filter-button").forEach((btn) => btn.classList.toggle("active", btn.dataset.filter === "all"));
+
+                applyFilters();
+                document.getElementById("transactionsSection").style.display = "block";
+            } catch (error) {
+                console.error(error);
+                updateMessage("❌ Couldn't connect to server.", "error");
+            }
+        }
+
+        function openGraphPage() {
+            window.location.href = "/graph";
+        }
+
+        function generateInvestigationReport() {
+            window.print();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setupFilters();
+            const existingMessage = document.getElementById("message");
+            if (existingMessage) {
+                existingMessage.className = "message info";
+            }
         });
-
-
-        document.getElementById("transactionsSection")
-            .style.display = "block";
-
-    }
-
-
-    catch (error) {
-
-        console.error(error);
-
-        message.innerText =
-            "❌ Couldn't connect to server.";
-
-    }
-
-}
-
-
-function openGraphPage() {
-
-    window.location.href = "/graph";
-
-}
-
-</script>
-
+    </script>
 </body>
 </html>

@@ -1,7 +1,5 @@
 .env
-<<<<<<< HEAD
+.venv/
 node_modules/
 __pycache__/
-=======
-__pycache__/
->>>>>>> c5732f43fa9a3eb29e49b5abbfc0387d04151c1e
+*.pyc
