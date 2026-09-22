@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>TraceX | Blockchain Investigation</title>
 
+
     <style>
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
 
         body {
             font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -19,6 +28,7 @@
             color: #e8edf5;
             min-height: 100vh;
         }
+
 
         /* ---------------- NAVBAR ---------------- */
 
@@ -32,6 +42,7 @@
             background: #090c13;
         }
 
+
         .logo {
             display: flex;
             align-items: center;
@@ -40,6 +51,7 @@
             font-weight: 700;
             letter-spacing: 0.5px;
         }
+
 
         .logo-icon {
             width: 35px;
@@ -52,9 +64,11 @@
             font-size: 17px;
         }
 
+
         .logo span {
             color: #6da2ff;
         }
+
 
         .status {
             display: flex;
@@ -64,6 +78,7 @@
             color: #8d98aa;
         }
 
+
         .status-dot {
             width: 8px;
             height: 8px;
@@ -71,6 +86,7 @@
             border-radius: 50%;
             box-shadow: 0 0 10px #36d98b;
         }
+
 
         /* ---------------- MAIN ---------------- */
 
@@ -80,9 +96,11 @@
             padding: 55px 0;
         }
 
+
         .hero {
             margin-bottom: 35px;
         }
+
 
         .eyebrow {
             color: #5e96ff;
@@ -93,11 +111,13 @@
             margin-bottom: 12px;
         }
 
+
         h1 {
             font-size: 42px;
             letter-spacing: -1px;
             margin-bottom: 12px;
         }
+
 
         .hero p {
             color: #8d98aa;
@@ -105,6 +125,7 @@
             line-height: 1.6;
             font-size: 15px;
         }
+
 
         /* ---------------- SEARCH ---------------- */
 
@@ -116,6 +137,7 @@
             margin-bottom: 30px;
         }
 
+
         .search-label {
             display: block;
             font-size: 13px;
@@ -124,10 +146,12 @@
             font-weight: 600;
         }
 
+
         .input-row {
             display: flex;
             gap: 12px;
         }
+
 
         input {
             flex: 1;
@@ -141,10 +165,12 @@
             transition: 0.2s;
         }
 
+
         input:focus {
             border-color: #397cff;
             box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
         }
+
 
         button {
             background: #246bff;
@@ -158,16 +184,19 @@
             transition: 0.2s;
         }
 
+
         button:hover {
             background: #3a7cff;
             transform: translateY(-1px);
         }
+
 
         #message {
             margin-top: 14px;
             color: #8d98aa;
             font-size: 13px;
         }
+
 
         /* ---------------- CARDS ---------------- */
 
@@ -179,6 +208,7 @@
             margin-bottom: 25px;
         }
 
+
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -186,16 +216,19 @@
             margin-bottom: 20px;
         }
 
+
         .section-title {
             font-size: 17px;
             font-weight: 650;
         }
+
 
         .section-subtitle {
             color: #687487;
             font-size: 12px;
             margin-top: 5px;
         }
+
 
         /* ---------------- SUMMARY ---------------- */
 
@@ -205,6 +238,7 @@
             gap: 15px;
         }
 
+
         .summary-card {
             background: #090d15;
             border: 1px solid #1c2636;
@@ -212,11 +246,13 @@
             border-radius: 10px;
         }
 
+
         .summary-label {
             color: #697588;
             font-size: 12px;
             margin-bottom: 10px;
         }
+
 
         .summary-value {
             font-size: 19px;
@@ -224,72 +260,11 @@
             word-break: break-all;
         }
 
+
         .summary-value.small {
             font-size: 14px;
         }
 
-        /* ---------------- FLOW ---------------- */
-
-        .flow-container {
-            overflow-x: auto;
-            padding: 15px 5px 20px;
-        }
-
-        .flow {
-            display: flex;
-            align-items: center;
-            min-width: max-content;
-        }
-
-        .node {
-            width: 235px;
-            background: #090d15;
-            border: 1px solid #273244;
-            border-radius: 12px;
-            padding: 18px;
-            position: relative;
-        }
-
-        .node.reported {
-            border-color: #b53d4b;
-            background: #130d12;
-        }
-
-        .node-label {
-            font-size: 11px;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .node.reported .node-label {
-            color: #ff6475;
-        }
-
-        .node-address {
-            font-family: monospace;
-            font-size: 12px;
-            color: #dce3ed;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-
-        .node-hop {
-            display: inline-block;
-            margin-top: 12px;
-            background: #182131;
-            color: #7ea8ff;
-            padding: 5px 9px;
-            border-radius: 5px;
-            font-size: 11px;
-        }
-
-        .arrow {
-            color: #397cff;
-            font-size: 24px;
-            padding: 0 14px;
-        }
 
         /* ---------------- TABLE ---------------- */
 
@@ -297,11 +272,13 @@
             overflow-x: auto;
         }
 
+
         table {
             width: 100%;
             border-collapse: collapse;
             min-width: 900px;
         }
+
 
         th {
             text-align: left;
@@ -314,6 +291,7 @@
             border-bottom: 1px solid #202a39;
         }
 
+
         td {
             padding: 15px 12px;
             border-bottom: 1px solid #171f2c;
@@ -321,9 +299,11 @@
             color: #b8c1cf;
         }
 
+
         tr:hover td {
             background: #111722;
         }
+
 
         .address {
             font-family: monospace;
@@ -332,40 +312,148 @@
             color: #aab8cc;
         }
 
+
         .in {
             color: #39d98a;
             font-weight: 700;
         }
+
 
         .out {
             color: #ff5969;
             font-weight: 700;
         }
 
+
         .exchange {
             color: #ff5969;
             font-weight: 700;
         }
 
-        .hop-badge {
-            display: inline-block;
-            padding: 5px 8px;
-            background: #182131;
-            color: #8aaeff;
-            border-radius: 5px;
-            font-size: 11px;
+
+        /* ---------------- FRAUD INTELLIGENCE ---------------- */
+
+        .risk-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
         }
 
-        /* ---------------- EMPTY ---------------- */
 
-        .empty {
-            border: 1px dashed #293446;
+        .risk-box {
+            background: #090d15;
+            border: 1px solid #1c2636;
             border-radius: 10px;
-            padding: 30px;
-            text-align: center;
+            padding: 20px;
+        }
+
+
+        .risk-label {
+            color: #697588;
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+
+        .risk-score {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+
+        .risk-level {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+
+        .indicator {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #151b27;
+            border-left: 3px solid #ff5969;
+        }
+
+
+        .indicator-message {
+            font-size: 14px;
+            color: #dce3ed;
+        }
+
+
+        .indicator-details {
+            display: flex;
+            gap: 12px;
+            margin-top: 7px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+
+        .indicator-severity {
+            color: #ff8a96;
+        }
+
+
+        .indicator-points {
+            color: #7ea8ff;
+        }
+
+
+        .no-indicators {
             color: #697588;
             font-size: 13px;
+            padding: 15px 0;
         }
+
+
+        /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
+
+        .recommendations-box {
+            margin-top: 22px;
+            background: #090d15;
+            border: 1px solid #1c2636;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+
+        .recommendations-title {
+            font-size: 14px;
+            font-weight: 650;
+            color: #dce3ed;
+            margin-bottom: 15px;
+        }
+
+
+        .recommendation {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #151b27;
+            border-radius: 8px;
+            color: #b8c1cf;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+
+        .recommendation:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .recommendation-icon {
+            color: #6da2ff;
+            font-weight: 700;
+        }
+
 
         /* ---------------- RESPONSIVE ---------------- */
 
@@ -375,52 +463,77 @@
                 padding: 0 20px;
             }
 
+
             .container {
                 width: 94%;
                 padding-top: 35px;
             }
 
+
             h1 {
                 font-size: 32px;
             }
+
 
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
+
+            .risk-overview {
+                grid-template-columns: 1fr;
+            }
+
+
             .input-row {
                 flex-direction: column;
             }
 
+
             button {
                 height: 48px;
             }
+
         }
+
 
         @media (max-width: 500px) {
 
             .summary-grid {
                 grid-template-columns: 1fr;
             }
+
         }
+
     </style>
+
 </head>
 
 
 <body>
+
 
     <!-- NAVBAR -->
 
     <nav class="navbar">
 
         <div class="logo">
-            <div class="logo-icon">⌁</div>
+
+            <div class="logo-icon">
+                ⌁
+            </div>
+
             Trace<span>X</span>
+
         </div>
 
+
         <div class="status">
+
             <div class="status-dot"></div>
+
             Blockchain API Online
+
         </div>
 
     </nav>
@@ -437,9 +550,11 @@
                 Blockchain Investigation Platform
             </div>
 
+
             <h1>
                 Trace the movement of funds.
             </h1>
+
 
             <p>
                 Investigate victim-reported cryptocurrency wallets,
@@ -458,6 +573,7 @@
                 SUSPICIOUS WALLET ADDRESS
             </label>
 
+
             <div class="input-row">
 
                 <input
@@ -466,11 +582,13 @@
                     placeholder="0x..."
                 >
 
+
                 <button onclick="traceWallet()">
                     Start Investigation
                 </button>
 
             </div>
+
 
             <div id="message"></div>
 
@@ -488,13 +606,16 @@
             <div class="section-header">
 
                 <div>
+
                     <div class="section-title">
                         Investigation Overview
                     </div>
 
+
                     <div class="section-subtitle">
                         Blockchain activity discovered from the reported address
                     </div>
+
                 </div>
 
             </div>
@@ -502,11 +623,13 @@
 
             <div class="summary-grid">
 
+
                 <div class="summary-card">
 
                     <div class="summary-label">
                         REPORTED WALLET
                     </div>
+
 
                     <div
                         id="reportedWallet"
@@ -524,6 +647,7 @@
                         WALLETS TRACED
                     </div>
 
+
                     <div
                         id="walletCount"
                         class="summary-value"
@@ -539,6 +663,7 @@
                     <div class="summary-label">
                         MAXIMUM HOPS
                     </div>
+
 
                     <div
                         id="hopCount"
@@ -556,6 +681,7 @@
                         TRANSACTIONS
                     </div>
 
+
                     <div
                         id="transactionCount"
                         class="summary-value"
@@ -569,6 +695,117 @@
 
         </div>
 
+
+        <!-- FRAUD INTELLIGENCE -->
+
+        <div
+            id="fraudSection"
+            class="section"
+            style="display:none;"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <div class="section-title">
+                        Fraud Intelligence
+                    </div>
+
+
+                    <div class="section-subtitle">
+                        Suspicious activity indicators identified from blockchain patterns
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- RISK SCORE -->
+
+            <div class="risk-overview">
+
+
+                <div class="risk-box">
+
+                    <div class="risk-label">
+                        RISK SCORE
+                    </div>
+
+
+                    <div
+                        id="riskScore"
+                        class="risk-score"
+                    >
+                        0 / 100
+                    </div>
+
+                </div>
+
+
+                <div class="risk-box">
+
+                    <div class="risk-label">
+                        RISK LEVEL
+                    </div>
+
+
+                    <div
+                        id="riskLevel"
+                        class="risk-level"
+                    >
+                        LOW
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- INDICATORS -->
+
+            <div id="indicatorContainer"></div>
+
+
+            <div
+                id="noIndicators"
+                class="no-indicators"
+            >
+                No suspicious activity indicators detected.
+            </div>
+
+
+            <!-- INVESTIGATOR RECOMMENDATIONS -->
+
+            <div class="recommendations-box">
+
+                <div class="recommendations-title">
+                    🔎 Investigator Recommendations
+                </div>
+
+
+                <div id="recommendationContainer">
+
+                    <div class="recommendation">
+
+                        <span class="recommendation-icon">
+                            →
+                        </span>
+
+                        <span>
+                            Run an investigation to generate recommendations.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
         <!-- GRAPH PAGE BUTTON -->
 
         <div
@@ -581,9 +818,11 @@
                 Wallet Relationship Graph
             </div>
 
+
             <div class="section-subtitle">
                 Open the visual representation of the traced wallet relationships.
             </div>
+
 
             <button
                 onclick="openGraphPage()"
@@ -593,6 +832,7 @@
             </button>
 
         </div>
+
 
         <!-- TRANSACTIONS -->
 
@@ -610,6 +850,7 @@
                         Transaction Activity
                     </div>
 
+
                     <div class="section-subtitle">
                         Detailed blockchain transactions discovered during investigation
                     </div>
@@ -626,16 +867,45 @@
                     <thead>
 
                         <tr>
-                            <th>Wallet</th>
-                            <th>Direction</th>
-                            <th>Counterparty</th>
-                            <th>Amount</th>
-                            <th>Exchange</th>
-                            <th>Time</th>
-                            <th>Transaction Hash</th>
+
+                            <th>
+                                Wallet
+                            </th>
+
+
+                            <th>
+                                Direction
+                            </th>
+
+
+                            <th>
+                                Counterparty
+                            </th>
+
+
+                            <th>
+                                Amount
+                            </th>
+
+
+                            <th>
+                                Exchange
+                            </th>
+
+
+                            <th>
+                                Time
+                            </th>
+
+
+                            <th>
+                                Transaction Hash
+                            </th>
+
                         </tr>
 
                     </thead>
+
 
                     <tbody id="transactionBody"></tbody>
 
@@ -648,196 +918,498 @@
     </main>
 
 
-<script>
+    <!-- JAVASCRIPT -->
 
-async function traceWallet() {
-
-    const wallet =
-        document.getElementById("wallet").value.trim();
-
-    const message =
-        document.getElementById("message");
+    <script>
 
 
-    if (!wallet) {
-
-        message.innerText =
-            "Please enter a wallet address.";
-
-        return;
-    }
+        async function traceWallet() {
 
 
-    message.innerText =
-        "⏳ Investigating blockchain activity...";
+            const wallet =
+                document.getElementById("wallet").value.trim();
 
 
-    document.getElementById("summarySection").style.display = "none";
+            const message =
+                document.getElementById("message");
 
 
+            if (!wallet) {
 
-    document.getElementById("transactionsSection").style.display = "none";
-    document.getElementById("graphButtonSection").style.display = "none";
+                message.innerText =
+                    "Please enter a wallet address.";
 
+                return;
 
-    try {
+            }
 
-        const response = await fetch("/trace", {
-
-            method: "POST",
-        
-            headers: {
-                "Content-Type": "application/json"
-            },
-        
-            body: JSON.stringify({
-                wallet: wallet
-            })
-        
-        });
-        
-        const data = await response.json();
-
-
-        if (!response.ok || data.error) {
 
             message.innerText =
-                "❌ " + (data.error || "Investigation failed.");
+                "⏳ Investigating blockchain activity...";
 
-            return;
+
+            document.getElementById(
+                "summarySection"
+            ).style.display = "none";
+
+
+            document.getElementById(
+                "fraudSection"
+            ).style.display = "none";
+
+
+            document.getElementById(
+                "transactionsSection"
+            ).style.display = "none";
+
+
+            document.getElementById(
+                "graphButtonSection"
+            ).style.display = "none";
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        "/trace",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                wallet: wallet
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok || data.error) {
+
+                    message.innerText =
+                        "❌ " +
+                        (
+                            data.error ||
+                            "Investigation failed."
+                        );
+
+                    return;
+
+                }
+
+
+                /* SAVE GRAPH DATA */
+
+                sessionStorage.setItem(
+                    "traceGraph",
+
+                    JSON.stringify({
+
+                        graph:
+                            data.graph,
+
+                        paths:
+                            data.paths || [],
+
+                        transactions:
+                            data.transactions || [],
+
+                        start_wallet:
+                            data.start_wallet,
+
+                        max_hops:
+                            data.max_hops,
+
+                        wallets_traced:
+                            data.wallets_traced
+
+                    })
+                );
+
+
+                message.innerText =
+                    "✓ Investigation completed";
+
+
+                /* ---------------- SUMMARY ---------------- */
+
+
+                document.getElementById(
+                    "summarySection"
+                ).style.display = "block";
+
+
+                document.getElementById(
+                    "reportedWallet"
+                ).innerText =
+                    data.start_wallet;
+
+
+                document.getElementById(
+                    "walletCount"
+                ).innerText =
+                    data.wallets_traced;
+
+
+                document.getElementById(
+                    "hopCount"
+                ).innerText =
+                    data.max_hops;
+
+
+                document.getElementById(
+                    "transactionCount"
+                ).innerText =
+                    data.transactions.length;
+
+
+                /* ---------------- FRAUD INTELLIGENCE ---------------- */
+
+
+                document.getElementById(
+                    "fraudSection"
+                ).style.display = "block";
+
+
+                const risk =
+                    data.risk || {
+                        score: 0,
+                        level: "LOW"
+                    };
+
+
+                document.getElementById(
+                    "riskScore"
+                ).innerText =
+                    `${risk.score} / 100`;
+
+
+                document.getElementById(
+                    "riskLevel"
+                ).innerText =
+                    risk.level;
+
+
+                /* ---------------- INDICATORS ---------------- */
+
+
+                const indicatorContainer =
+                    document.getElementById(
+                        "indicatorContainer"
+                    );
+
+
+                const noIndicators =
+                    document.getElementById(
+                        "noIndicators"
+                    );
+
+
+                indicatorContainer.innerHTML =
+                    "";
+
+
+                const indicators =
+                    data.suspicious_activity?.indicators || [];
+
+
+                if (indicators.length === 0) {
+
+                    noIndicators.style.display =
+                        "block";
+
+                }
+
+                else {
+
+                    noIndicators.style.display =
+                        "none";
+
+
+                    indicators.forEach(
+                        indicator => {
+
+
+                            const div =
+                                document.createElement(
+                                    "div"
+                                );
+
+
+                            div.className =
+                                "indicator";
+
+
+                            div.innerHTML = `
+
+                                <div class="indicator-message">
+
+                                    ⚠ ${indicator.message}
+
+                                </div>
+
+
+                                <div class="indicator-details">
+
+                                    <span class="indicator-severity">
+
+                                        ${indicator.severity}
+
+                                    </span>
+
+
+                                    <span class="indicator-points">
+
+                                        +${indicator.points} points
+
+                                    </span>
+
+                                </div>
+
+                            `;
+
+
+                            indicatorContainer.appendChild(
+                                div
+                            );
+
+                        }
+                    );
+
+                }
+
+
+                /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
+
+
+                const recommendationContainer =
+                    document.getElementById(
+                        "recommendationContainer"
+                    );
+
+
+                recommendationContainer.innerHTML =
+                    "";
+
+
+                const recommendations =
+                    data.investigator_recommendations || [];
+
+
+                if (recommendations.length === 0) {
+
+                    const div =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    div.className =
+                        "recommendation";
+
+
+                    div.innerHTML = `
+
+                        <span class="recommendation-icon">
+                            →
+                        </span>
+
+                        <span>
+                            Continue monitoring the wallet and review transaction history for unusual activity.
+                        </span>
+
+                    `;
+
+
+                    recommendationContainer.appendChild(
+                        div
+                    );
+
+                }
+
+                else {
+
+                    recommendations.forEach(
+                        recommendation => {
+
+                            const div =
+                                document.createElement(
+                                    "div"
+                                );
+
+
+                            div.className =
+                                "recommendation";
+
+
+                            div.innerHTML = `
+
+                                <span class="recommendation-icon">
+                                    →
+                                </span>
+
+                                <span>
+                                    ${recommendation}
+                                </span>
+
+                            `;
+
+
+                            recommendationContainer.appendChild(
+                                div
+                            );
+
+                        }
+                    );
+
+                }
+
+
+                /* ---------------- GRAPH BUTTON ---------------- */
+
+
+                document.getElementById(
+                    "graphButtonSection"
+                ).style.display = "block";
+
+
+                /* ---------------- TRANSACTIONS ---------------- */
+
+
+                const transactionBody =
+                    document.getElementById(
+                        "transactionBody"
+                    );
+
+
+                transactionBody.innerHTML =
+                    "";
+
+
+                data.transactions.forEach(
+                    tx => {
+
+
+                        const row =
+                            document.createElement(
+                                "tr"
+                            );
+
+
+                        const directionClass =
+                            tx.direction === "OUT"
+                                ? "out"
+                                : "in";
+
+
+                        const exchange =
+                            tx.exchange
+                                ? `🚨 ${tx.exchange}`
+                                : "—";
+
+
+                        row.innerHTML = `
+
+                            <td class="address">
+
+                                ${tx.wallet}
+
+                            </td>
+
+
+                            <td class="${directionClass}">
+
+                                ${tx.direction}
+
+                            </td>
+
+
+                            <td class="address">
+
+                                ${tx.counterparty}
+
+                            </td>
+
+
+                            <td>
+
+                                ${tx.amount} ETH
+
+                            </td>
+
+
+                            <td class="exchange">
+
+                                ${exchange}
+
+                            </td>
+
+
+                            <td>
+
+                                ${tx.timestamp}
+
+                            </td>
+
+
+                            <td class="address">
+
+                                ${tx.hash}
+
+                            </td>
+
+                        `;
+
+
+                        transactionBody.appendChild(
+                            row
+                        );
+
+                    }
+                );
+
+
+                document.getElementById(
+                    "transactionsSection"
+                ).style.display = "block";
+
+
+            }
+
+
+            catch (error) {
+
+
+                console.error(error);
+
+
+                message.innerText =
+                    "❌ Couldn't connect to server.";
+
+            }
+
         }
 
 
-        sessionStorage.setItem(
-            "traceGraph",
-            JSON.stringify({
-                graph: data.graph,
-                paths: data.paths || [],
-                transactions: data.transactions || [],
-                start_wallet: data.start_wallet,
-                max_hops: data.max_hops,
-                wallets_traced: data.wallets_traced
-            })
-        );
+        function openGraphPage() {
 
-        message.innerText =
-            "✓ Investigation completed";
+            window.location.href =
+                "/graph";
 
-        document.getElementById("graphButtonSection").style.display =
-            "block";
+        }
 
 
-        /* SUMMARY */
+    </script>
 
-        document.getElementById("summarySection").style.display =
-            "block";
-
-
-        document.getElementById("reportedWallet").innerText =
-            data.start_wallet;
-
-
-        document.getElementById("walletCount").innerText =
-            data.wallets_traced;
-
-
-        document.getElementById("hopCount").innerText =
-            data.max_hops;
-
-
-        document.getElementById("transactionCount").innerText =
-            data.transactions.length;
-
-
-        /* TRANSACTIONS */
-
-        const transactionBody =
-            document.getElementById("transactionBody");
-
-        transactionBody.innerHTML = "";
-
-
-        data.transactions.forEach(tx => {
-
-            const row =
-                document.createElement("tr");
-
-
-            const directionClass =
-                tx.direction === "OUT"
-                    ? "out"
-                    : "in";
-
-
-            const exchange =
-                tx.exchange
-                    ? `🚨 ${tx.exchange}`
-                    : "—";
-
-
-            row.innerHTML = `
-
-                <td class="address">
-                    ${tx.wallet}
-                </td>
-
-                <td class="${directionClass}">
-                    ${tx.direction}
-                </td>
-
-                <td class="address">
-                    ${tx.counterparty}
-                </td>
-
-                <td>
-                    ${tx.amount} ETH
-                </td>
-
-                <td class="exchange">
-                    ${exchange}
-                </td>
-
-                <td>
-                    ${tx.timestamp}
-                </td>
-
-                <td class="address">
-                    ${tx.hash}
-                </td>
-
-            `;
-
-
-            transactionBody.appendChild(row);
-
-        });
-
-
-        document.getElementById("transactionsSection")
-            .style.display = "block";
-
-    }
-
-
-    catch (error) {
-
-        console.error(error);
-
-        message.innerText =
-            "❌ Couldn't connect to server.";
-
-    }
-
-}
-
-
-function openGraphPage() {
-
-    window.location.href = "/graph";
-
-}
-
-</script>
 
 </body>
+
 </html>
