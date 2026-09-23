@@ -1,4 +1,5 @@
 .env
+venv/
 <<<<<<< HEAD
 node_modules/
 __pycache__/
