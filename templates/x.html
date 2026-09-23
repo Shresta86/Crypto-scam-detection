@@ -106,9 +106,21 @@ body {
 }
 
 .nav-icon {
-    width: 18px;
-    text-align: center;
-    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #8d99ad;
+}
+
+.nav-item.active .nav-icon {
+    color: #70a1ff;
+}
+
+.nav-item:hover .nav-icon {
+    color: #ffffff;
 }
 
 
@@ -512,7 +524,23 @@ body {
     color: #6d9dff;
     font-weight: bold;
 }
+.report-btn {
+    margin-top: 15px;
+    padding: 11px 20px;
+    background: #246bff;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
 
+.report-btn:hover {
+    background: #397cff;
+    transform: translateY(-1px);
+}
 
 /* ================= GRAPH ================= */
 
@@ -714,9 +742,13 @@ tr:hover td {
         onclick="scrollToSection('walletOverview')"
     >
 
-        <span class="nav-icon">
-            
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 7H5a3 3 0 0 1 0-6h14v6Z"/>
+            <path d="M5 7h15a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V4"/>
+            <path d="M17 14h.01"/>
+        </svg>
+    </span>
 
         Wallet Overview
 
@@ -728,9 +760,14 @@ tr:hover td {
         onclick="scrollToSection('transactionAnalysis')"
     >
 
-        <span class="nav-icon">
-            
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7h13"/>
+            <path d="m12 3 4 4-4 4"/>
+            <path d="M21 17H8"/>
+            <path d="m12 13-4 4 4 4"/>
+        </svg>
+    </span>
 
         Transaction Analysis
 
@@ -742,8 +779,13 @@ tr:hover td {
         onclick="scrollToSection('riskAssessment')"
     >
 
-        <span class="nav-icon">
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+        </svg>
+    </span>
 
         Risk Assessment
 
@@ -755,9 +797,17 @@ tr:hover td {
         onclick="scrollToSection('exchangeAttributionSection')"
     >
 
-        <span class="nav-icon">
-            
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V10"/>
+            <path d="M19 21V10"/>
+            <path d="M3 10h18"/>
+            <path d="m5 10 7-7 7 7"/>
+            <path d="M9 21v-6"/>
+            <path d="M15 21v-6"/>
+        </svg>
+    </span>
 
         Exchange Attribution
 
@@ -774,9 +824,15 @@ tr:hover td {
         onclick="scrollToSection('investigatorReport')"
     >
 
-        <span class="nav-icon">
-            
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+            <path d="M14 2v6h6"/>
+            <path d="M8 13h8"/>
+            <path d="M8 17h6"/>
+            <path d="M8 9h2"/>
+        </svg>
+    </span>
 
         Investigator Report
 
@@ -788,10 +844,16 @@ tr:hover td {
         onclick="openGraphPage()"
     >
 
-        <span class="nav-icon">
-            
-        </span>
-
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="2.5"/>
+            <circle cx="5" cy="19" r="2.5"/>
+            <circle cx="19" cy="19" r="2.5"/>
+            <path d="M10.5 7 6.5 17"/>
+            <path d="M13.5 7 17.5 17"/>
+            <path d="M7.5 19h9"/>
+        </svg>
+    </span>
         Wallet Graph
 
     </div>
@@ -807,9 +869,12 @@ tr:hover td {
         onclick="openSettings()"
     >
 
-        <span class="nav-icon">
-            ⚙
-        </span>
+    <span class="nav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V20h-2.4v-.2a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 6.4 15a1.7 1.7 0 0 0-1.56-1.03H4v-2.4h.2A1.7 1.7 0 0 0 5.76 10a1.7 1.7 0 0 0-.34-1.88l-.06-.06 1.7-1.7.06.06A1.7 1.7 0 0 0 9 6.4a1.7 1.7 0 0 0 1.03-1.56V4h2.4v.2A1.7 1.7 0 0 0 13.46 5.76a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.7 1.7-.06.06A1.7 1.7 0 0 0 16.4 9a1.7 1.7 0 0 0 1.56 1.03h.2v2.4h-.2A1.7 1.7 0 0 0 16.4 15Z"/>
+        </svg>
+    </span>
 
         Settings
 
@@ -911,9 +976,13 @@ tr:hover td {
                 class="card wallet-card"
             >
 
-                <div class="card-title">
-                    Wallet Overview
-                </div>
+            <span class="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 7H5a3 3 0 0 1 0-6h14v6Z"/>
+                    <path d="M5 7h15a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V4"/>
+                    <path d="M17 14h.01"/>
+                </svg>
+            </span>
 
                 <div class="card-subtitle">
                     Reported cryptocurrency address
@@ -1212,7 +1281,43 @@ tr:hover td {
 
             </div>
 
+            <div
+    id="investigatorReport"
+    class="card recommendations-card"
+>
 
+    <div class="card-title">
+        Report Dowloading
+    </div>
+
+    <div class="card-subtitle">
+        
+    </div>
+
+    <div id="recommendationContainer">
+
+        <div class="recommendation">
+
+            <span class="rec-icon">
+                →
+            </span>
+
+            <span>
+                Click the button to download report.
+            </span>
+
+        </div>
+
+    </div>
+
+    <button
+        class="report-btn"
+        onclick="downloadInvestigationReport()"
+    >
+        Download Report
+    </button>
+
+</div>
 
             <!-- ================= TRANSACTIONS ================= -->
 
@@ -1296,6 +1401,50 @@ tr:hover td {
 <!-- ================= JAVASCRIPT ================= -->
 
 <script>
+    let currentTraceData = null;
+
+async function downloadInvestigationReport() {
+    if (!currentTraceData) {
+        alert("Analyze a wallet first.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/report", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(currentTraceData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            alert(error.error || "Report generation failed.");
+            return;
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+
+        const wallet = currentTraceData.start_wallet || "wallet";
+
+        a.href = url;
+        a.download = `TraceX_Investigation_${wallet.slice(0, 10)}.pdf`;
+
+        document.body.appendChild(a);
+        a.click();
+
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error(error);
+        alert("Could not generate report.");
+    }
+}
 
 
 /* ================= SIDEBAR NAVIGATION ================= */
@@ -1436,6 +1585,7 @@ async function traceWallet() {
 
         const data =
             await response.json();
+            currentTraceData = data;
 
 
         if (!response.ok || data.error) {

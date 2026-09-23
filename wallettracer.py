@@ -4,8 +4,22 @@ import requests
 import networkx as nx
 
 from datetime import datetime, timezone
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 from dotenv import load_dotenv
+from io import BytesIO
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    LongTable
+)
 
 
 # =========================
@@ -1056,7 +1070,232 @@ def build_wallet_graph(trace_result):
 
     }
 
+def generate_pdf_report(report_data):
+    buffer = BytesIO()
 
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ReportTitle",
+        parent=styles["Title"],
+        alignment=TA_CENTER,
+        fontSize=20,
+        spaceAfter=15
+    )
+
+    heading_style = ParagraphStyle(
+        "ReportHeading",
+        parent=styles["Heading2"],
+        fontSize=13,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    normal_style = styles["BodyText"]
+
+    story = []
+
+    # Title
+    story.append(Paragraph("TraceX Investigation Report", title_style))
+    story.append(Spacer(1, 10))
+
+    wallet = report_data.get("start_wallet", "Unknown")
+
+    story.append(Paragraph(
+        f"<b>Reported Wallet:</b> {wallet}",
+        normal_style
+    ))
+
+    story.append(Paragraph(
+        f"<b>Report Generated:</b> {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
+        normal_style
+    ))
+
+    story.append(Spacer(1, 15))
+
+    # Risk Assessment
+    story.append(Paragraph("Risk Assessment", heading_style))
+
+    risk = report_data.get("risk", {})
+
+    risk_score = risk.get("score", 0)
+    risk_level = risk.get("level", "UNKNOWN")
+
+    risk_table = Table([
+        ["Risk Score", "Risk Level"],
+        [str(risk_score), str(risk_level)]
+    ], colWidths=[200, 200])
+
+    risk_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("PADDING", (0, 0), (-1, -1), 7)
+    ]))
+
+    story.append(risk_table)
+
+    # Trace Summary
+    story.append(Paragraph("Trace Summary", heading_style))
+
+    wallets = report_data.get("wallets", [])
+    paths = report_data.get("paths", [])
+    transactions = report_data.get("transactions", [])
+
+    summary_table = Table([
+        ["Metric", "Value"],
+        ["Wallets Traced", str(len(wallets))],
+        ["Maximum Hops", str(report_data.get("max_hops", "N/A"))],
+        ["Transactions Found", str(len(transactions))],
+        ["Paths Found", str(len(paths))]
+    ], colWidths=[200, 200])
+
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("PADDING", (0, 0), (-1, -1), 6)
+    ]))
+
+    story.append(summary_table)
+
+    # Suspicious Indicators
+    story.append(Paragraph("Suspicious Activity Indicators", heading_style))
+
+    suspicious = report_data.get("suspicious_activity", {})
+    indicators = suspicious.get("indicators", [])
+
+    if indicators:
+        for indicator in indicators:
+            story.append(
+                Paragraph(f"• {indicator}", normal_style)
+            )
+            story.append(Spacer(1, 4))
+    else:
+        story.append(
+            Paragraph("No suspicious indicators detected.", normal_style)
+        )
+
+    # Investigator Recommendations
+    story.append(Paragraph("Investigator Recommendations", heading_style))
+
+    recommendations = report_data.get(
+        "investigator_recommendations",
+        []
+    )
+
+    if recommendations:
+        for recommendation in recommendations:
+            story.append(
+                Paragraph(f"• {recommendation}", normal_style)
+            )
+            story.append(Spacer(1, 4))
+    else:
+        story.append(
+            Paragraph("No specific recommendations generated.", normal_style)
+        )
+
+    # Exchange Attribution
+    story.append(Paragraph("Exchange Attribution", heading_style))
+
+    exchanges = report_data.get("exchange_attributions", [])
+
+    if exchanges:
+        for exchange in exchanges:
+            story.append(
+                Paragraph(f"• {exchange}", normal_style)
+            )
+    else:
+        story.append(
+            Paragraph(
+                "Exchange attribution is not available in the current MVP "
+                "and is under development.",
+                normal_style
+            )
+        )
+
+    # Transactions
+    story.append(Paragraph("Transaction Analysis", heading_style))
+
+    if transactions:
+        transaction_data = [
+            [
+                "Direction",
+                "Counterparty",
+                "Amount",
+                "Exchange",
+                "Type"
+            ]
+        ]
+
+        for tx in transactions[:200]:
+            transaction_data.append([
+                str(tx.get("direction", "")),
+                str(tx.get("counterparty", ""))[:18],
+                str(tx.get("amount", "")),
+                str(tx.get("exchange") or "None"),
+                str(tx.get("type", ""))
+            ])
+
+        transaction_table = LongTable(
+            transaction_data,
+            colWidths=[55, 130, 70, 80, 55],
+            repeatRows=1
+        )
+
+        transaction_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+            ("FONTSIZE", (0, 0), (-1, -1), 7),
+            ("PADDING", (0, 0), (-1, -1), 4)
+        ]))
+
+        story.append(transaction_table)
+
+        if len(transactions) > 200:
+            story.append(Spacer(1, 8))
+            story.append(
+                Paragraph(
+                    "Showing the first 200 transactions in this report.",
+                    normal_style
+                )
+            )
+    else:
+        story.append(
+            Paragraph("No transactions available.", normal_style)
+        )
+
+    # Disclaimer
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("Disclaimer", heading_style))
+
+    story.append(
+        Paragraph(
+            "This report is an automated investigative aid. "
+            "Risk scores and suspicious activity indicators are "
+            "rule-based and do not by themselves establish fraud "
+            "or criminal activity. Findings should be independently "
+            "verified by investigators.",
+            normal_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
 # =========================
 # ROUTES
 # =========================
@@ -1203,7 +1442,31 @@ def trace():
 
     return jsonify(result)
 
+@app.route("/report", methods=["POST"])
+def report():
+    data = request.get_json() or {}
 
+    if not data.get("start_wallet"):
+        return jsonify({
+            "error": "No wallet analysis data provided."
+        }), 400
+
+    try:
+        pdf = generate_pdf_report(data)
+
+        wallet = data.get("start_wallet", "wallet")
+
+        return send_file(
+            pdf,
+            as_attachment=True,
+            download_name=f"TraceX_Investigation_{wallet[:10]}.pdf",
+            mimetype="application/pdf"
+        )
+
+    except Exception as e:
+        return jsonify({
+            "error": f"Report generation failed: {str(e)}"
+        }), 500
 # =========================
 # RUN
 # =========================
