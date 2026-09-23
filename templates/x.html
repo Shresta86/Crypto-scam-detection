@@ -411,6 +411,67 @@
         }
 
 
+        /* ---------------- EXCHANGE ATTRIBUTION ---------------- */
+
+        .exchange-attribution-box {
+            margin-top: 22px;
+            background: #090d15;
+            border: 1px solid #1c2636;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+
+        .exchange-attribution-title {
+            font-size: 14px;
+            font-weight: 650;
+            color: #dce3ed;
+            margin-bottom: 15px;
+        }
+
+
+        .exchange-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 16px;
+            margin-top: 10px;
+            border-radius: 8px;
+            background: #151b27;
+            border: 1px solid #202a39;
+        }
+
+
+        .exchange-item strong {
+            font-size: 15px;
+            color: #ff7b87;
+        }
+
+
+        .exchange-address {
+            margin-top: 6px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #8d98aa;
+            word-break: break-all;
+        }
+
+
+        .exchange-basis {
+            font-size: 11px;
+            color: #7ea8ff;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+
+        .no-exchange {
+            color: #697588;
+            font-size: 13px;
+        }
+
+
         /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
 
         .recommendations-box {
@@ -492,6 +553,17 @@
 
             button {
                 height: 48px;
+            }
+
+
+            .exchange-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+
+            .exchange-basis {
+                text-align: left;
             }
 
         }
@@ -773,6 +845,26 @@
                 class="no-indicators"
             >
                 No suspicious activity indicators detected.
+            </div>
+
+
+            <!-- EXCHANGE ATTRIBUTION -->
+
+            <div class="exchange-attribution-box">
+
+                <div class="exchange-attribution-title">
+                    🏦 Exchange Attribution
+                </div>
+
+
+                <div id="exchangeAttribution">
+
+                    <div class="no-exchange">
+                        No known exchange interaction detected.
+                    </div>
+
+                </div>
+
             </div>
 
 
@@ -1187,6 +1279,89 @@
                 }
 
 
+                /* ---------------- EXCHANGE ATTRIBUTION ---------------- */
+
+
+                const exchangeAttribution =
+                    document.getElementById(
+                        "exchangeAttribution"
+                    );
+
+
+                const exchangeAttributions =
+                    data.exchange_attributions || [];
+
+
+                exchangeAttribution.innerHTML =
+                    "";
+
+
+                if (exchangeAttributions.length === 0) {
+
+                    exchangeAttribution.innerHTML = `
+
+                        <div class="no-exchange">
+
+                            No known exchange interaction detected.
+
+                        </div>
+
+                    `;
+
+                }
+
+                else {
+
+                    exchangeAttributions.forEach(
+                        attribution => {
+
+                            const div =
+                                document.createElement(
+                                    "div"
+                                );
+
+
+                            div.className =
+                                "exchange-item";
+
+
+                            div.innerHTML = `
+
+                                <div>
+
+                                    <strong>
+                                        🚨 ${attribution.exchange}
+                                    </strong>
+
+
+                                    <div class="exchange-address">
+
+                                        ${attribution.address}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="exchange-basis">
+
+                                    ✓ Matched against known-address dataset
+
+                                </div>
+
+                            `;
+
+
+                            exchangeAttribution.appendChild(
+                                div
+                            );
+
+                        }
+                    );
+
+                }
+
+
                 /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
 
 
@@ -1255,6 +1430,7 @@
                                 <span class="recommendation-icon">
                                     →
                                 </span>
+
 
                                 <span>
                                     ${recommendation}
