@@ -451,7 +451,7 @@
         <div class="logo">
 
             <div class="logo-icon">
-                ⌁
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h5l2-6 3 12 2-6h4"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="20" cy="12" r="1" fill="currentColor"/></svg>
             </div>
 
             Trace<span>X</span>
@@ -678,6 +678,18 @@
 
             </div>
 
+
+            <div class="detail-row">
+
+                <div class="detail-label">Transactions</div>
+                <div class="detail-value" id="detailTransactions">-</div>
+
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Exchange / VASP</div>
+                <div class="detail-value" id="detailExchange">-</div>
+            </div>
 
             <div class="detail-row">
 
@@ -1347,6 +1359,12 @@
                     ).innerText =
                         node.id;
 
+                    const nodeTransactions = (traceData?.transactions || []).filter(tx =>
+                        (tx.from || "").toLowerCase() === node.id.toLowerCase() ||
+                        (tx.to || "").toLowerCase() === node.id.toLowerCase());
+                    document.getElementById("detailTransactions").innerText = nodeTransactions.length;
+                    document.getElementById("detailExchange").innerText = node.type === "exchange" ? node.label : "Not identified";
+
 
                     document.getElementById(
                         "detailHop"
@@ -1359,7 +1377,7 @@
                     document.getElementById(
                         "detailAmount"
                     ).innerText =
-                        "-";
+                        nodeTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0).toFixed(6) + " ETH";
 
 
                     document.getElementById(

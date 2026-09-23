@@ -275,6 +275,15 @@ body {
     display: none !important;
 }
 
+.history-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:18px 0; flex-wrap:wrap; }
+.history-table { width:100%; min-width:760px; border-collapse:collapse; }
+.history-table th,.history-table td { padding:13px 10px; border-bottom:1px solid #202938; text-align:left; font-size:12px; }
+.history-actions { display:flex; gap:8px; }
+.small-btn { border:1px solid #2a3b54; background:#142034; color:#cbd9ed; padding:7px 10px; border-radius:6px; cursor:pointer; }
+.danger-btn { border-color:#68343d; color:#ff9ba5; }
+.toolbar-input { background:#10151f; color:#e8edf5; border:1px solid #242e3e; border-radius:7px; padding:9px 12px; }
+.copy-value { color:#9cbfff; font-family:monospace; background:none; border:0; cursor:pointer; font-size:11px; }
+
 
 /* ================= CARDS ================= */
 
@@ -724,10 +733,10 @@ tr:hover td {
     <div class="logo">
 
         <div class="logo-icon">
-            ⌁
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h5l2-6 3 12 2-6h4"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="20" cy="12" r="1" fill="currentColor"/></svg>
         </div>
 
-        Trace<span>X</span>
+        <span>Trace<span>X</span><small style="display:block;color:#748198;font-size:10px;font-weight:400;letter-spacing:0">Blockchain Investigation Platform</small></span>
 
     </div>
 
@@ -750,8 +759,18 @@ tr:hover td {
         </svg>
     </span>
 
-        Wallet Overview
+        Dashboard
 
+    </div>
+
+    <div class="nav-item" onclick="scrollToSection('analyzeSection'); document.getElementById('wallet').focus()">
+      <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></span>
+      Wallet Investigation
+    </div>
+
+    <div class="nav-item" onclick="showHistory()">
+      <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></svg></span>
+      Investigation History
     </div>
 
 
@@ -809,7 +828,7 @@ tr:hover td {
         </svg>
     </span>
 
-        Exchange Attribution
+        Exchange / VASP Attribution
 
     </div>
 
@@ -821,7 +840,7 @@ tr:hover td {
 
     <div
         class="nav-item"
-        onclick="scrollToSection('investigatorReport')"
+        onclick="scrollToSection('reportExport')"
     >
 
     <span class="nav-icon">
@@ -834,7 +853,7 @@ tr:hover td {
         </svg>
     </span>
 
-        Investigator Report
+        Reports
 
     </div>
 
@@ -854,7 +873,7 @@ tr:hover td {
             <path d="M7.5 19h9"/>
         </svg>
     </span>
-        Wallet Graph
+        Fund Flow Graph
 
     </div>
 
@@ -917,17 +936,35 @@ tr:hover td {
 
     <main class="content">
 
+        <section id="historyPage" class="card hidden">
+          <div class="card-title">Investigation History</div>
+          <div class="card-subtitle">Saved investigations remain available after restarting TraceX.</div>
+          <div class="history-toolbar"><input id="historySearch" class="toolbar-input" placeholder="Search wallet address" oninput="filterHistory()"><button class="small-btn danger-btn" onclick="clearHistory()">Clear History</button></div>
+          <div class="table-wrapper"><table class="history-table"><thead><tr><th>Wallet</th><th>Risk</th><th>Score</th><th>Transactions</th><th>Date</th><th>Actions</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+        </section>
+        <section id="settingsPage" class="card hidden">
+          <div class="card-title">Settings</div><div class="card-subtitle">TraceX service configuration</div>
+          <div class="behavior-row"><span class="behavior-label">Blockchain</span><span class="behavior-value">Ethereum</span></div>
+          <div class="behavior-row"><span class="behavior-label">Backend</span><span class="behavior-value">Python Flask</span></div>
+          <div class="behavior-row"><span class="behavior-label">Risk Engine</span><span class="behavior-value">Rule-based</span></div>
+          <div class="behavior-row"><span class="behavior-label">Exchange Dataset</span><span class="behavior-value">Enabled</span></div>
+          <div class="behavior-row"><span class="behavior-label">Database</span><span class="behavior-value">SQLite</span></div>
+          <div class="behavior-row"><span class="behavior-label">Blockchain API</span><span class="behavior-value">{{ 'Configured; connectivity not checked' if api_configured else 'Offline — API key missing' }}</span></div>
+          <button class="small-btn" onclick="showDashboard()">Back to Dashboard</button>
+        </section>
+        <div id="dashboardContent">
+
 
         <!-- ================= HEADER ================= -->
 
         <div class="page-header">
 
             <h1>
-                Wallet Investigation
+                Blockchain Investigation
             </h1>
 
             <p>
-                Blockchain intelligence and transaction analysis
+                Trace and analyze cryptocurrency wallets for suspicious activity.
             </p>
 
         </div>
@@ -936,13 +973,14 @@ tr:hover td {
 
         <!-- ================= SEARCH ================= -->
 
-        <div class="search-box">
+        <div id="analyzeSection" class="search-box">
 
 
             <input
                 id="wallet"
                 class="wallet-input"
-                placeholder="Enter suspicious wallet address 0x..."
+                placeholder="Enter wallet address 0x..."
+                autocomplete="off"
             >
 
 
@@ -1211,7 +1249,7 @@ tr:hover td {
                 <div id="exchangeAttribution">
 
                     <div style="color:#687487;font-size:12px;">
-                        No known exchange interaction detected.
+                        Exchange attribution is currently under development.
                     </div>
 
                 </div>
@@ -1224,7 +1262,7 @@ tr:hover td {
             <!-- ================= RECOMMENDATIONS ================= -->
 
             <div
-                id="investigatorReport"
+                id="investigatorRecommendations"
                 class="card recommendations-card"
             >
 
@@ -1282,19 +1320,19 @@ tr:hover td {
             </div>
 
             <div
-    id="investigatorReport"
+    id="reportExport"
     class="card recommendations-card"
 >
 
     <div class="card-title">
-        Report Dowloading
+        Investigation Report
     </div>
 
     <div class="card-subtitle">
         
     </div>
 
-    <div id="recommendationContainer">
+    <div id="reportPrompt">
 
         <div class="recommendation">
 
@@ -1303,7 +1341,7 @@ tr:hover td {
             </span>
 
             <span>
-                Click the button to download report.
+                Download a PDF for the selected investigation.
             </span>
 
         </div>
@@ -1334,6 +1372,9 @@ tr:hover td {
                     Blockchain transactions discovered during investigation
                 </div>
 
+                <div class="history-toolbar"><input id="transactionSearch" class="toolbar-input" placeholder="Search address or transaction hash" oninput="filterTransactions()"><select id="directionFilter" class="toolbar-input" onchange="filterTransactions()"><option value="">All directions</option><option value="IN">Incoming</option><option value="OUT">Outgoing</option></select><select id="transactionSort" class="toolbar-input" onchange="filterTransactions()"><option value="time-desc">Newest first</option><option value="time-asc">Oldest first</option><option value="amount-desc">Amount: high to low</option><option value="amount-asc">Amount: low to high</option></select></div>
+                <div class="history-toolbar"><span id="transactionPageLabel" class="card-subtitle"></span><div><button class="small-btn" onclick="changeTransactionPage(-1)">Previous</button> <button class="small-btn" onclick="changeTransactionPage(1)">Next</button></div></div>
+
 
                 <div class="table-wrapper">
 
@@ -1344,15 +1385,15 @@ tr:hover td {
                             <tr>
 
                                 <th>
-                                    Wallet
-                                </th>
-
-                                <th>
                                     Direction
                                 </th>
 
                                 <th>
-                                    Counterparty
+                                    From
+                                </th>
+
+                                <th>
+                                    To
                                 </th>
 
                                 <th>
@@ -1370,6 +1411,8 @@ tr:hover td {
                                 <th>
                                     Hash
                                 </th>
+
+                                <th>Type</th>
 
                             </tr>
 
@@ -1391,6 +1434,7 @@ tr:hover td {
         </div>
 
 
+        </div>
     </main>
 
 
@@ -1444,6 +1488,97 @@ async function downloadInvestigationReport() {
         console.error(error);
         alert("Could not generate report.");
     }
+}
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function showHistory() {
+    document.getElementById("dashboardContent").classList.add("hidden");
+    document.getElementById("settingsPage").classList.add("hidden");
+    document.getElementById("historyPage").classList.remove("hidden");
+    loadHistory();
+}
+
+function showDashboard() {
+    document.getElementById("settingsPage").classList.add("hidden");
+    document.getElementById("historyPage").classList.add("hidden");
+    document.getElementById("dashboardContent").classList.remove("hidden");
+}
+
+async function loadHistory() {
+    const response = await fetch("/history");
+    const items = await response.json();
+    const body = document.getElementById("historyBody");
+    body.innerHTML = items.map(item => `<tr data-wallet="${escapeHTML(item.wallet_address).toLowerCase()}">
+      <td class="address">${escapeHTML(item.wallet_address)}</td><td>${escapeHTML(item.risk_level)}</td><td>${item.risk_score}</td><td>${item.transaction_count}</td><td>${escapeHTML(item.timestamp)}</td>
+      <td><div class="history-actions"><button class="small-btn" onclick="openInvestigation(${item.id})">View Investigation</button><button class="small-btn danger-btn" onclick="deleteInvestigation(${item.id})">Delete</button></div></td></tr>`).join("") || '<tr><td colspan="6">No saved investigations yet.</td></tr>';
+}
+
+function filterHistory() {
+    const query = document.getElementById("historySearch").value.toLowerCase();
+    document.querySelectorAll("#historyBody tr[data-wallet]").forEach(row => row.classList.toggle("hidden", !row.dataset.wallet.includes(query)));
+}
+
+async function openInvestigation(id) {
+    const response = await fetch(`/history/${id}`);
+    const data = await response.json();
+    if (!response.ok) return alert(data.error || "Could not open investigation.");
+    currentTraceData = data;
+    document.getElementById("historyPage").classList.add("hidden");
+    document.getElementById("dashboardContent").classList.remove("hidden");
+    document.getElementById("wallet").value = data.start_wallet;
+    document.getElementById("historySearch").value = "";
+    renderInvestigation(data);
+}
+
+async function deleteInvestigation(id) {
+    if (!confirm("Delete this saved investigation?")) return;
+    const response = await fetch(`/history/${id}`, {method:"DELETE"});
+    if (response.ok) loadHistory();
+}
+
+async function clearHistory() {
+    if (!confirm("Delete all saved investigations? This cannot be undone.")) return;
+    const response = await fetch("/history", {method:"DELETE"});
+    if (response.ok) loadHistory();
+}
+
+function exportSelected(format) {
+    if (!currentTraceData?.investigation_id) return alert("Select a saved investigation first.");
+    window.location.href = `/export/${currentTraceData.investigation_id}.${format}`;
+}
+
+function filterTransactions() {
+    const query = document.getElementById("transactionSearch").value.toLowerCase();
+    const direction = document.getElementById("directionFilter").value;
+    document.querySelectorAll("#transactionBody tr").forEach(row => row.dataset.filtered = String(Boolean((direction && row.dataset.direction !== direction) || !row.innerText.toLowerCase().includes(query))));
+    const [field, order] = document.getElementById("transactionSort").value.split("-");
+    const visible = [...document.querySelectorAll('#transactionBody tr[data-filtered="false"]')];
+    visible.sort((a, b) => {
+        const av = field === "amount" ? Number(a.dataset.amount) : a.dataset.timestamp;
+        const bv = field === "amount" ? Number(b.dataset.amount) : b.dataset.timestamp;
+        return (av < bv ? -1 : av > bv ? 1 : 0) * (order === "desc" ? -1 : 1);
+    }).forEach(row => document.getElementById("transactionBody").appendChild(row));
+    transactionPage = 1;
+    paginateTransactions();
+}
+let transactionPage = 1;
+function changeTransactionPage(delta) { transactionPage += delta; paginateTransactions(); }
+function paginateTransactions() {
+    const rows = [...document.querySelectorAll("#transactionBody tr")].filter(row => row.dataset.filtered !== "true");
+    const pages = Math.max(1, Math.ceil(rows.length / 25));
+    transactionPage = Math.min(pages, Math.max(1, transactionPage));
+    document.querySelectorAll("#transactionBody tr").forEach(row => row.classList.add("hidden"));
+    rows.slice((transactionPage - 1) * 25, transactionPage * 25).forEach(row => row.classList.remove("hidden"));
+    document.getElementById("transactionPageLabel").textContent = `${rows.length} transactions · Page ${transactionPage} of ${pages}`;
+}
+
+function shortValue(value) { value = String(value || ""); return value.length > 15 ? `${value.slice(0, 6)}...${value.slice(-6)}` : value; }
+async function copyValue(button) {
+    try { await navigator.clipboard.writeText(button.dataset.copy); button.textContent = "Copied"; setTimeout(() => button.textContent = shortValue(button.dataset.copy), 1000); }
+    catch (_) { alert("Copy is unavailable in this browser context."); }
 }
 
 
@@ -1512,15 +1647,9 @@ topSearch.addEventListener(
 /* ================= SETTINGS ================= */
 
 function openSettings() {
-
-    alert(
-        "TraceX Settings\n\n" +
-        "Blockchain Network: Ethereum\n" +
-        "Risk Engine: Rule-based\n" +
-        "Exchange Dataset: Enabled\n" +
-        "Blockchain API: Online"
-    );
-
+    document.getElementById("dashboardContent").classList.add("hidden");
+    document.getElementById("historyPage").classList.add("hidden");
+    document.getElementById("settingsPage").classList.remove("hidden");
 }
 
 
@@ -1604,6 +1733,16 @@ async function traceWallet() {
 
         message.innerText =
             "✓ Investigation completed";
+
+        renderInvestigation(data);
+    }
+    catch(error) {
+        console.error(error);
+        message.innerText = "Could not connect to the investigation service.";
+    }
+}
+
+function renderInvestigation(data) {
 
 
         document
@@ -1759,18 +1898,18 @@ async function traceWallet() {
 
                         <div class="indicator-name">
 
-                            ⚠ ${indicator.message}
+                            ${escapeHTML(indicator.message)}
 
                         </div>
 
                         <div class="indicator-right">
 
                             <span class="indicator-severity">
-                                ${indicator.severity}
+                        ${escapeHTML(indicator.severity)}
                             </span>
 
                             <span class="indicator-points">
-                                +${indicator.points}
+                        +${Number(indicator.points) || 0}
                             </span>
 
                         </div>
@@ -1814,7 +1953,7 @@ async function traceWallet() {
                     color:#687487;
                     font-size:12px;
                 ">
-                    No known exchange interaction detected.
+                    Exchange attribution is currently under development.
                 </div>
 
             `;
@@ -1841,14 +1980,14 @@ async function traceWallet() {
 
                         <div class="exchange-name">
 
-                             ${attribution.exchange}
+                        ${escapeHTML(attribution.exchange)}
 
                         </div>
 
 
                         <div class="exchange-address">
 
-                            ${attribution.address}
+                            ${escapeHTML(attribution.address)}
 
                         </div>
 
@@ -1958,6 +2097,9 @@ async function traceWallet() {
                     document.createElement(
                         "tr"
                     );
+                row.dataset.direction = tx.direction;
+                row.dataset.amount = tx.amount;
+                row.dataset.timestamp = tx.timestamp;
 
 
                 const directionClass =
@@ -1968,18 +2110,11 @@ async function traceWallet() {
 
                 const exchange =
                     tx.exchange
-                        ? "🚨 " + tx.exchange
+                        ? tx.exchange
                         : "—";
 
 
                 row.innerHTML = `
-
-                    <td class="address">
-
-                        ${tx.wallet}
-
-                    </td>
-
 
                     <td class="${directionClass}">
 
@@ -1990,37 +2125,45 @@ async function traceWallet() {
 
                     <td class="address">
 
-                        ${tx.counterparty}
+                        <button class="copy-value" title="Copy full address" data-copy="${escapeHTML(tx.from)}" onclick="copyValue(this)">${escapeHTML(shortValue(tx.from))}</button>
+
+                    </td>
+
+                    <td class="address">
+
+                        <button class="copy-value" title="Copy full address" data-copy="${escapeHTML(tx.to)}" onclick="copyValue(this)">${escapeHTML(shortValue(tx.to))}</button>
 
                     </td>
 
 
                     <td>
 
-                        ${tx.amount} ETH
+                        ${escapeHTML(tx.amount)} ETH
 
                     </td>
 
 
                     <td class="exchange">
 
-                        ${exchange}
+                        ${escapeHTML(exchange)}
 
                     </td>
 
 
                     <td>
 
-                        ${tx.timestamp}
+                        ${escapeHTML(tx.timestamp)}
 
                     </td>
 
 
                     <td class="address">
 
-                        ${tx.hash}
+                        <button class="copy-value" title="Copy full transaction hash" data-copy="${escapeHTML(tx.hash)}" onclick="copyValue(this)">${escapeHTML(shortValue(tx.hash))}</button>
 
                     </td>
+
+                    <td>${escapeHTML(tx.type)}</td>
 
                 `;
 
@@ -2031,6 +2174,8 @@ async function traceWallet() {
 
             }
         );
+        transactionPage = 1;
+        filterTransactions();
 
 
 
@@ -2065,19 +2210,6 @@ async function traceWallet() {
 
         );
 
-
-    }
-
-
-    catch(error) {
-
-        console.error(error);
-
-
-        message.innerText =
-            "❌ Couldn't connect to server.";
-
-    }
 
 }
 

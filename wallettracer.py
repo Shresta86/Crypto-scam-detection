@@ -1,5 +1,9 @@
 import os
 import json
+import csv
+import sqlite3
+import re
+from contextlib import contextmanager
 import requests
 import networkx as nx
 
@@ -7,6 +11,7 @@ from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify, send_file
 from dotenv import load_dotenv
 from io import BytesIO
+from flask import Response
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -35,6 +40,90 @@ API_KEY = os.getenv("ETHERSCAN_API_KEY")
 BASE_URL = "https://api.etherscan.io/v2/api"
 
 CHAIN_ID = 1
+DATABASE = os.path.join(os.path.dirname(__file__), "tracex.db")
+
+
+def db_connect():
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    return connection
+
+
+@contextmanager
+def db_session():
+    connection = db_connect()
+    try:
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def initialize_database():
+    with db_session() as db:
+        db.executescript("""
+            CREATE TABLE IF NOT EXISTS investigations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                wallet_address TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                risk_score INTEGER NOT NULL,
+                risk_level TEXT NOT NULL,
+                transaction_count INTEGER NOT NULL,
+                wallet_count INTEGER NOT NULL,
+                max_hops INTEGER NOT NULL,
+                result_json TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS indicators (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+                indicator TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+                tx_hash TEXT, sender TEXT, receiver TEXT, amount REAL,
+                timestamp TEXT, direction TEXT, exchange TEXT, type TEXT
+            );
+            CREATE TABLE IF NOT EXISTS recommendations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+                recommendation TEXT NOT NULL
+            );
+        """)
+
+
+initialize_database()
+
+
+def save_investigation(result):
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    result["timestamp"] = timestamp
+    with db_session() as db:
+        cursor = db.execute("""INSERT INTO investigations
+            (wallet_address,timestamp,risk_score,risk_level,transaction_count,wallet_count,max_hops,result_json)
+            VALUES (?,?,?,?,?,?,?,?)""", (
+            result["start_wallet"], timestamp, result["risk"]["score"], result["risk"]["level"],
+            len(result["transactions"]), result["wallets_traced"], result["max_hops"],
+            json.dumps(result)))
+        investigation_id = cursor.lastrowid
+        db.executemany("INSERT INTO indicators(investigation_id,indicator) VALUES (?,?)", [
+            (investigation_id, item["message"]) for item in result["suspicious_activity"]["indicators"]])
+        db.executemany("""INSERT INTO transactions
+            (investigation_id,tx_hash,sender,receiver,amount,timestamp,direction,exchange,type)
+            VALUES (?,?,?,?,?,?,?,?,?)""", [
+            (investigation_id, tx.get("hash"), tx.get("from"), tx.get("to"), tx.get("amount"),
+             tx.get("timestamp"), tx.get("direction"), tx.get("exchange"), tx.get("type"))
+            for tx in result["transactions"]])
+        db.executemany("INSERT INTO recommendations(investigation_id,recommendation) VALUES (?,?)", [
+            (investigation_id, item) for item in result["investigator_recommendations"]])
+        result["investigation_id"] = investigation_id
+        db.execute("UPDATE investigations SET result_json=? WHERE id=?",
+                   (json.dumps(result), investigation_id))
+    return result
 
 
 # =========================
@@ -714,7 +803,7 @@ def detect_suspicious_activity(
             "type": "exchange_interaction",
 
             "message":
-                f"Interaction with known exchange: {exchange_name}",
+                f"Known exchange interaction: {exchange_name} (not evidence of fraud)",
 
             "severity": "medium",
 
@@ -1111,6 +1200,7 @@ def generate_pdf_report(report_data):
     wallet = report_data.get("start_wallet", "Unknown")
 
     story.append(Paragraph(
+        f"<b>Investigation ID:</b> {report_data.get('investigation_id', 'N/A')}<br/>"
         f"<b>Reported Wallet:</b> {wallet}",
         normal_style
     ))
@@ -1154,7 +1244,7 @@ def generate_pdf_report(report_data):
 
     summary_table = Table([
         ["Metric", "Value"],
-        ["Wallets Traced", str(len(wallets))],
+        ["Wallets Traced", str(report_data.get("wallets_traced", len(wallets)))],
         ["Maximum Hops", str(report_data.get("max_hops", "N/A"))],
         ["Transactions Found", str(len(transactions))],
         ["Paths Found", str(len(paths))]
@@ -1177,8 +1267,9 @@ def generate_pdf_report(report_data):
 
     if indicators:
         for indicator in indicators:
+            indicator_text = indicator.get("message", "") if isinstance(indicator, dict) else str(indicator)
             story.append(
-                Paragraph(f"• {indicator}", normal_style)
+                Paragraph(f"• {indicator_text}", normal_style)
             )
             story.append(Spacer(1, 4))
     else:
@@ -1212,8 +1303,14 @@ def generate_pdf_report(report_data):
 
     if exchanges:
         for exchange in exchanges:
+            if isinstance(exchange, dict):
+                exchange_text = (f"{exchange.get('exchange')} — {exchange.get('address')} "
+                                 f"({exchange.get('interactions', 0)} interactions; "
+                                 f"{exchange.get('confidence', 'dataset match')})")
+            else:
+                exchange_text = str(exchange)
             story.append(
-                Paragraph(f"• {exchange}", normal_style)
+                Paragraph(f"• {exchange_text}", normal_style)
             )
     else:
         story.append(
@@ -1304,7 +1401,7 @@ def generate_pdf_report(report_data):
 def home():
 
     return render_template(
-        "x.html"
+        "x.html", api_configured=bool(API_KEY)
     )
 
 
@@ -1322,7 +1419,7 @@ def graph():
 )
 def trace():
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
     wallet_address = data.get(
         "wallet",
@@ -1342,13 +1439,7 @@ def trace():
 
         }), 400
 
-    if (
-
-        not wallet_address.startswith("0x")
-
-        or len(wallet_address) != 42
-
-    ):
+    if not re.fullmatch(r"0x[a-fA-F0-9]{40}", wallet_address):
 
         return jsonify({
 
@@ -1440,7 +1531,78 @@ def trace():
     result["investigator_recommendations"] = \
         recommendations
 
+    exchange_counts = {}
+    for tx in result["transactions"]:
+        if tx.get("exchange"):
+            address = tx.get("counterparty", "")
+            key = (tx["exchange"], address.lower())
+            exchange_counts[key] = exchange_counts.get(key, 0) + 1
+    result["exchange_attributions"] = [
+        {"exchange": name, "address": address, "interactions": count,
+         "transaction_count": count, "confidence": "Dataset match"}
+        for (name, address), count in exchange_counts.items()]
+    save_investigation(result)
+
     return jsonify(result)
+
+
+def history_summary(row):
+    item = dict(row)
+    item.pop("result_json", None)
+    return item
+
+
+@app.route("/history", methods=["GET", "DELETE"])
+def history():
+    with db_session() as db:
+        if request.method == "DELETE":
+            db.execute("DELETE FROM investigations")
+            return jsonify({"deleted": True})
+        rows = db.execute("SELECT * FROM investigations ORDER BY id DESC").fetchall()
+        results = []
+        for row in rows:
+            summary = history_summary(row)
+            summary["indicators"] = [r[0] for r in db.execute(
+                "SELECT indicator FROM indicators WHERE investigation_id=?", (row["id"],))]
+            results.append(summary)
+    return jsonify(results)
+
+
+@app.route("/history/<int:investigation_id>", methods=["GET", "DELETE"])
+def history_item(investigation_id):
+    with db_session() as db:
+        row = db.execute("SELECT * FROM investigations WHERE id=?", (investigation_id,)).fetchone()
+        if request.method == "DELETE":
+            if row is None:
+                return jsonify({"error": "Investigation not found"}), 404
+            db.execute("DELETE FROM investigations WHERE id=?", (investigation_id,))
+            return jsonify({"deleted": True})
+        if row is None:
+            return jsonify({"error": "Investigation not found"}), 404
+        result = json.loads(row["result_json"])
+    return jsonify(result)
+
+
+@app.route("/export/<int:investigation_id>.<fmt>")
+def export_investigation(investigation_id, fmt):
+    with db_session() as db:
+        row = db.execute("SELECT result_json FROM investigations WHERE id=?", (investigation_id,)).fetchone()
+    if row is None:
+        return jsonify({"error": "Investigation not found"}), 404
+    result = json.loads(row["result_json"])
+    if fmt == "json":
+        return Response(json.dumps(result, indent=2), mimetype="application/json",
+                        headers={"Content-Disposition": f"attachment; filename=TraceX_{investigation_id}.json"})
+    if fmt == "csv":
+        import io
+        text_output = io.StringIO()
+        writer = csv.DictWriter(text_output, fieldnames=["direction", "from", "to", "amount", "timestamp", "hash", "exchange", "type"])
+        writer.writeheader()
+        for tx in result.get("transactions", []):
+            writer.writerow({key: tx.get(key, "") for key in writer.fieldnames})
+        return Response(text_output.getvalue(), mimetype="text/csv",
+                        headers={"Content-Disposition": f"attachment; filename=TraceX_{investigation_id}.csv"})
+    return jsonify({"error": "Format must be json or csv"}), 400
 
 @app.route("/report", methods=["POST"])
 def report():
@@ -1475,7 +1637,7 @@ if __name__ == "__main__":
 
     app.run(
 
-        debug=True,
+        debug=False,
 
         port=5001
 
