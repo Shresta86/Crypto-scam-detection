@@ -3,581 +3,684 @@
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>TraceX | Blockchain Investigation</title>
-
-
-    <style>
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-
-        body {
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #080b12;
-            color: #e8edf5;
-            min-height: 100vh;
-        }
-
-
-        /* ---------------- NAVBAR ---------------- */
-
-        .navbar {
-            height: 70px;
-            border-bottom: 1px solid #1b2230;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 45px;
-            background: #090c13;
-        }
-
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-
-        .logo-icon {
-            width: 35px;
-            height: 35px;
-            border-radius: 9px;
-            background: #1d6cff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 17px;
-        }
-
-
-        .logo span {
-            color: #6da2ff;
-        }
-
-
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: #8d98aa;
-        }
-
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #36d98b;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #36d98b;
-        }
-
-
-        /* ---------------- MAIN ---------------- */
-
-        .container {
-            width: min(1250px, 92%);
-            margin: auto;
-            padding: 55px 0;
-        }
-
-
-        .hero {
-            margin-bottom: 35px;
-        }
-
-
-        .eyebrow {
-            color: #5e96ff;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-
-
-        h1 {
-            font-size: 42px;
-            letter-spacing: -1px;
-            margin-bottom: 12px;
-        }
-
-
-        .hero p {
-            color: #8d98aa;
-            max-width: 650px;
-            line-height: 1.6;
-            font-size: 15px;
-        }
-
-
-        /* ---------------- SEARCH ---------------- */
-
-        .search-card {
-            background: #0e131d;
-            border: 1px solid #1c2636;
-            border-radius: 14px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-
-        .search-label {
-            display: block;
-            font-size: 13px;
-            color: #aab4c4;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-
-        .input-row {
-            display: flex;
-            gap: 12px;
-        }
-
-
-        input {
-            flex: 1;
-            background: #080b12;
-            border: 1px solid #273244;
-            color: white;
-            padding: 15px 17px;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: 0.2s;
-        }
-
-
-        input:focus {
-            border-color: #397cff;
-            box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
-        }
-
-
-        button {
-            background: #246bff;
-            border: none;
-            color: white;
-            padding: 0 27px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-
-        button:hover {
-            background: #3a7cff;
-            transform: translateY(-1px);
-        }
-
-
-        #message {
-            margin-top: 14px;
-            color: #8d98aa;
-            font-size: 13px;
-        }
-
-
-        /* ---------------- CARDS ---------------- */
-
-        .section {
-            background: #0e131d;
-            border: 1px solid #1c2636;
-            border-radius: 14px;
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-
-        .section-title {
-            font-size: 17px;
-            font-weight: 650;
-        }
-
-
-        .section-subtitle {
-            color: #687487;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-
-        /* ---------------- SUMMARY ---------------- */
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-
-
-        .summary-card {
-            background: #090d15;
-            border: 1px solid #1c2636;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-
-        .summary-label {
-            color: #697588;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-
-        .summary-value {
-            font-size: 19px;
-            font-weight: 650;
-            word-break: break-all;
-        }
-
-
-        .summary-value.small {
-            font-size: 14px;
-        }
-
-
-        /* ---------------- TABLE ---------------- */
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 900px;
-        }
-
-
-        th {
-            text-align: left;
-            color: #657185;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.7px;
-            padding: 12px;
-            border-bottom: 1px solid #202a39;
-        }
-
-
-        td {
-            padding: 15px 12px;
-            border-bottom: 1px solid #171f2c;
-            font-size: 12px;
-            color: #b8c1cf;
-        }
-
-
-        tr:hover td {
-            background: #111722;
-        }
-
-
-        .address {
-            font-family: monospace;
-            max-width: 220px;
-            word-break: break-all;
-            color: #aab8cc;
-        }
-
-
-        .in {
-            color: #39d98a;
-            font-weight: 700;
-        }
-
-
-        .out {
-            color: #ff5969;
-            font-weight: 700;
-        }
-
-
-        .exchange {
-            color: #ff5969;
-            font-weight: 700;
-        }
-
-
-        /* ---------------- FRAUD INTELLIGENCE ---------------- */
-
-        .risk-overview {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 18px;
-        }
-
-
-        .risk-box {
-            background: #090d15;
-            border: 1px solid #1c2636;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-
-        .risk-label {
-            color: #697588;
-            font-size: 11px;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-
-        .risk-score {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-
-        .risk-level {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-
-        .indicator {
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            background: #151b27;
-            border-left: 3px solid #ff5969;
-        }
-
-
-        .indicator-message {
-            font-size: 14px;
-            color: #dce3ed;
-        }
-
-
-        .indicator-details {
-            display: flex;
-            gap: 12px;
-            margin-top: 7px;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-
-        .indicator-severity {
-            color: #ff8a96;
-        }
-
-
-        .indicator-points {
-            color: #7ea8ff;
-        }
-
-
-        .no-indicators {
-            color: #697588;
-            font-size: 13px;
-            padding: 15px 0;
-        }
-
-
-        /* ---------------- EXCHANGE ATTRIBUTION ---------------- */
-
-        .exchange-attribution-box {
-            margin-top: 22px;
-            background: #090d15;
-            border: 1px solid #1c2636;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-
-        .exchange-attribution-title {
-            font-size: 14px;
-            font-weight: 650;
-            color: #dce3ed;
-            margin-bottom: 15px;
-        }
-
-
-        .exchange-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            padding: 16px;
-            margin-top: 10px;
-            border-radius: 8px;
-            background: #151b27;
-            border: 1px solid #202a39;
-        }
-
-
-        .exchange-item strong {
-            font-size: 15px;
-            color: #ff7b87;
-        }
-
-
-        .exchange-address {
-            margin-top: 6px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #8d98aa;
-            word-break: break-all;
-        }
-
-
-        .exchange-basis {
-            font-size: 11px;
-            color: #7ea8ff;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-
-        .no-exchange {
-            color: #697588;
-            font-size: 13px;
-        }
-
-
-        /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
-
-        .recommendations-box {
-            margin-top: 22px;
-            background: #090d15;
-            border: 1px solid #1c2636;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-
-        .recommendations-title {
-            font-size: 14px;
-            font-weight: 650;
-            color: #dce3ed;
-            margin-bottom: 15px;
-        }
-
-
-        .recommendation {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #151b27;
-            border-radius: 8px;
-            color: #b8c1cf;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-
-        .recommendation:last-child {
-            margin-bottom: 0;
-        }
-
-
-        .recommendation-icon {
-            color: #6da2ff;
-            font-weight: 700;
-        }
-
-
-        /* ---------------- RESPONSIVE ---------------- */
-
-        @media (max-width: 800px) {
-
-            .navbar {
-                padding: 0 20px;
-            }
-
-
-            .container {
-                width: 94%;
-                padding-top: 35px;
-            }
-
-
-            h1 {
-                font-size: 32px;
-            }
-
-
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-
-            .risk-overview {
-                grid-template-columns: 1fr;
-            }
-
-
-            .input-row {
-                flex-direction: column;
-            }
-
-
-            button {
-                height: 48px;
-            }
-
-
-            .exchange-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-
-            .exchange-basis {
-                text-align: left;
-            }
-
-        }
-
-
-        @media (max-width: 500px) {
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-        }
-
-    </style>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TraceX | Blockchain Investigation</title>
+
+<style>
+
+/* ================= RESET ================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #080b11;
+    color: #e8edf5;
+    min-height: 100vh;
+}
+
+
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background: #090d14;
+    border-right: 1px solid #1b2330;
+    padding: 38px 18px;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    margin-bottom: 65px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    background: #246bff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    color: white;
+}
+
+.logo span {
+    color: #6d9dff;
+}
+
+.nav-title {
+    color: #5d6a80;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0 22px 14px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    margin-bottom: 5px;
+    border-radius: 11px;
+    color: #8d99ad;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: 0.2s;
+}
+
+.nav-item:hover {
+    background: #151e2e;
+    color: #ffffff;
+    transform: translateX(2px);
+}
+
+.nav-item.active {
+    background: #182742;
+    color: #70a1ff;
+}
+
+.nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 16px;
+}
+
+
+/* ================= MAIN ================= */
+
+.main {
+    margin-left: 250px;
+    min-height: 100vh;
+}
+
+
+/* ================= TOP BAR ================= */
+
+.topbar {
+    height: 78px;
+    border-bottom: 1px solid #1b2330;
+    background: #090d14;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.top-search {
+    width: 520px;
+    height: 46px;
+    background: #111722;
+    border: 1px solid #202a39;
+    border-radius: 9px;
+    color: #cdd5e1;
+    padding: 0 16px;
+    outline: none;
+    font-size: 14px;
+}
+
+.top-search:focus {
+    border-color: #397cff;
+    box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
+}
+
+.top-search::placeholder {
+    color: #667184;
+}
+
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #8994a7;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #35d98a;
+    box-shadow: 0 0 10px #35d98a;
+}
+
+
+/* ================= CONTENT ================= */
+
+.content {
+    padding: 55px 40px;
+    max-width: 1500px;
+}
+
+.page-header {
+    margin-bottom: 28px;
+}
+
+.page-header h1 {
+    font-size: 42px;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    color: #697588;
+    font-size: 16px;
+}
+
+
+/* ================= SEARCH ================= */
+
+.search-box {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.wallet-input {
+    flex: 1;
+    height: 54px;
+    background: #10151f;
+    border: 1px solid #242e3e;
+    border-radius: 9px;
+    color: white;
+    padding: 0 17px;
+    outline: none;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.wallet-input:focus {
+    border-color: #397cff;
+    box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
+}
+
+.wallet-input::placeholder {
+    color: #737d8e;
+}
+
+.trace-btn {
+    height: 54px;
+    padding: 0 28px;
+    background: #246bff;
+    border: none;
+    border-radius: 9px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.trace-btn:hover {
+    background: #397cff;
+    transform: translateY(-1px);
+}
+
+#message {
+    color: #758196;
+    font-size: 12px;
+    margin-bottom: 25px;
+}
+
+
+/* ================= DASHBOARD ================= */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* ================= CARDS ================= */
+
+.card {
+    background: #0e131c;
+    border: 1px solid #1d2634;
+    border-radius: 12px;
+    padding: 22px;
+}
+
+.card-title {
+    font-size: 17px;
+    font-weight: 650;
+    color: #dce3ed;
+    margin-bottom: 6px;
+}
+
+.card-subtitle {
+    color: #626e81;
+    font-size: 12px;
+    margin-bottom: 18px;
+}
+
+
+/* ================= WALLET OVERVIEW ================= */
+
+.wallet-card {
+    grid-column: span 2;
+}
+
+.wallet-address {
+    font-family: monospace;
+    color: #6d9dff;
+    font-size: 14px;
+    word-break: break-all;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat {
+    background: #090d14;
+    border: 1px solid #1a2330;
+    border-radius: 9px;
+    padding: 17px;
+}
+
+.stat-label {
+    color: #606c7f;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+
+/* ================= RISK ================= */
+
+.risk-card {
+    grid-row: span 2;
+}
+
+.risk-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    margin: 20px auto 18px;
+
+    background:
+        conic-gradient(
+            #ff9d48 0deg,
+            #ff9d48 var(--risk-angle, 0deg),
+            #252d39 var(--risk-angle, 0deg),
+            #252d39 360deg
+        );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.risk-circle::after {
+    content: "";
+    position: absolute;
+    width: 128px;
+    height: 128px;
+    background: #0e131c;
+    border-radius: 50%;
+}
+
+.risk-number {
+    position: relative;
+    z-index: 2;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.risk-text {
+    text-align: center;
+    font-size: 11px;
+    color: #7b8799;
+}
+
+.risk-level {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 15px;
+    color: #ffae66;
+    font-weight: 700;
+}
+
+
+/* ================= BEHAVIOR ================= */
+
+.behavior-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 13px 0;
+    border-bottom: 1px solid #19212d;
+}
+
+.behavior-row:last-child {
+    border-bottom: none;
+}
+
+.behavior-label {
+    color: #6e7a8c;
+    font-size: 12px;
+}
+
+.behavior-value {
+    font-size: 13px;
+    font-weight: 650;
+}
+
+
+/* ================= INDICATORS ================= */
+
+.indicators-card {
+    grid-column: span 2;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    background: #121823;
+    border-radius: 7px;
+    border-left: 3px solid #ff5969;
+}
+
+.indicator-name {
+    font-size: 12px;
+    color: #d8dfea;
+}
+
+.indicator-right {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.indicator-severity {
+    color: #ff8b97;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.indicator-points {
+    color: #6d9dff;
+    font-size: 11px;
+}
+
+#noIndicators {
+    color: #687487;
+    font-size: 12px;
+}
+
+
+/* ================= EXCHANGE ================= */
+
+.exchange-card {
+    grid-column: span 1;
+}
+
+.exchange-item {
+    background: #121823;
+    border: 1px solid #202a39;
+    padding: 14px;
+    border-radius: 7px;
+    margin-bottom: 9px;
+}
+
+.exchange-name {
+    color: #ff7582;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.exchange-address {
+    color: #707d90;
+    font-family: monospace;
+    font-size: 10px;
+    margin-top: 6px;
+    word-break: break-all;
+}
+
+.exchange-match {
+    color: #5f9bff;
+    font-size: 10px;
+    margin-top: 8px;
+}
+
+
+/* ================= RECOMMENDATIONS ================= */
+
+.recommendations-card {
+    grid-column: span 3;
+}
+
+.recommendation {
+    display: flex;
+    gap: 11px;
+    padding: 12px 14px;
+    background: #121823;
+    border-radius: 7px;
+    margin-bottom: 8px;
+    color: #aab5c5;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.rec-icon {
+    color: #6d9dff;
+    font-weight: bold;
+}
+
+
+/* ================= GRAPH ================= */
+
+.graph-card {
+    grid-column: span 3;
+    text-align: center;
+}
+
+.graph-btn {
+    margin-top: 12px;
+    background: #16243c;
+    color: #70a1ff;
+    border: 1px solid #294675;
+    border-radius: 7px;
+    padding: 11px 22px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.graph-btn:hover {
+    background: #1b3152;
+}
+
+
+/* ================= TRANSACTIONS ================= */
+
+.transactions-card {
+    grid-column: span 3;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+th {
+    text-align: left;
+    color: #596579;
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 11px;
+    border-bottom: 1px solid #202938;
+}
+
+td {
+    padding: 12px 11px;
+    border-bottom: 1px solid #171f2b;
+    color: #aeb8c7;
+    font-size: 11px;
+}
+
+tr:hover td {
+    background: #111722;
+}
+
+.address {
+    font-family: monospace;
+    max-width: 190px;
+    word-break: break-all;
+}
+
+.in {
+    color: #35d98a;
+    font-weight: 700;
+}
+
+.out {
+    color: #ff5969;
+    font-weight: 700;
+}
+
+.exchange {
+    color: #ff7582;
+    font-weight: 700;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width: 1100px) {
+
+    .sidebar {
+        width: 220px;
+    }
+
+    .main {
+        margin-left: 220px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .wallet-card,
+    .indicators-card,
+    .recommendations-card,
+    .transactions-card,
+    .graph-card {
+        grid-column: span 2;
+    }
+
+    .top-search {
+        width: 400px;
+    }
+
+}
+
+
+@media(max-width: 750px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+    }
+
+    .content {
+        padding: 30px 20px;
+    }
+
+    .topbar {
+        padding: 0 20px;
+    }
+
+    .top-search {
+        width: 70%;
+    }
+
+    .page-header h1 {
+        font-size: 32px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wallet-card,
+    .risk-card,
+    .indicators-card,
+    .exchange-card,
+    .recommendations-card,
+    .transactions-card,
+    .graph-card {
+        grid-column: span 1;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .search-box {
+        flex-direction: column;
+    }
+
+    .trace-btn {
+        width: 100%;
+    }
+
+}
+
+</style>
 
 </head>
 
@@ -585,295 +688,483 @@
 <body>
 
 
-    <!-- NAVBAR -->
+<!-- ================= SIDEBAR ================= -->
 
-    <nav class="navbar">
+<aside class="sidebar">
 
-        <div class="logo">
 
-            <div class="logo-icon">
-                ⌁
-            </div>
+    <div class="logo">
 
-            Trace<span>X</span>
-
+        <div class="logo-icon">
+            ⌁
         </div>
 
+        Trace<span>X</span>
 
-        <div class="status">
+    </div>
 
-            <div class="status-dot"></div>
+
+    <div class="nav-title">
+        Investigation
+    </div>
+
+
+    <div
+        class="nav-item active"
+        onclick="scrollToSection('walletOverview')"
+    >
+
+        <span class="nav-icon">
+            
+        </span>
+
+        Wallet Overview
+
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="scrollToSection('transactionAnalysis')"
+    >
+
+        <span class="nav-icon">
+            
+        </span>
+
+        Transaction Analysis
+
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="scrollToSection('riskAssessment')"
+    >
+
+        <span class="nav-icon">
+        </span>
+
+        Risk Assessment
+
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="scrollToSection('exchangeAttributionSection')"
+    >
+
+        <span class="nav-icon">
+            
+        </span>
+
+        Exchange Attribution
+
+    </div>
+
+
+    <div class="nav-title">
+        Intelligence
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="scrollToSection('investigatorReport')"
+    >
+
+        <span class="nav-icon">
+            
+        </span>
+
+        Investigator Report
+
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="openGraphPage()"
+    >
+
+        <span class="nav-icon">
+            
+        </span>
+
+        Wallet Graph
+
+    </div>
+
+
+    <div class="nav-title">
+        System
+    </div>
+
+
+    <div
+        class="nav-item"
+        onclick="openSettings()"
+    >
+
+        <span class="nav-icon">
+            ⚙
+        </span>
+
+        Settings
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- ================= MAIN ================= -->
+
+<div class="main">
+
+
+    <!-- ================= TOP BAR ================= -->
+
+    <header class="topbar">
+
+
+        <input
+            id="topWalletSearch"
+            class="top-search"
+            placeholder="Search wallet address..."
+        >
+
+
+        <div class="api-status">
+
+            <span class="status-dot"></span>
 
             Blockchain API Online
 
         </div>
 
-    </nav>
+
+    </header>
 
 
-    <main class="container">
+
+    <main class="content">
 
 
-        <!-- HERO -->
+        <!-- ================= HEADER ================= -->
 
-        <div class="hero">
-
-            <div class="eyebrow">
-                Blockchain Investigation Platform
-            </div>
-
+        <div class="page-header">
 
             <h1>
-                Trace the movement of funds.
+                Wallet Investigation
             </h1>
 
-
             <p>
-                Investigate victim-reported cryptocurrency wallets,
-                identify connected addresses and follow the movement
-                of funds across the blockchain.
+                Blockchain intelligence and transaction analysis
             </p>
 
         </div>
 
 
-        <!-- SEARCH -->
 
-        <div class="search-card">
+        <!-- ================= SEARCH ================= -->
 
-            <label class="search-label">
-                SUSPICIOUS WALLET ADDRESS
-            </label>
+        <div class="search-box">
 
 
-            <div class="input-row">
-
-                <input
-                    id="wallet"
-                    type="text"
-                    placeholder="0x..."
-                >
+            <input
+                id="wallet"
+                class="wallet-input"
+                placeholder="Enter suspicious wallet address 0x..."
+            >
 
 
-                <button onclick="traceWallet()">
-                    Start Investigation
-                </button>
+            <button
+                class="trace-btn"
+                onclick="traceWallet()"
+            >
+                Analyze Wallet
+            </button>
 
-            </div>
-
-
-            <div id="message"></div>
 
         </div>
 
 
-        <!-- SUMMARY -->
+        <div id="message"></div>
+
+
+
+        <!-- ================= DASHBOARD ================= -->
 
         <div
-            id="summarySection"
-            class="section"
-            style="display:none;"
+            id="dashboard"
+            class="dashboard-grid hidden"
         >
 
-            <div class="section-header">
 
-                <div>
-
-                    <div class="section-title">
-                        Investigation Overview
-                    </div>
-
-
-                    <div class="section-subtitle">
-                        Blockchain activity discovered from the reported address
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="summary-grid">
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        REPORTED WALLET
-                    </div>
-
-
-                    <div
-                        id="reportedWallet"
-                        class="summary-value small"
-                    >
-                        -
-                    </div>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        WALLETS TRACED
-                    </div>
-
-
-                    <div
-                        id="walletCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        MAXIMUM HOPS
-                    </div>
-
-
-                    <div
-                        id="hopCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        TRANSACTIONS
-                    </div>
-
-
-                    <div
-                        id="transactionCount"
-                        class="summary-value"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- FRAUD INTELLIGENCE -->
-
-        <div
-            id="fraudSection"
-            class="section"
-            style="display:none;"
-        >
-
-            <div class="section-header">
-
-                <div>
-
-                    <div class="section-title">
-                        Fraud Intelligence
-                    </div>
-
-
-                    <div class="section-subtitle">
-                        Suspicious activity indicators identified from blockchain patterns
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- RISK SCORE -->
-
-            <div class="risk-overview">
-
-
-                <div class="risk-box">
-
-                    <div class="risk-label">
-                        RISK SCORE
-                    </div>
-
-
-                    <div
-                        id="riskScore"
-                        class="risk-score"
-                    >
-                        0 / 100
-                    </div>
-
-                </div>
-
-
-                <div class="risk-box">
-
-                    <div class="risk-label">
-                        RISK LEVEL
-                    </div>
-
-
-                    <div
-                        id="riskLevel"
-                        class="risk-level"
-                    >
-                        LOW
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- INDICATORS -->
-
-            <div id="indicatorContainer"></div>
-
+            <!-- ================= WALLET OVERVIEW ================= -->
 
             <div
-                id="noIndicators"
-                class="no-indicators"
+                id="walletOverview"
+                class="card wallet-card"
             >
-                No suspicious activity indicators detected.
+
+                <div class="card-title">
+                    Wallet Overview
+                </div>
+
+                <div class="card-subtitle">
+                    Reported cryptocurrency address
+                </div>
+
+
+                <div
+                    id="reportedWallet"
+                    class="wallet-address"
+                >
+                    -
+                </div>
+
+
+                <div class="stats">
+
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            Wallets Traced
+                        </div>
+
+                        <div
+                            id="walletCount"
+                            class="stat-value"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            Maximum Hops
+                        </div>
+
+                        <div
+                            id="hopCount"
+                            class="stat-value"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            Transactions
+                        </div>
+
+                        <div
+                            id="transactionCount"
+                            class="stat-value"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+
+                </div>
+
             </div>
 
 
-            <!-- EXCHANGE ATTRIBUTION -->
 
-            <div class="exchange-attribution-box">
+            <!-- ================= RISK ================= -->
 
-                <div class="exchange-attribution-title">
-                    🏦 Exchange Attribution
+            <div
+                id="riskAssessment"
+                class="card risk-card"
+            >
+
+                <div class="card-title">
+                    Final Risk Assessment
+                </div>
+
+                <div class="card-subtitle">
+                    Rule-based blockchain risk analysis
+                </div>
+
+
+                <div
+                    id="riskCircle"
+                    class="risk-circle"
+                >
+
+                    <div
+                        id="riskNumber"
+                        class="risk-number"
+                    >
+                        0%
+                    </div>
+
+                </div>
+
+
+                <div class="risk-text">
+                    Risk Assessment
+                </div>
+
+
+                <div
+                    id="riskLevel"
+                    class="risk-level"
+                >
+                    LOW
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ================= BEHAVIOR ================= -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Wallet Behavior
+                </div>
+
+                <div class="card-subtitle">
+                    Observed blockchain activity
+                </div>
+
+
+                <div class="behavior-row">
+
+                    <span class="behavior-label">
+                        Transaction Count
+                    </span>
+
+                    <span
+                        id="behaviorTx"
+                        class="behavior-value"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+
+                <div class="behavior-row">
+
+                    <span class="behavior-label">
+                        Wallets Traced
+                    </span>
+
+                    <span
+                        id="behaviorWallets"
+                        class="behavior-value"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+
+                <div class="behavior-row">
+
+                    <span class="behavior-label">
+                        Maximum Hop
+                    </span>
+
+                    <span
+                        id="behaviorHops"
+                        class="behavior-value"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ================= INDICATORS ================= -->
+
+            <div class="card indicators-card">
+
+                <div class="card-title">
+                    Suspicious Activity
+                </div>
+
+                <div class="card-subtitle">
+                    Detected blockchain behavior indicators
+                </div>
+
+
+                <div id="indicatorContainer"></div>
+
+
+                <div id="noIndicators">
+                    No suspicious activity indicators detected.
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ================= EXCHANGE ================= -->
+
+            <div
+                id="exchangeAttributionSection"
+                class="card exchange-card"
+            >
+
+                <div class="card-title">
+                    Exchange Attribution
+                </div>
+
+                <div class="card-subtitle">
+                    Known exchange address matches
                 </div>
 
 
                 <div id="exchangeAttribution">
 
-                    <div class="no-exchange">
+                    <div style="color:#687487;font-size:12px;">
                         No known exchange interaction detected.
                     </div>
 
                 </div>
 
+
             </div>
 
 
-            <!-- INVESTIGATOR RECOMMENDATIONS -->
 
-            <div class="recommendations-box">
+            <!-- ================= RECOMMENDATIONS ================= -->
 
-                <div class="recommendations-title">
-                    🔎 Investigator Recommendations
+            <div
+                id="investigatorReport"
+                class="card recommendations-card"
+            >
+
+                <div class="card-title">
+                    Investigator Recommendations
+                </div>
+
+                <div class="card-subtitle">
+                    Suggested next investigation steps
                 </div>
 
 
@@ -881,7 +1172,7 @@
 
                     <div class="recommendation">
 
-                        <span class="recommendation-icon">
+                        <span class="rec-icon">
                             →
                         </span>
 
@@ -893,493 +1184,416 @@
 
                 </div>
 
-            </div>
 
-        </div>
-
-
-        <!-- GRAPH PAGE BUTTON -->
-
-        <div
-            id="graphButtonSection"
-            class="section"
-            style="display:none; text-align:center;"
-        >
-
-            <div class="section-title">
-                Wallet Relationship Graph
             </div>
 
 
-            <div class="section-subtitle">
-                Open the visual representation of the traced wallet relationships.
+
+            <!-- ================= GRAPH ================= -->
+
+            <div class="card graph-card">
+
+                <div class="card-title">
+                    Wallet Relationship Graph
+                </div>
+
+                <div class="card-subtitle">
+                    Visualize traced wallet relationships and fund movement
+                </div>
+
+
+                <button
+                    class="graph-btn"
+                    onclick="openGraphPage()"
+                >
+                    Open Wallet Graph →
+                </button>
+
+
             </div>
 
 
-            <button
-                onclick="openGraphPage()"
-                style="margin-top:18px; height:45px;"
+
+            <!-- ================= TRANSACTIONS ================= -->
+
+            <div
+                id="transactionAnalysis"
+                class="card transactions-card"
             >
-                View Wallet Graph →
-            </button>
 
-        </div>
+                <div class="card-title">
+                    Transaction Activity
+                </div>
 
-
-        <!-- TRANSACTIONS -->
-
-        <div
-            id="transactionsSection"
-            class="section"
-            style="display:none;"
-        >
-
-            <div class="section-header">
-
-                <div>
-
-                    <div class="section-title">
-                        Transaction Activity
-                    </div>
+                <div class="card-subtitle">
+                    Blockchain transactions discovered during investigation
+                </div>
 
 
-                    <div class="section-subtitle">
-                        Detailed blockchain transactions discovered during investigation
-                    </div>
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Wallet
+                                </th>
+
+                                <th>
+                                    Direction
+                                </th>
+
+                                <th>
+                                    Counterparty
+                                </th>
+
+                                <th>
+                                    Amount
+                                </th>
+
+                                <th>
+                                    Exchange
+                                </th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                                <th>
+                                    Hash
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="transactionBody"></tbody>
+
+
+                    </table>
+
 
                 </div>
 
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Wallet
-                            </th>
-
-
-                            <th>
-                                Direction
-                            </th>
-
-
-                            <th>
-                                Counterparty
-                            </th>
-
-
-                            <th>
-                                Amount
-                            </th>
-
-
-                            <th>
-                                Exchange
-                            </th>
-
-
-                            <th>
-                                Time
-                            </th>
-
-
-                            <th>
-                                Transaction Hash
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="transactionBody"></tbody>
-
-                </table>
 
             </div>
+
 
         </div>
+
 
     </main>
 
 
-    <!-- JAVASCRIPT -->
-
-    <script>
+</div>
 
 
-        async function traceWallet() {
 
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+
+/* ================= SIDEBAR NAVIGATION ================= */
+
+function scrollToSection(id) {
+
+    const section =
+        document.getElementById(id);
+
+    if (!section) {
+
+        return;
+
+    }
+
+    section.scrollIntoView({
+
+        behavior: "smooth",
+
+        block: "start"
+
+    });
+
+}
+
+
+/* ================= TOP SEARCH ================= */
+
+const topSearch =
+    document.getElementById(
+        "topWalletSearch"
+    );
+
+
+topSearch.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
 
             const wallet =
-                document.getElementById("wallet").value.trim();
-
-
-            const message =
-                document.getElementById("message");
+                topSearch.value.trim();
 
 
             if (!wallet) {
-
-                message.innerText =
-                    "Please enter a wallet address.";
 
                 return;
 
             }
 
 
-            message.innerText =
-                "⏳ Investigating blockchain activity...";
-
-
             document.getElementById(
-                "summarySection"
-            ).style.display = "none";
+                "wallet"
+            ).value = wallet;
 
 
-            document.getElementById(
-                "fraudSection"
-            ).style.display = "none";
+            traceWallet();
+
+        }
+
+    }
+);
 
 
-            document.getElementById(
-                "transactionsSection"
-            ).style.display = "none";
+/* ================= SETTINGS ================= */
+
+function openSettings() {
+
+    alert(
+        "TraceX Settings\n\n" +
+        "Blockchain Network: Ethereum\n" +
+        "Risk Engine: Rule-based\n" +
+        "Exchange Dataset: Enabled\n" +
+        "Blockchain API: Online"
+    );
+
+}
 
 
-            document.getElementById(
-                "graphButtonSection"
-            ).style.display = "none";
+/* ================= TRACE WALLET ================= */
+
+async function traceWallet() {
 
 
-            try {
+    const wallet =
+        document
+        .getElementById("wallet")
+        .value
+        .trim();
 
 
-                const response =
-                    await fetch(
-                        "/trace",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-
-                            body: JSON.stringify({
-                                wallet: wallet
-                            })
-                        }
-                    );
+    const message =
+        document.getElementById(
+            "message"
+        );
 
 
-                const data =
-                    await response.json();
+    if (!wallet) {
+
+        message.innerText =
+            "Please enter a wallet address.";
+
+        return;
+
+    }
 
 
-                if (!response.ok || data.error) {
+    message.innerText =
+        " Analyzing blockchain activity...";
 
-                    message.innerText =
-                        "❌ " +
-                        (
-                            data.error ||
-                            "Investigation failed."
-                        );
 
-                    return;
+    document
+        .getElementById("dashboard")
+        .classList.add("hidden");
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/trace",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        wallet: wallet
+                    })
 
                 }
+            );
 
 
-                /* SAVE GRAPH DATA */
+        const data =
+            await response.json();
 
-                sessionStorage.setItem(
-                    "traceGraph",
 
-                    JSON.stringify({
+        if (!response.ok || data.error) {
 
-                        graph:
-                            data.graph,
-
-                        paths:
-                            data.paths || [],
-
-                        transactions:
-                            data.transactions || [],
-
-                        start_wallet:
-                            data.start_wallet,
-
-                        max_hops:
-                            data.max_hops,
-
-                        wallets_traced:
-                            data.wallets_traced
-
-                    })
+            message.innerText =
+                "❌ " +
+                (
+                    data.error ||
+                    "Investigation failed."
                 );
 
+            return;
 
-                message.innerText =
-                    "✓ Investigation completed";
+        }
 
 
-                /* ---------------- SUMMARY ---------------- */
+        message.innerText =
+            "✓ Investigation completed";
 
 
-                document.getElementById(
-                    "summarySection"
-                ).style.display = "block";
+        document
+            .getElementById("dashboard")
+            .classList.remove("hidden");
 
 
-                document.getElementById(
-                    "reportedWallet"
-                ).innerText =
-                    data.start_wallet;
 
+        /* ================= WALLET SUMMARY ================= */
 
-                document.getElementById(
-                    "walletCount"
-                ).innerText =
-                    data.wallets_traced;
 
+        document
+            .getElementById("reportedWallet")
+            .innerText =
+            data.start_wallet;
 
-                document.getElementById(
-                    "hopCount"
-                ).innerText =
-                    data.max_hops;
 
+        document
+            .getElementById("walletCount")
+            .innerText =
+            data.wallets_traced;
 
-                document.getElementById(
-                    "transactionCount"
-                ).innerText =
-                    data.transactions.length;
 
+        document
+            .getElementById("hopCount")
+            .innerText =
+            data.max_hops;
 
-                /* ---------------- FRAUD INTELLIGENCE ---------------- */
 
+        document
+            .getElementById("transactionCount")
+            .innerText =
+            data.transactions.length;
 
-                document.getElementById(
-                    "fraudSection"
-                ).style.display = "block";
 
+        document
+            .getElementById("behaviorTx")
+            .innerText =
+            data.transactions.length;
 
-                const risk =
-                    data.risk || {
-                        score: 0,
-                        level: "LOW"
-                    };
 
+        document
+            .getElementById("behaviorWallets")
+            .innerText =
+            data.wallets_traced;
 
-                document.getElementById(
-                    "riskScore"
-                ).innerText =
-                    `${risk.score} / 100`;
 
+        document
+            .getElementById("behaviorHops")
+            .innerText =
+            data.max_hops;
 
-                document.getElementById(
-                    "riskLevel"
-                ).innerText =
-                    risk.level;
 
 
-                /* ---------------- INDICATORS ---------------- */
+        /* ================= RISK ================= */
 
 
-                const indicatorContainer =
-                    document.getElementById(
-                        "indicatorContainer"
-                    );
+        const risk =
+            data.risk || {
 
+                score: 0,
 
-                const noIndicators =
-                    document.getElementById(
-                        "noIndicators"
-                    );
+                level: "LOW"
 
+            };
 
-                indicatorContainer.innerHTML =
-                    "";
 
+        const score =
+            Math.min(
+                100,
+                Math.max(
+                    0,
+                    Number(risk.score)
+                )
+            );
 
-                const indicators =
-                    data.suspicious_activity?.indicators || [];
 
+        document
+            .getElementById("riskNumber")
+            .innerText =
+            score + "%";
 
-                if (indicators.length === 0) {
 
-                    noIndicators.style.display =
-                        "block";
+        document
+            .getElementById("riskLevel")
+            .innerText =
+            risk.level;
 
-                }
 
-                else {
+        document
+            .getElementById("riskCircle")
+            .style
+            .setProperty(
+                "--risk-angle",
+                (score * 3.6) + "deg"
+            );
 
-                    noIndicators.style.display =
-                        "none";
 
 
-                    indicators.forEach(
-                        indicator => {
+        /* ================= INDICATORS ================= */
 
 
-                            const div =
-                                document.createElement(
-                                    "div"
-                                );
+        const indicatorContainer =
+            document.getElementById(
+                "indicatorContainer"
+            );
 
 
-                            div.className =
-                                "indicator";
+        const noIndicators =
+            document.getElementById(
+                "noIndicators"
+            );
 
 
-                            div.innerHTML = `
+        indicatorContainer.innerHTML =
+            "";
 
-                                <div class="indicator-message">
 
-                                    ⚠ ${indicator.message}
+        const indicators =
+            data
+            .suspicious_activity
+            ?.indicators || [];
 
-                                </div>
 
+        if (indicators.length === 0) {
 
-                                <div class="indicator-details">
+            noIndicators.style.display =
+                "block";
 
-                                    <span class="indicator-severity">
+        }
 
-                                        ${indicator.severity}
+        else {
 
-                                    </span>
+            noIndicators.style.display =
+                "none";
 
 
-                                    <span class="indicator-points">
+            indicators.forEach(
+                indicator => {
 
-                                        +${indicator.points} points
-
-                                    </span>
-
-                                </div>
-
-                            `;
-
-
-                            indicatorContainer.appendChild(
-                                div
-                            );
-
-                        }
-                    );
-
-                }
-
-
-                /* ---------------- EXCHANGE ATTRIBUTION ---------------- */
-
-
-                const exchangeAttribution =
-                    document.getElementById(
-                        "exchangeAttribution"
-                    );
-
-
-                const exchangeAttributions =
-                    data.exchange_attributions || [];
-
-
-                exchangeAttribution.innerHTML =
-                    "";
-
-
-                if (exchangeAttributions.length === 0) {
-
-                    exchangeAttribution.innerHTML = `
-
-                        <div class="no-exchange">
-
-                            No known exchange interaction detected.
-
-                        </div>
-
-                    `;
-
-                }
-
-                else {
-
-                    exchangeAttributions.forEach(
-                        attribution => {
-
-                            const div =
-                                document.createElement(
-                                    "div"
-                                );
-
-
-                            div.className =
-                                "exchange-item";
-
-
-                            div.innerHTML = `
-
-                                <div>
-
-                                    <strong>
-                                        🚨 ${attribution.exchange}
-                                    </strong>
-
-
-                                    <div class="exchange-address">
-
-                                        ${attribution.address}
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="exchange-basis">
-
-                                    ✓ Matched against known-address dataset
-
-                                </div>
-
-                            `;
-
-
-                            exchangeAttribution.appendChild(
-                                div
-                            );
-
-                        }
-                    );
-
-                }
-
-
-                /* ---------------- INVESTIGATOR RECOMMENDATIONS ---------------- */
-
-
-                const recommendationContainer =
-                    document.getElementById(
-                        "recommendationContainer"
-                    );
-
-
-                recommendationContainer.innerHTML =
-                    "";
-
-
-                const recommendations =
-                    data.investigator_recommendations || [];
-
-
-                if (recommendations.length === 0) {
 
                     const div =
                         document.createElement(
@@ -1388,202 +1602,346 @@
 
 
                     div.className =
-                        "recommendation";
+                        "indicator";
 
 
                     div.innerHTML = `
 
-                        <span class="recommendation-icon">
-                            →
-                        </span>
+                        <div class="indicator-name">
 
-                        <span>
-                            Continue monitoring the wallet and review transaction history for unusual activity.
-                        </span>
+                            ⚠ ${indicator.message}
+
+                        </div>
+
+                        <div class="indicator-right">
+
+                            <span class="indicator-severity">
+                                ${indicator.severity}
+                            </span>
+
+                            <span class="indicator-points">
+                                +${indicator.points}
+                            </span>
+
+                        </div>
 
                     `;
 
 
-                    recommendationContainer.appendChild(
-                        div
-                    );
+                    indicatorContainer
+                        .appendChild(div);
+
 
                 }
+            );
 
-                else {
+        }
 
-                    recommendations.forEach(
-                        recommendation => {
 
-                            const div =
-                                document.createElement(
-                                    "div"
-                                );
 
+        /* ================= EXCHANGE ================= */
 
-                            div.className =
-                                "recommendation";
 
+        const exchangeContainer =
+            document.getElementById(
+                "exchangeAttribution"
+            );
 
-                            div.innerHTML = `
 
-                                <span class="recommendation-icon">
-                                    →
-                                </span>
+        exchangeContainer.innerHTML =
+            "";
 
 
-                                <span>
-                                    ${recommendation}
-                                </span>
+        const exchanges =
+            data.exchange_attributions || [];
 
-                            `;
 
+        if (exchanges.length === 0) {
 
-                            recommendationContainer.appendChild(
-                                div
-                            );
+            exchangeContainer.innerHTML = `
 
-                        }
-                    );
+                <div style="
+                    color:#687487;
+                    font-size:12px;
+                ">
+                    No known exchange interaction detected.
+                </div>
 
-                }
+            `;
 
+        }
 
-                /* ---------------- GRAPH BUTTON ---------------- */
+        else {
 
+            exchanges.forEach(
+                attribution => {
 
-                document.getElementById(
-                    "graphButtonSection"
-                ).style.display = "block";
 
-
-                /* ---------------- TRANSACTIONS ---------------- */
-
-
-                const transactionBody =
-                    document.getElementById(
-                        "transactionBody"
-                    );
-
-
-                transactionBody.innerHTML =
-                    "";
-
-
-                data.transactions.forEach(
-                    tx => {
-
-
-                        const row =
-                            document.createElement(
-                                "tr"
-                            );
-
-
-                        const directionClass =
-                            tx.direction === "OUT"
-                                ? "out"
-                                : "in";
-
-
-                        const exchange =
-                            tx.exchange
-                                ? `🚨 ${tx.exchange}`
-                                : "—";
-
-
-                        row.innerHTML = `
-
-                            <td class="address">
-
-                                ${tx.wallet}
-
-                            </td>
-
-
-                            <td class="${directionClass}">
-
-                                ${tx.direction}
-
-                            </td>
-
-
-                            <td class="address">
-
-                                ${tx.counterparty}
-
-                            </td>
-
-
-                            <td>
-
-                                ${tx.amount} ETH
-
-                            </td>
-
-
-                            <td class="exchange">
-
-                                ${exchange}
-
-                            </td>
-
-
-                            <td>
-
-                                ${tx.timestamp}
-
-                            </td>
-
-
-                            <td class="address">
-
-                                ${tx.hash}
-
-                            </td>
-
-                        `;
-
-
-                        transactionBody.appendChild(
-                            row
+                    const div =
+                        document.createElement(
+                            "div"
                         );
 
-                    }
-                );
+
+                    div.className =
+                        "exchange-item";
 
 
-                document.getElementById(
-                    "transactionsSection"
-                ).style.display = "block";
+                    div.innerHTML = `
+
+                        <div class="exchange-name">
+
+                             ${attribution.exchange}
+
+                        </div>
 
 
-            }
+                        <div class="exchange-address">
+
+                            ${attribution.address}
+
+                        </div>
 
 
-            catch (error) {
+                        <div class="exchange-match">
+
+                            ✓ Known-address dataset match
+
+                        </div>
+
+                    `;
 
 
-                console.error(error);
+                    exchangeContainer
+                        .appendChild(div);
 
 
-                message.innerText =
-                    "❌ Couldn't connect to server.";
-
-            }
+                }
+            );
 
         }
 
 
-        function openGraphPage() {
 
-            window.location.href =
-                "/graph";
+        /* ================= RECOMMENDATIONS ================= */
+
+
+        const recommendationContainer =
+            document.getElementById(
+                "recommendationContainer"
+            );
+
+
+        recommendationContainer.innerHTML =
+            "";
+
+
+        let recommendations =
+            data.investigator_recommendations || [];
+
+
+        if (recommendations.length === 0) {
+
+            recommendations = [
+
+                "Continue monitoring the wallet and review transaction history for unusual activity."
+
+            ];
 
         }
 
 
-    </script>
+        recommendations.forEach(
+            recommendation => {
+
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "recommendation";
+
+
+                div.innerHTML = `
+
+                    <span class="rec-icon">
+                        →
+                    </span>
+
+                    <span>
+                        ${recommendation}
+                    </span>
+
+                `;
+
+
+                recommendationContainer
+                    .appendChild(div);
+
+
+            }
+        );
+
+
+
+        /* ================= TRANSACTIONS ================= */
+
+
+        const transactionBody =
+            document.getElementById(
+                "transactionBody"
+            );
+
+
+        transactionBody.innerHTML =
+            "";
+
+
+        data.transactions.forEach(
+            tx => {
+
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const directionClass =
+                    tx.direction === "OUT"
+                        ? "out"
+                        : "in";
+
+
+                const exchange =
+                    tx.exchange
+                        ? "🚨 " + tx.exchange
+                        : "—";
+
+
+                row.innerHTML = `
+
+                    <td class="address">
+
+                        ${tx.wallet}
+
+                    </td>
+
+
+                    <td class="${directionClass}">
+
+                        ${tx.direction}
+
+                    </td>
+
+
+                    <td class="address">
+
+                        ${tx.counterparty}
+
+                    </td>
+
+
+                    <td>
+
+                        ${tx.amount} ETH
+
+                    </td>
+
+
+                    <td class="exchange">
+
+                        ${exchange}
+
+                    </td>
+
+
+                    <td>
+
+                        ${tx.timestamp}
+
+                    </td>
+
+
+                    <td class="address">
+
+                        ${tx.hash}
+
+                    </td>
+
+                `;
+
+
+                transactionBody
+                    .appendChild(row);
+
+
+            }
+        );
+
+
+
+        /* ================= GRAPH DATA ================= */
+
+
+        sessionStorage.setItem(
+
+            "traceGraph",
+
+            JSON.stringify({
+
+                graph:
+                    data.graph,
+
+                paths:
+                    data.paths || [],
+
+                transactions:
+                    data.transactions || [],
+
+                start_wallet:
+                    data.start_wallet,
+
+                max_hops:
+                    data.max_hops,
+
+                wallets_traced:
+                    data.wallets_traced
+
+            })
+
+        );
+
+
+    }
+
+
+    catch(error) {
+
+        console.error(error);
+
+
+        message.innerText =
+            "❌ Couldn't connect to server.";
+
+    }
+
+}
+
+
+/* ================= GRAPH PAGE ================= */
+
+function openGraphPage() {
+
+    window.location.href =
+        "/graph";
+
+}
+
+</script>
 
 
 </body>
