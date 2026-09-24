@@ -3,6 +3,8 @@ import json
 import csv
 import sqlite3
 import re
+import threading
+import time
 from contextlib import contextmanager
 import requests
 import networkx as nx
@@ -38,9 +40,308 @@ app = Flask(__name__)
 API_KEY = os.getenv("ETHERSCAN_API_KEY")
 
 BASE_URL = "https://api.etherscan.io/v2/api"
-
 CHAIN_ID = 1
+DEFAULT_BLOCKCHAIN = (os.getenv("DEFAULT_BLOCKCHAIN", "ethereum") or "ethereum").strip().lower()
+if DEFAULT_BLOCKCHAIN not in {"ethereum"}:
+    DEFAULT_BLOCKCHAIN = "ethereum"
 DATABASE = os.path.join(os.path.dirname(__file__), "tracex.db")
+SUPPORTED_BLOCKCHAINS = {
+    "ethereum": {
+        "label": "Ethereum",
+        "address_pattern": r"0x[a-fA-F0-9]{40}",
+        "chain_id": 1,
+        "api_key": "ETHERSCAN_API_KEY"
+    }
+}
+
+MONITORING_POLL_SECONDS = 15
+MONITORING_LOCK = threading.Lock()
+MONITORING_THREAD = None
+MONITORING_STOP_EVENT = threading.Event()
+MONITORING_CACHE = {}
+
+
+def get_blockchain_name(blockchain):
+    if blockchain is None:
+        return DEFAULT_BLOCKCHAIN
+
+    value = str(blockchain).strip().lower()
+    if not value:
+        return DEFAULT_BLOCKCHAIN
+    return value if value in SUPPORTED_BLOCKCHAINS else value
+
+
+def get_blockchain_provider(blockchain):
+    blockchain_name = get_blockchain_name(blockchain)
+    if blockchain_name == "ethereum":
+        return EthereumProvider(blockchain_name)
+    raise ValueError(f"Unsupported blockchain: {blockchain_name}")
+
+
+class BlockchainProvider:
+    blockchain_name = DEFAULT_BLOCKCHAIN
+    label = "Blockchain"
+    api_key_name = None
+    chain_id = 1
+
+    def __init__(self, blockchain_name=None):
+        if blockchain_name:
+            self.blockchain_name = blockchain_name
+
+    def validate_address(self, address):
+        raise NotImplementedError
+
+    def fetch_normal_transactions(self, wallet_address, limit=100):
+        raise NotImplementedError
+
+    def fetch_internal_transactions(self, wallet_address, limit=100):
+        return []
+
+    def fetch_transactions(self, wallet_address, limit=100):
+        transactions = self.fetch_normal_transactions(wallet_address, limit=limit)
+        transactions.extend(self.fetch_internal_transactions(wallet_address, limit=limit))
+        return transactions
+
+    def normalize_transaction(self, tx, wallet_address, transaction_type):
+        raise NotImplementedError
+
+
+class EthereumProvider(BlockchainProvider):
+    blockchain_name = "ethereum"
+    label = "Ethereum"
+    api_key_name = "ETHERSCAN_API_KEY"
+    chain_id = CHAIN_ID
+
+    def validate_address(self, address):
+        if not address:
+            return False
+        return bool(re.fullmatch(r"0x[a-fA-F0-9]{40}", address.strip()))
+
+    def normalize_transaction(self, tx, wallet_address, transaction_type):
+        if not tx:
+            return None
+
+        tx_hash = tx.get("hash") or tx.get("transactionHash") or tx.get("txHash")
+        from_address = tx.get("from", "")
+        to_address = tx.get("to", "")
+        if not tx_hash or not from_address or not to_address:
+            return None
+
+        wallet_lower = wallet_address.lower()
+
+        if from_address.lower() == wallet_lower:
+            direction = "OUT"
+            counterparty = to_address
+        else:
+            direction = "IN"
+            counterparty = from_address
+
+        value_wei = tx.get("value")
+        try:
+            value_eth = int(value_wei or 0) / 10**18
+        except (TypeError, ValueError):
+            value_eth = 0
+
+        timestamp = tx.get("timeStamp") or tx.get("timestamp")
+        if timestamp is not None:
+            ts_value = format_timestamp(str(timestamp))
+        else:
+            ts_value = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        amount = round(value_eth, 6)
+        return {
+            "blockchain": self.blockchain_name,
+            "transaction_hash": tx_hash,
+            "block_number": tx.get("blockNumber") or tx.get("block_number"),
+            "timestamp": ts_value,
+            "sender": from_address,
+            "receiver": to_address,
+            "amount": amount,
+            "raw_amount": int(value_wei or 0),
+            "display_amount": amount,
+            "asset": "ETH",
+            "asset_type": "native",
+            "token_contract": None,
+            "token_symbol": "ETH",
+            "token_decimals": 18,
+            "transaction_type": transaction_type,
+            "status": "failed" if str(tx.get("isError", "0")) == "1" else "success",
+            "hash": tx_hash,
+            "from": from_address,
+            "to": to_address,
+            "direction": direction,
+            "counterparty": counterparty,
+            "exchange": identify_exchange(counterparty),
+            "type": transaction_type,
+            "wallet": wallet_address,
+            "value": amount,
+            "display_value": amount,
+            "asset_name": "Ethereum"
+        }
+
+    def normalize_token_transfer(self, tx, wallet_address):
+        if not tx:
+            return None
+
+        tx_hash = tx.get("hash") or tx.get("transactionHash") or tx.get("txHash")
+        from_address = tx.get("from", "")
+        to_address = tx.get("to", "")
+        if not tx_hash or not from_address or not to_address:
+            return None
+
+        wallet_lower = wallet_address.lower()
+        if from_address.lower() == wallet_lower:
+            direction = "OUT"
+            counterparty = to_address
+        else:
+            direction = "IN"
+            counterparty = from_address
+
+        decimal_places = tx.get("tokenDecimal") or tx.get("decimals") or 0
+        try:
+            token_decimals = int(decimal_places)
+        except (TypeError, ValueError):
+            token_decimals = 0
+
+        raw_amount = int(tx.get("value") or 0)
+        if token_decimals > 0:
+            display_amount = raw_amount / (10 ** token_decimals)
+        else:
+            display_amount = raw_amount
+
+        symbol = tx.get("tokenSymbol") or tx.get("symbol") or "UNKNOWN"
+        contract = tx.get("contractAddress") or tx.get("tokenContract") or tx.get("contract_address") or None
+        timestamp = tx.get("timeStamp") or tx.get("timestamp")
+        if timestamp is not None:
+            ts_value = format_timestamp(str(timestamp))
+        else:
+            ts_value = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        amount = round(float(display_amount), 8)
+        status = "failed" if str(tx.get("isError", "0")) == "1" else "success"
+
+        return {
+            "blockchain": self.blockchain_name,
+            "transaction_hash": tx_hash,
+            "block_number": tx.get("blockNumber") or tx.get("block_number"),
+            "timestamp": ts_value,
+            "sender": from_address,
+            "receiver": to_address,
+            "amount": amount,
+            "raw_amount": raw_amount,
+            "display_amount": amount,
+            "asset": symbol,
+            "asset_type": "token",
+            "token_contract": contract,
+            "token_symbol": symbol,
+            "token_decimals": token_decimals,
+            "transaction_type": "ERC20_TRANSFER",
+            "status": status,
+            "hash": tx_hash,
+            "from": from_address,
+            "to": to_address,
+            "direction": direction,
+            "counterparty": counterparty,
+            "exchange": identify_exchange(counterparty),
+            "type": "ERC20_TRANSFER",
+            "wallet": wallet_address,
+            "value": amount,
+            "display_value": amount,
+            "asset_name": tx.get("tokenName") or tx.get("name") or symbol,
+            "token_name": tx.get("tokenName") or tx.get("name") or symbol
+        }
+
+    def fetch_erc20_transactions(self, wallet_address, limit=100):
+        params = {
+            "chainid": self.chain_id,
+            "module": "account",
+            "action": "tokentx",
+            "address": wallet_address,
+            "startblock": 0,
+            "endblock": 999999999,
+            "page": 1,
+            "offset": limit,
+            "sort": "desc",
+            "apikey": os.getenv(self.api_key_name)
+        }
+
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=20)
+            data = response.json()
+        except Exception:
+            return []
+
+        if data.get("status") != "1":
+            return []
+
+        transactions = []
+        for tx in data.get("result", []):
+            normalized = self.normalize_token_transfer(tx, wallet_address)
+            if normalized:
+                transactions.append(normalized)
+        return transactions
+
+    def fetch_normal_transactions(self, wallet_address, limit=100):
+        params = {
+            "chainid": self.chain_id,
+            "module": "account",
+            "action": "txlist",
+            "address": wallet_address,
+            "startblock": 0,
+            "endblock": 999999999,
+            "page": 1,
+            "offset": limit,
+            "sort": "desc",
+            "apikey": os.getenv(self.api_key_name)
+        }
+
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=20)
+            data = response.json()
+        except Exception:
+            return []
+
+        if data.get("status") != "1":
+            return []
+
+        transactions = []
+        for tx in data.get("result", []):
+            normalized = self.normalize_transaction(tx, wallet_address, "normal")
+            if normalized:
+                transactions.append(normalized)
+        return transactions
+
+    def fetch_internal_transactions(self, wallet_address, limit=100):
+        params = {
+            "chainid": self.chain_id,
+            "module": "account",
+            "action": "txlistinternal",
+            "address": wallet_address,
+            "startblock": 0,
+            "endblock": 999999999,
+            "page": 1,
+            "offset": limit,
+            "sort": "desc",
+            "apikey": os.getenv(self.api_key_name)
+        }
+
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=20)
+            data = response.json()
+        except Exception:
+            return []
+
+        if data.get("status") != "1":
+            return []
+
+        transactions = []
+        for tx in data.get("result", []):
+            if str(tx.get("isError", "0")) == "1":
+                continue
+            normalized = self.normalize_transaction(tx, wallet_address, "internal")
+            if normalized:
+                transactions.append(normalized)
+        return transactions
 
 
 def db_connect():
@@ -63,12 +364,13 @@ def db_session():
         connection.close()
 
 
-def initialize_database():
+def ensure_database_schema():
     with db_session() as db:
         db.executescript("""
             CREATE TABLE IF NOT EXISTS investigations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 wallet_address TEXT NOT NULL,
+                blockchain TEXT NOT NULL DEFAULT 'ethereum',
                 timestamp TEXT NOT NULL,
                 risk_score INTEGER NOT NULL,
                 risk_level TEXT NOT NULL,
@@ -85,7 +387,10 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 investigation_id INTEGER NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+                blockchain TEXT NOT NULL DEFAULT 'ethereum',
                 tx_hash TEXT, sender TEXT, receiver TEXT, amount REAL,
+                raw_amount REAL, display_amount REAL, asset TEXT, asset_type TEXT,
+                token_contract TEXT, token_symbol TEXT, token_decimals INTEGER,
                 timestamp TEXT, direction TEXT, exchange TEXT, type TEXT
             );
             CREATE TABLE IF NOT EXISTS recommendations (
@@ -93,7 +398,59 @@ def initialize_database():
                 investigation_id INTEGER NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
                 recommendation TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS monitored_wallets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER,
+                wallet_address TEXT NOT NULL,
+                blockchain TEXT NOT NULL DEFAULT 'ethereum',
+                status TEXT NOT NULL DEFAULT 'monitoring',
+                last_checked_at TEXT,
+                last_transaction_timestamp TEXT,
+                last_transaction_hash TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                max_hops INTEGER DEFAULT 2,
+                max_wallets INTEGER DEFAULT 8
+            );
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER,
+                wallet_address TEXT NOT NULL,
+                blockchain TEXT NOT NULL DEFAULT 'ethereum',
+                transaction_hash TEXT NOT NULL,
+                alert_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                risk_contribution INTEGER,
+                timestamp TEXT,
+                created_at TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'NEW',
+                evidence TEXT
+            );
         """)
+
+        investigation_columns = {row[1] for row in db.execute("PRAGMA table_info(investigations)").fetchall()}
+        if "blockchain" not in investigation_columns:
+            db.execute("ALTER TABLE investigations ADD COLUMN blockchain TEXT NOT NULL DEFAULT 'ethereum'")
+
+        transaction_columns = {row[1] for row in db.execute("PRAGMA table_info(transactions)").fetchall()}
+        for column_name, default_sql in {
+            "blockchain": "TEXT NOT NULL DEFAULT 'ethereum'",
+            "raw_amount": "REAL",
+            "display_amount": "REAL",
+            "asset": "TEXT",
+            "asset_type": "TEXT",
+            "token_contract": "TEXT",
+            "token_symbol": "TEXT",
+            "token_decimals": "INTEGER"
+        }.items():
+            if column_name not in transaction_columns:
+                db.execute(f"ALTER TABLE transactions ADD COLUMN {column_name} {default_sql}")
+
+
+def initialize_database():
+    ensure_database_schema()
 
 
 initialize_database()
@@ -101,22 +458,42 @@ initialize_database()
 
 def save_investigation(result):
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    blockchain = get_blockchain_name(result.get("blockchain", DEFAULT_BLOCKCHAIN))
+    result["blockchain"] = blockchain
     result["timestamp"] = timestamp
     with db_session() as db:
         cursor = db.execute("""INSERT INTO investigations
-            (wallet_address,timestamp,risk_score,risk_level,transaction_count,wallet_count,max_hops,result_json)
-            VALUES (?,?,?,?,?,?,?,?)""", (
-            result["start_wallet"], timestamp, result["risk"]["score"], result["risk"]["level"],
+            (wallet_address,blockchain,timestamp,risk_score,risk_level,transaction_count,wallet_count,max_hops,result_json)
+            VALUES (?,?,?,?,?,?,?,?,?)""", (
+            result["start_wallet"], blockchain, timestamp, result["risk"]["score"], result["risk"]["level"],
             len(result["transactions"]), result["wallets_traced"], result["max_hops"],
             json.dumps(result)))
         investigation_id = cursor.lastrowid
         db.executemany("INSERT INTO indicators(investigation_id,indicator) VALUES (?,?)", [
             (investigation_id, item["message"]) for item in result["suspicious_activity"]["indicators"]])
         db.executemany("""INSERT INTO transactions
-            (investigation_id,tx_hash,sender,receiver,amount,timestamp,direction,exchange,type)
-            VALUES (?,?,?,?,?,?,?,?,?)""", [
-            (investigation_id, tx.get("hash"), tx.get("from"), tx.get("to"), tx.get("amount"),
-             tx.get("timestamp"), tx.get("direction"), tx.get("exchange"), tx.get("type"))
+            (investigation_id,blockchain,tx_hash,sender,receiver,amount,raw_amount,display_amount,asset,asset_type,
+             token_contract,token_symbol,token_decimals,timestamp,direction,exchange,type)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
+            (
+                investigation_id,
+                blockchain,
+                tx.get("transaction_hash") or tx.get("hash"),
+                tx.get("from"),
+                tx.get("to"),
+                tx.get("amount"),
+                float(tx.get("raw_amount")) if tx.get("raw_amount") is not None else None,
+                float(tx.get("display_amount")) if tx.get("display_amount") is not None else None,
+                tx.get("asset") or tx.get("token_symbol") or "ETH",
+                tx.get("asset_type") or "native",
+                tx.get("token_contract"),
+                tx.get("token_symbol") or tx.get("asset") or "ETH",
+                tx.get("token_decimals"),
+                tx.get("timestamp"),
+                tx.get("direction"),
+                tx.get("exchange"),
+                tx.get("type")
+            )
             for tx in result["transactions"]])
         db.executemany("INSERT INTO recommendations(investigation_id,recommendation) VALUES (?,?)", [
             (investigation_id, item) for item in result["investigator_recommendations"]])
@@ -179,197 +556,382 @@ def format_timestamp(timestamp):
 # NORMAL TRANSACTIONS
 # =========================
 
-def get_wallet_transactions(wallet_address, limit=100):
-
-    params = {
-        "chainid": CHAIN_ID,
-        "module": "account",
-        "action": "txlist",
-        "address": wallet_address,
-        "startblock": 0,
-        "endblock": 999999999,
-        "page": 1,
-        "offset": limit,
-        "sort": "desc",
-        "apikey": API_KEY
-    }
-
-    try:
-
-        response = requests.get(
-            BASE_URL,
-            params=params,
-            timeout=20
-        )
-
-        data = response.json()
-
-    except Exception:
-
+def get_wallet_transactions(wallet_address, limit=100, blockchain=DEFAULT_BLOCKCHAIN):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(wallet_address):
         return []
-
-    if data.get("status") != "1":
-        return []
-
-    transactions = []
-
-    wallet_lower = wallet_address.lower()
-
-    for tx in data["result"]:
-
-        from_address = tx.get("from", "")
-        to_address = tx.get("to", "")
-
-        if not from_address or not to_address:
-            continue
-
-        if from_address.lower() == wallet_lower:
-
-            direction = "OUT"
-            counterparty = to_address
-
-        else:
-
-            direction = "IN"
-            counterparty = from_address
-
-        value_eth = int(
-            tx.get("value", 0)
-        ) / 10**18
-
-        timestamp = format_timestamp(
-            tx["timeStamp"]
-        )
-
-        transactions.append({
-
-            "hash": tx["hash"],
-
-            "from": from_address,
-
-            "to": to_address,
-
-            "direction": direction,
-
-            "counterparty": counterparty,
-
-            "amount": round(
-                value_eth,
-                6
-            ),
-
-            "timestamp": timestamp,
-
-            "exchange": identify_exchange(
-                counterparty
-            ),
-
-            "type": "normal"
-
-        })
-
-    return transactions
+    return provider.fetch_normal_transactions(wallet_address, limit=limit)
 
 
 # =========================
 # INTERNAL TRANSACTIONS
 # =========================
 
-def get_internal_transactions(wallet_address, limit=100):
-
-    params = {
-        "chainid": CHAIN_ID,
-        "module": "account",
-        "action": "txlistinternal",
-        "address": wallet_address,
-        "startblock": 0,
-        "endblock": 999999999,
-        "page": 1,
-        "offset": limit,
-        "sort": "desc",
-        "apikey": API_KEY
-    }
-
-    try:
-
-        response = requests.get(
-            BASE_URL,
-            params=params,
-            timeout=20
-        )
-
-        data = response.json()
-
-    except Exception:
-
+def get_internal_transactions(wallet_address, limit=100, blockchain=DEFAULT_BLOCKCHAIN):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(wallet_address):
         return []
+    return provider.fetch_internal_transactions(wallet_address, limit=limit)
 
-    if data.get("status") != "1":
+
+def get_erc20_transactions(wallet_address, limit=100, blockchain=DEFAULT_BLOCKCHAIN):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(wallet_address):
+        return []
+    if hasattr(provider, "fetch_erc20_transactions"):
+        return provider.fetch_erc20_transactions(wallet_address, limit=limit)
+    return []
+
+
+def _monitor_identity(transaction):
+    if not transaction:
+        return None
+    tx_hash = str(transaction.get("transaction_hash") or transaction.get("hash") or "").strip().lower()
+    blockchain = str(transaction.get("blockchain") or DEFAULT_BLOCKCHAIN).strip().lower()
+    if not tx_hash:
+        return None
+    return (blockchain, tx_hash)
+
+
+def filter_new_transactions(previous_transactions, new_transactions):
+    previous_ids = set()
+    for tx in previous_transactions or []:
+        key = _monitor_identity(tx)
+        if key:
+            previous_ids.add(key)
+
+    filtered = []
+    for tx in new_transactions or []:
+        key = _monitor_identity(tx)
+        if key and key in previous_ids:
+            continue
+        filtered.append(tx)
+    return filtered
+
+
+def fetch_monitor_transactions(wallet_address, limit=100, blockchain=DEFAULT_BLOCKCHAIN):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(wallet_address):
         return []
 
     transactions = []
+    transactions.extend(get_wallet_transactions(wallet_address, limit=limit, blockchain=blockchain))
+    transactions.extend(get_internal_transactions(wallet_address, limit=limit, blockchain=blockchain))
+    transactions.extend(get_erc20_transactions(wallet_address, limit=limit, blockchain=blockchain))
+    return transactions
 
-    wallet_lower = wallet_address.lower()
 
-    for tx in data["result"]:
+def _normalize_monitor_timestamp(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(int(value), timezone.utc)
+        except (TypeError, ValueError, OSError):
+            return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+        try:
+            return datetime.fromtimestamp(int(float(value)), timezone.utc)
+        except (TypeError, ValueError):
+            pass
+        try:
+            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S UTC").replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return None
 
-        from_address = tx.get("from", "")
-        to_address = tx.get("to", "")
 
-        if not from_address or not to_address:
-            continue
+def _monitor_alert_severity(alert_type):
+    if alert_type in {"rapid_movement", "fund_consolidation", "multi_hop"}:
+        return "HIGH"
+    if alert_type in {"high_activity", "fund_splitting", "erc20_activity"}:
+        return "MEDIUM"
+    return "LOW"
 
-        if str(
-            tx.get("isError", "0")
-        ) == "1":
-            continue
 
-        if from_address.lower() == wallet_lower:
+def start_monitoring(wallet_address, blockchain=DEFAULT_BLOCKCHAIN, investigation_id=None, max_hops=2, max_wallets=8):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(wallet_address):
+        raise ValueError(f"Invalid {provider.label} wallet address")
 
-            direction = "OUT"
-            counterparty = to_address
-
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    with db_session() as db:
+        existing = db.execute(
+            "SELECT id, status FROM monitored_wallets WHERE wallet_address=? AND blockchain=? ORDER BY id DESC LIMIT 1",
+            (wallet_address.strip(), get_blockchain_name(blockchain))
+        ).fetchone()
+        if existing:
+            db.execute(
+                "UPDATE monitored_wallets SET status=?, updated_at=?, investigation_id=?, max_hops=?, max_wallets=? WHERE id=?",
+                ("monitoring", now, investigation_id, max_hops, max_wallets, existing["id"])
+            )
+            monitor_id = existing["id"]
         else:
+            cursor = db.execute(
+                "INSERT INTO monitored_wallets (investigation_id, wallet_address, blockchain, status, last_checked_at, created_at, updated_at, max_hops, max_wallets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (investigation_id, wallet_address.strip(), get_blockchain_name(blockchain), "monitoring", now, now, now, max_hops, max_wallets)
+            )
+            monitor_id = cursor.lastrowid
 
-            direction = "IN"
-            counterparty = from_address
+    ensure_monitoring_worker()
+    return {
+        "id": monitor_id,
+        "wallet_address": wallet_address.strip(),
+        "blockchain": get_blockchain_name(blockchain),
+        "status": "monitoring",
+        "last_checked_at": now,
+        "created_at": now,
+        "updated_at": now,
+        "max_hops": max_hops,
+        "max_wallets": max_wallets,
+    }
 
-        value_eth = int(
-            tx.get("value", 0)
-        ) / 10**18
 
-        timestamp = format_timestamp(
-            tx["timeStamp"]
+def stop_monitoring(wallet_address, blockchain=DEFAULT_BLOCKCHAIN):
+    target_wallet = wallet_address.strip()
+    target_blockchain = get_blockchain_name(blockchain)
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    with db_session() as db:
+        row = db.execute(
+            "SELECT * FROM monitored_wallets WHERE wallet_address=? AND blockchain=? ORDER BY id DESC LIMIT 1",
+            (target_wallet, target_blockchain)
+        ).fetchone()
+        if row is None:
+            return {"wallet_address": target_wallet, "blockchain": target_blockchain, "status": "stopped"}
+        db.execute(
+            "UPDATE monitored_wallets SET status=?, updated_at=? WHERE id=?",
+            ("stopped", now, row["id"])
+        )
+    return {"wallet_address": target_wallet, "blockchain": target_blockchain, "status": "stopped", "updated_at": now}
+
+
+def get_monitoring_status(wallet_address=None, blockchain=DEFAULT_BLOCKCHAIN):
+    target_blockchain = get_blockchain_name(blockchain)
+    with db_session() as db:
+        if wallet_address is None:
+            rows = db.execute(
+                "SELECT * FROM monitored_wallets WHERE blockchain=? ORDER BY updated_at DESC",
+                (target_blockchain,)
+            ).fetchall()
+            return {"wallets": [dict(row) for row in rows]}
+        row = db.execute(
+            "SELECT * FROM monitored_wallets WHERE wallet_address=? AND blockchain=? ORDER BY id DESC LIMIT 1",
+            (wallet_address.strip(), target_blockchain)
+        ).fetchone()
+        if row is None:
+            return {"wallet_address": wallet_address.strip(), "blockchain": target_blockchain, "status": "not_monitoring"}
+        return dict(row)
+
+
+def ensure_monitoring_worker():
+    global MONITORING_THREAD
+    with MONITORING_LOCK:
+        if MONITORING_THREAD is not None and MONITORING_THREAD.is_alive():
+            return
+        MONITORING_STOP_EVENT.clear()
+        MONITORING_THREAD = threading.Thread(target=_monitoring_loop, name="tracex-monitor-worker", daemon=True)
+        MONITORING_THREAD.start()
+
+
+def _monitoring_loop():
+    while not MONITORING_STOP_EVENT.is_set():
+        try:
+            _poll_all_monitored_wallets()
+        except Exception:
+            pass
+        MONITORING_STOP_EVENT.wait(MONITORING_POLL_SECONDS)
+
+
+def _poll_all_monitored_wallets():
+    with db_session() as db:
+        rows = db.execute(
+            "SELECT * FROM monitored_wallets WHERE status='monitoring' ORDER BY updated_at DESC"
+        ).fetchall()
+    for row in rows:
+        poll_wallet_monitor(dict(row))
+
+
+def poll_wallet_monitor(monitor_row):
+    wallet_address = monitor_row.get("wallet_address")
+    blockchain = monitor_row.get("blockchain") or DEFAULT_BLOCKCHAIN
+    if not wallet_address:
+        return
+
+    try:
+        current_transactions = fetch_monitor_transactions(wallet_address, limit=100, blockchain=blockchain)
+    except Exception:
+        return
+
+    if not current_transactions:
+        return
+
+    seen_key = (blockchain.lower(), wallet_address.lower())
+    previous_seen = MONITORING_CACHE.get(seen_key, set())
+    new_transactions = []
+    for tx in current_transactions:
+        tx_key = _monitor_identity(tx)
+        if tx_key and tx_key not in previous_seen:
+            new_transactions.append(tx)
+    MONITORING_CACHE[seen_key] = set(_monitor_identity(tx) for tx in current_transactions if _monitor_identity(tx) is not None)
+
+    if not new_transactions:
+        return
+
+    new_transactions = sorted(new_transactions, key=lambda tx: _normalize_monitor_timestamp(tx.get("timestamp") or tx.get("timeStamp")) or datetime.min.replace(tzinfo=timezone.utc))
+
+    for tx in new_transactions:
+        _evaluate_monitor_transaction(wallet_address, tx, blockchain)
+
+    latest = max(current_transactions, key=lambda tx: _normalize_monitor_timestamp(tx.get("timestamp") or tx.get("timeStamp")) or datetime.min.replace(tzinfo=timezone.utc))
+    last_hash = latest.get("transaction_hash") or latest.get("hash")
+    last_timestamp = latest.get("timestamp") or latest.get("timeStamp")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    with db_session() as db:
+        db.execute(
+            "UPDATE monitored_wallets SET last_checked_at=?, last_transaction_timestamp=?, last_transaction_hash=?, updated_at=? WHERE id=?",
+            (now, str(last_timestamp), str(last_hash), now, monitor_row["id"])
         )
 
-        transactions.append({
 
-            "hash": tx["hash"],
+def _evaluate_monitor_transaction(wallet_address, transaction, blockchain):
+    tx_hash = transaction.get("transaction_hash") or transaction.get("hash")
+    if not tx_hash:
+        return None
 
-            "from": from_address,
+    alerts = []
+    tx_time = _normalize_monitor_timestamp(transaction.get("timestamp") or transaction.get("timeStamp"))
+    if tx_time is None:
+        tx_time = datetime.now(timezone.utc)
 
-            "to": to_address,
+    recent_transactions = fetch_monitor_transactions(wallet_address, limit=50, blockchain=blockchain)
+    recent_transactions = [tx for tx in recent_transactions if (tx.get("transaction_hash") or tx.get("hash")) != tx_hash]
+    for prior in recent_transactions:
+        prior_time = _normalize_monitor_timestamp(prior.get("timestamp") or prior.get("timeStamp"))
+        if prior_time is None:
+            continue
+        delta = (tx_time - prior_time).total_seconds()
+        if 0 <= delta <= 600 and prior.get("direction") == "OUT" and transaction.get("direction") == "IN":
+            alerts.append(("rapid_movement", "Rapid movement of funds", "Funds moved quickly after receipt"))
+            break
 
-            "direction": direction,
+    if len(recent_transactions) >= 20:
+        alerts.append(("high_activity", "High transaction activity", "High transaction activity detected within the monitored wallet"))
 
-            "counterparty": counterparty,
+    if transaction.get("asset_type") == "token":
+        alerts.append(("erc20_activity", "Token activity detected", f"{transaction.get('asset') or transaction.get('token_symbol') or 'Token'} movement observed"))
 
-            "amount": round(
-                value_eth,
-                6
-            ),
+    created = []
+    for alert_type, title, description in alerts:
+        alert = create_monitor_alert(
+            wallet_address=wallet_address,
+            transaction=transaction,
+            alert_type=alert_type,
+            severity=_monitor_alert_severity(alert_type),
+            title=title,
+            description=description,
+            investigation_id=None,
+            blockchain=blockchain,
+            evidence={"source": "monitoring_poll", "asset": transaction.get("asset") or transaction.get("token_symbol") or "ETH"}
+        )
+        if alert is not None:
+            created.append(alert)
+    return created
 
+
+def create_monitor_alert(wallet_address, transaction, alert_type, severity, title, description, investigation_id=None, blockchain=None, risk_contribution=None, evidence=None):
+    if not wallet_address or not transaction:
+        return None
+    blockchain_name = get_blockchain_name(blockchain or transaction.get("blockchain") or DEFAULT_BLOCKCHAIN)
+    tx_hash = str(transaction.get("transaction_hash") or transaction.get("hash") or "").strip()
+    if not tx_hash:
+        return None
+
+    with db_session() as db:
+        existing = db.execute(
+            "SELECT id FROM alerts WHERE wallet_address=? AND blockchain=? AND transaction_hash=? AND alert_type=? AND status IN ('NEW','ACKNOWLEDGED','RESOLVED')",
+            (wallet_address.strip(), blockchain_name, tx_hash, alert_type)
+        ).fetchone()
+        if existing:
+            return None
+
+        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = transaction.get("timestamp") or created_at
+        payload = {
+            "wallet_address": wallet_address.strip(),
+            "blockchain": blockchain_name,
+            "transaction_hash": tx_hash,
+            "alert_type": alert_type,
+            "severity": severity,
+            "title": title,
+            "description": description,
+            "risk_contribution": risk_contribution,
             "timestamp": timestamp,
+            "created_at": created_at,
+            "status": "NEW",
+            "evidence": json.dumps(evidence or {})
+        }
+        cursor = db.execute(
+            "INSERT INTO alerts (investigation_id, wallet_address, blockchain, transaction_hash, alert_type, severity, title, description, risk_contribution, timestamp, created_at, status, evidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                investigation_id,
+                payload["wallet_address"],
+                payload["blockchain"],
+                payload["transaction_hash"],
+                payload["alert_type"],
+                payload["severity"],
+                payload["title"],
+                payload["description"],
+                payload["risk_contribution"],
+                payload["timestamp"],
+                payload["created_at"],
+                payload["status"],
+                payload["evidence"],
+            )
+        )
+        alert_id = cursor.lastrowid
+    return {"id": alert_id, **payload}
 
-            "exchange": identify_exchange(
-                counterparty
-            ),
 
-            "type": "internal"
+def list_alerts(wallet_address=None, blockchain=DEFAULT_BLOCKCHAIN):
+    target_blockchain = get_blockchain_name(blockchain)
+    with db_session() as db:
+        if wallet_address:
+            rows = db.execute(
+                "SELECT * FROM alerts WHERE wallet_address=? AND blockchain=? ORDER BY created_at DESC",
+                (wallet_address.strip(), target_blockchain)
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT * FROM alerts WHERE blockchain=? ORDER BY created_at DESC",
+                (target_blockchain,)
+            ).fetchall()
+        items = []
+        for row in rows:
+            item = dict(row)
+            item["evidence"] = json.loads(item.get("evidence") or "{}")
+            items.append(item)
+        return items
 
-        })
 
-    return transactions
+def acknowledge_alert(alert_id):
+    with db_session() as db:
+        row = db.execute("SELECT * FROM alerts WHERE id=?", (alert_id,)).fetchone()
+        if row is None:
+            return None
+        db.execute("UPDATE alerts SET status='ACKNOWLEDGED' WHERE id=?", (alert_id,))
+    return {"id": alert_id, "status": "ACKNOWLEDGED"}
+
+
+def resolve_alert(alert_id):
+    with db_session() as db:
+        row = db.execute("SELECT * FROM alerts WHERE id=?", (alert_id,)).fetchone()
+        if row is None:
+            return None
+        db.execute("UPDATE alerts SET status='RESOLVED' WHERE id=?", (alert_id,))
+    return {"id": alert_id, "status": "RESOLVED"}
 
 
 # =========================
@@ -379,8 +941,12 @@ def get_internal_transactions(wallet_address, limit=100):
 def trace_wallet(
     start_wallet,
     max_hops=5,
-    max_wallets=50
+    max_wallets=50,
+    blockchain=DEFAULT_BLOCKCHAIN
 ):
+    provider = get_blockchain_provider(blockchain)
+    if not provider.validate_address(start_wallet):
+        raise ValueError(f"Invalid {provider.label} wallet address")
 
     visited = set()
 
@@ -405,17 +971,26 @@ def trace_wallet(
 
         normal_transactions = get_wallet_transactions(
             current_wallet,
-            limit=100
+            limit=100,
+            blockchain=blockchain
         )
 
         internal_transactions = get_internal_transactions(
             current_wallet,
-            limit=100
+            limit=100,
+            blockchain=blockchain
+        )
+
+        token_transactions = get_erc20_transactions(
+            current_wallet,
+            limit=100,
+            blockchain=blockchain
         )
 
         transactions = (
             normal_transactions +
-            internal_transactions
+            internal_transactions +
+            token_transactions
         )
 
         # =========================
@@ -429,10 +1004,11 @@ def trace_wallet(
         for tx in transactions:
 
             dedup_key = (
-                tx["hash"].lower(),
-                tx["from"].lower(),
-                tx["to"].lower(),
-                tx["amount"]
+                str(tx.get("transaction_hash") or tx.get("hash", "")).lower(),
+                str(tx.get("from", "")).lower(),
+                str(tx.get("to", "")).lower(),
+                str(tx.get("token_contract") or ""),
+                tx.get("amount")
             )
 
             if dedup_key in seen:
@@ -485,6 +1061,8 @@ def trace_wallet(
                         "hop": hop + 1,
 
                         "type": tx["type"],
+
+                        "asset": tx.get("asset") or "ETH",
 
                         "exchange":
                             identify_exchange(
@@ -1074,7 +1652,11 @@ def build_wallet_graph(trace_result):
             type=path.get(
                 "type",
                 "normal"
-            )
+            ),
+
+            asset=path.get("asset") or "ETH",
+
+            label=f"{path['amount']} {path.get('asset') or 'ETH'}"
 
         )
 
@@ -1147,7 +1729,11 @@ def build_wallet_graph(trace_result):
             "type": data.get(
                 "type",
                 "normal"
-            )
+            ),
+
+            "asset": data.get("asset") or "ETH",
+
+            "label": data.get("label") or f"{data.get('amount', 0)} {data.get('asset') or 'ETH'}"
 
         })
 
@@ -1328,25 +1914,38 @@ def generate_pdf_report(report_data):
         transaction_data = [
             [
                 "Direction",
-                "Counterparty",
+                "Sender",
+                "Receiver",
+                "Asset",
                 "Amount",
-                "Exchange",
+                "Timestamp",
+                "Tx Hash",
+                "Token Contract",
                 "Type"
             ]
         ]
 
         for tx in transactions[:200]:
+            asset_name = tx.get("asset") or tx.get("token_symbol") or "ETH"
+            sender = tx.get("sender") or tx.get("from") or tx.get("counterparty") or ""
+            receiver = tx.get("receiver") or tx.get("to") or ""
+            tx_hash = tx.get("transaction_hash") or tx.get("hash") or ""
+            token_contract = tx.get("token_contract") or tx.get("contractAddress") or tx.get("contract_address") or ""
             transaction_data.append([
                 str(tx.get("direction", "")),
-                str(tx.get("counterparty", ""))[:18],
+                str(sender),
+                str(receiver),
+                str(asset_name),
                 str(tx.get("amount", "")),
-                str(tx.get("exchange") or "None"),
+                str(tx.get("timestamp", "")),
+                str(tx_hash),
+                str(token_contract),
                 str(tx.get("type", ""))
             ])
 
         transaction_table = LongTable(
             transaction_data,
-            colWidths=[55, 130, 70, 80, 55],
+            colWidths=[55, 110, 110, 55, 60, 88, 110, 110, 55],
             repeatRows=1
         )
 
@@ -1393,6 +1992,71 @@ def generate_pdf_report(report_data):
     buffer.seek(0)
 
     return buffer
+
+
+# =========================
+# MONITORING API
+# =========================
+
+@app.route("/monitor/start", methods=["POST"])
+def monitor_start():
+    data = request.get_json(silent=True) or {}
+    wallet_address = (data.get("wallet_address") or data.get("wallet") or "").strip()
+    blockchain = get_blockchain_name(data.get("blockchain", DEFAULT_BLOCKCHAIN))
+    investigation_id = data.get("investigation_id")
+
+    if not wallet_address:
+        return jsonify({"error": "Wallet address is required"}), 400
+
+    try:
+        monitor = start_monitoring(wallet_address, blockchain=blockchain, investigation_id=investigation_id)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(monitor)
+
+
+@app.route("/monitor/stop", methods=["POST"])
+def monitor_stop():
+    data = request.get_json(silent=True) or {}
+    wallet_address = (data.get("wallet_address") or data.get("wallet") or "").strip()
+    blockchain = get_blockchain_name(data.get("blockchain", DEFAULT_BLOCKCHAIN))
+    if not wallet_address:
+        return jsonify({"error": "Wallet address is required"}), 400
+    return jsonify(stop_monitoring(wallet_address, blockchain=blockchain))
+
+
+@app.route("/monitor/status")
+def monitor_status():
+    wallet_address = request.args.get("wallet") or request.args.get("wallet_address")
+    blockchain = get_blockchain_name(request.args.get("blockchain") or DEFAULT_BLOCKCHAIN)
+    if wallet_address:
+        return jsonify(get_monitoring_status(wallet_address=wallet_address, blockchain=blockchain))
+    return jsonify(get_monitoring_status(blockchain=blockchain))
+
+
+@app.route("/alerts")
+def alerts_list():
+    wallet_address = request.args.get("wallet") or request.args.get("wallet_address")
+    blockchain = get_blockchain_name(request.args.get("blockchain") or DEFAULT_BLOCKCHAIN)
+    return jsonify(list_alerts(wallet_address=wallet_address, blockchain=blockchain))
+
+
+@app.route("/alerts/<int:alert_id>/acknowledge", methods=["POST"])
+def alert_acknowledge(alert_id):
+    result = acknowledge_alert(alert_id)
+    if result is None:
+        return jsonify({"error": "Alert not found"}), 404
+    return jsonify(result)
+
+
+@app.route("/alerts/<int:alert_id>/resolve", methods=["POST"])
+def alert_resolve(alert_id):
+    result = resolve_alert(alert_id)
+    if result is None:
+        return jsonify({"error": "Alert not found"}), 404
+    return jsonify(result)
+
+
 # =========================
 # ROUTES
 # =========================
@@ -1421,10 +2085,12 @@ def trace():
 
     data = request.get_json(silent=True) or {}
 
-    wallet_address = data.get(
-        "wallet",
-        ""
+    wallet_address = (
+        data.get("wallet_address")
+        or data.get("wallet")
+        or ""
     ).strip()
+    blockchain = get_blockchain_name(data.get("blockchain", DEFAULT_BLOCKCHAIN))
 
     # =========================
     # VALIDATION
@@ -1439,22 +2105,19 @@ def trace():
 
         }), 400
 
-    if not re.fullmatch(r"0x[a-fA-F0-9]{40}", wallet_address):
+    try:
+        provider = get_blockchain_provider(blockchain)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
+    if not provider.validate_address(wallet_address):
         return jsonify({
-
-            "error":
-                "Invalid Ethereum wallet address"
-
+            "error": f"Invalid {provider.label} wallet address"
         }), 400
 
-    if not API_KEY:
-
+    if blockchain == "ethereum" and not API_KEY:
         return jsonify({
-
-            "error":
-                "Etherscan API key is missing"
-
+            "error": "Etherscan API key is missing"
         }), 500
 
     # =========================
@@ -1467,7 +2130,8 @@ def trace():
 
         max_hops=2,
 
-        max_wallets=8
+        max_wallets=8,
+        blockchain=blockchain
 
     )
 
@@ -1521,6 +2185,7 @@ def trace():
     # ADD RESULTS
     # =========================
 
+    result["blockchain"] = blockchain
     result["graph"] = graph
 
     result["suspicious_activity"] = \

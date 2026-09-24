@@ -229,6 +229,18 @@ body {
     font-size: 14px;
 }
 
+.blockchain-select {
+    min-width: 170px;
+    height: 54px;
+    background: #10151f;
+    border: 1px solid #242e3e;
+    border-radius: 9px;
+    color: #e8edf5;
+    padding: 0 14px;
+    outline: none;
+    font-size: 14px;
+}
+
 .wallet-input:focus {
     border-color: #397cff;
     box-shadow: 0 0 0 3px rgba(57, 124, 255, 0.08);
@@ -983,6 +995,10 @@ tr:hover td {
                 autocomplete="off"
             >
 
+            <select id="blockchainSelect" class="blockchain-select" aria-label="Blockchain selector">
+                <option value="ethereum">Ethereum</option>
+            </select>
+
 
             <button
                 class="trace-btn"
@@ -1357,6 +1373,17 @@ tr:hover td {
 
 </div>
 
+            <div id="monitoringPanel" class="card recommendations-card">
+                <div class="card-title">Real-Time Monitoring</div>
+                <div class="card-subtitle">Monitor wallet activity and alert on new suspicious transactions.</div>
+                <div id="monitoringSummary" class="recommendation">No active monitoring for the current wallet.</div>
+                <div class="history-toolbar">
+                    <button class="small-btn" onclick="startMonitoring()">Start Monitoring</button>
+                    <button class="small-btn danger-btn" onclick="stopMonitoring()">Stop Monitoring</button>
+                </div>
+                <div id="monitoringAlerts" style="margin-top: 12px;"></div>
+            </div>
+
             <!-- ================= TRANSACTIONS ================= -->
 
             <div
@@ -1489,6 +1516,101 @@ async function downloadInvestigationReport() {
         alert("Could not generate report.");
     }
 }
+
+async function startMonitoring() {
+    if (!currentTraceData?.start_wallet) {
+        alert("Analyze a wallet first.");
+        return;
+    }
+
+    const response = await fetch("/monitor/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            wallet_address: currentTraceData.start_wallet,
+            blockchain: currentTraceData.blockchain || "ethereum",
+            investigation_id: currentTraceData.investigation_id || null
+        })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        alert(data.error || "Could not start monitoring.");
+        return;
+    }
+    await refreshMonitoringStatus();
+    await refreshAlerts();
+}
+
+async function stopMonitoring() {
+    if (!currentTraceData?.start_wallet) {
+        alert("Analyze a wallet first.");
+        return;
+    }
+
+    const response = await fetch("/monitor/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            wallet_address: currentTraceData.start_wallet,
+            blockchain: currentTraceData.blockchain || "ethereum"
+        })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        alert(data.error || "Could not stop monitoring.");
+        return;
+    }
+    await refreshMonitoringStatus();
+    await refreshAlerts();
+}
+
+async function refreshMonitoringStatus() {
+    if (!currentTraceData?.start_wallet) {
+        document.getElementById("monitoringSummary").innerHTML = "No active monitoring for the current wallet.";
+        return;
+    }
+
+    const wallet = encodeURIComponent(currentTraceData.start_wallet);
+    const blockchain = encodeURIComponent(currentTraceData.blockchain || "ethereum");
+    const response = await fetch(`/monitor/status?wallet=${wallet}&blockchain=${blockchain}`);
+    if (!response.ok) return;
+    const data = await response.json();
+    const status = data?.status || "not_monitoring";
+    const count = Array.isArray(data?.wallets) ? data.wallets.length : 0;
+    const summary = status === "monitoring" ? `Wallet: ${escapeHTML(data.wallet_address || currentTraceData.start_wallet)}<br>Blockchain: ${escapeHTML(data.blockchain || "ethereum")}<br>Status: MONITORING<br>Last checked: ${escapeHTML(data.last_checked_at || "—")}<br>New transactions: ${Number(data.last_transaction_hash ? 1 : 0)}<br>Alerts: ${count}` : `Wallet: ${escapeHTML(currentTraceData.start_wallet)}<br>Blockchain: ${escapeHTML(currentTraceData.blockchain || "ethereum")}<br>Status: NOT MONITORING`;
+    document.getElementById("monitoringSummary").innerHTML = summary;
+}
+
+async function refreshAlerts() {
+    if (!currentTraceData?.start_wallet) {
+        document.getElementById("monitoringAlerts").innerHTML = "";
+        return;
+    }
+
+    const wallet = encodeURIComponent(currentTraceData.start_wallet);
+    const blockchain = encodeURIComponent(currentTraceData.blockchain || "ethereum");
+    const response = await fetch(`/alerts?wallet=${wallet}&blockchain=${blockchain}`);
+    if (!response.ok) return;
+    const alerts = await response.json();
+    if (!alerts.length) {
+        document.getElementById("monitoringAlerts").innerHTML = "<div class=\"recommendation\"><span class=\"rec-icon\">→</span><span>No alerts for this monitored wallet.</span></div>";
+        return;
+    }
+
+    document.getElementById("monitoringAlerts").innerHTML = alerts.map(alert => `
+        <div class="recommendation">
+            <span class="rec-icon">→</span>
+            <span><strong>${escapeHTML(alert.severity || "LOW")}</strong> · ${escapeHTML(alert.alert_type || "monitoring")} · ${escapeHTML(alert.title || "Alert")} · ${escapeHTML(alert.transaction_hash || "")}</span>
+        </div>
+    `).join("");
+}
+
+setInterval(() => {
+    if (currentTraceData?.start_wallet) {
+        refreshMonitoringStatus();
+        refreshAlerts();
+    }
+}, 15000);
 
 function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1664,6 +1786,11 @@ async function traceWallet() {
         .value
         .trim();
 
+    const blockchain =
+        document
+        .getElementById("blockchainSelect")
+        .value || "ethereum";
+
 
     const message =
         document.getElementById(
@@ -1705,7 +1832,8 @@ async function traceWallet() {
                     },
 
                     body: JSON.stringify({
-                        wallet: wallet
+                        wallet: wallet,
+                        blockchain: blockchain
                     })
 
                 }
@@ -1735,6 +1863,8 @@ async function traceWallet() {
             "✓ Investigation completed";
 
         renderInvestigation(data);
+        refreshMonitoringStatus();
+        refreshAlerts();
     }
     catch(error) {
         console.error(error);
@@ -2114,6 +2244,9 @@ function renderInvestigation(data) {
                         : "—";
 
 
+                const asset = tx.asset || tx.token_symbol || "ETH";
+                const amountDisplay = tx.asset && tx.asset !== "ETH" ? `${escapeHTML(String(tx.amount))} ${escapeHTML(asset)}` : `${escapeHTML(String(tx.amount))} ETH`;
+
                 row.innerHTML = `
 
                     <td class="${directionClass}">
@@ -2138,7 +2271,7 @@ function renderInvestigation(data) {
 
                     <td>
 
-                        ${escapeHTML(tx.amount)} ETH
+                        ${amountDisplay}
 
                     </td>
 
@@ -2163,7 +2296,7 @@ function renderInvestigation(data) {
 
                     </td>
 
-                    <td>${escapeHTML(tx.type)}</td>
+                    <td>${escapeHTML(tx.type || "normal")}</td>
 
                 `;
 

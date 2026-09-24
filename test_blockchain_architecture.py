@@ -33,6 +33,15 @@ class TestBlockchainArchitecture(unittest.TestCase):
         self.assertEqual(tx["transaction_hash"], "0xabc")
         self.assertEqual(tx["direction"], "OUT")
 
+    def test_unsupported_blockchain_raises(self):
+        with self.assertRaises(ValueError):
+            wallettracer.get_blockchain_provider("solana")
+
+    def test_legacy_wallet_address_field_is_accepted(self):
+        client = wallettracer.app.test_client()
+        response = client.post("/trace", json={"wallet_address": "0x0000000000000000000000000000000000000000"})
+        self.assertEqual(response.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
