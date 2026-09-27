@@ -1,5 +1,14 @@
 {
-  "dependencies": {
-    "dotenv": "^17.4.2"
+  "name": "tracex-mern",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\"",
+    "server": "npm run start --workspace backend",
+    "client": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

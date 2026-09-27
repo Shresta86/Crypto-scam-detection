@@ -961,7 +961,7 @@ tr:hover td {
           <div class="behavior-row"><span class="behavior-label">Risk Engine</span><span class="behavior-value">Rule-based</span></div>
           <div class="behavior-row"><span class="behavior-label">Exchange Dataset</span><span class="behavior-value">Enabled</span></div>
           <div class="behavior-row"><span class="behavior-label">Database</span><span class="behavior-value">SQLite</span></div>
-          <div class="behavior-row"><span class="behavior-label">Blockchain API</span><span class="behavior-value">{{ 'Configured; connectivity not checked' if api_configured else 'Offline — API key missing' }}</span></div>
+          <div class="behavior-row"><span class="behavior-label">Blockchain API</span><span class="behavior-value" id="apiConnectionStatus">Checking configuration…</span></div>
           <button class="small-btn" onclick="showDashboard()">Back to Dashboard</button>
         </section>
         <div id="dashboardContent">
@@ -1473,6 +1473,17 @@ tr:hover td {
 
 <script>
     let currentTraceData = null;
+
+    fetch("/api/config")
+        .then(response => response.json())
+        .then(config => {
+            const element = document.getElementById("apiConnectionStatus");
+            if (element) element.textContent = config.apiConfigured ? "Configured; connectivity not checked" : "Offline — API key missing";
+        })
+        .catch(() => {
+            const element = document.getElementById("apiConnectionStatus");
+            if (element) element.textContent = "Configuration unavailable";
+        });
 
 async function downloadInvestigationReport() {
     if (!currentTraceData) {
