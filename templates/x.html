@@ -295,6 +295,17 @@ body {
 .danger-btn { border-color:#68343d; color:#ff9ba5; }
 .toolbar-input { background:#10151f; color:#e8edf5; border:1px solid #242e3e; border-radius:7px; padding:9px 12px; }
 .copy-value { color:#9cbfff; font-family:monospace; background:none; border:0; cursor:pointer; font-size:11px; }
+.copilot-controls { display:flex; gap:10px; align-items:stretch; }
+.copilot-input { flex:1; min-height:44px; resize:vertical; background:#10151f; color:#e8edf5; border:1px solid #242e3e; border-radius:7px; padding:11px 12px; font:inherit; }
+.copilot-answer { white-space:pre-wrap; display:block; min-height:44px; }
+.evidence-meta { color:#7f8da3; font-size:11px; line-height:1.7; }
+.network-card { grid-column:span 3; }
+.network-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+.network-metric { background:#121823; border:1px solid #202b3b; border-radius:8px; padding:12px; }
+.network-metric strong { display:block; color:#e8edf5; font-size:21px; margin-top:4px; }
+.related-case { border:1px solid #202b3b; background:#101720; border-radius:8px; padding:14px; margin-top:10px; }
+.related-case-title { display:flex; justify-content:space-between; gap:12px; color:#dce3ed; font-weight:650; }
+.relationship-reason { color:#92a0b5; font-size:11px; margin-top:7px; overflow-wrap:anywhere; }
 
 
 /* ================= CARDS ================= */
@@ -662,6 +673,7 @@ tr:hover td {
 
     .wallet-card,
     .indicators-card,
+    .network-card,
     .recommendations-card,
     .transactions-card,
     .graph-card {
@@ -709,6 +721,7 @@ tr:hover td {
     .risk-card,
     .indicators-card,
     .exchange-card,
+    .network-card,
     .recommendations-card,
     .transactions-card,
     .graph-card {
@@ -844,6 +857,11 @@ tr:hover td {
 
     </div>
 
+    <div class="nav-item" onclick="scrollToSection('fraudNetworkPanel')">
+      <span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 7.2 11 16M16 7.2 13 16M8 6h8"/></svg></span>
+      Fraud Network
+    </div>
+
 
     <div class="nav-title">
         Intelligence
@@ -957,10 +975,10 @@ tr:hover td {
         <section id="settingsPage" class="card hidden">
           <div class="card-title">Settings</div><div class="card-subtitle">TraceX service configuration</div>
           <div class="behavior-row"><span class="behavior-label">Blockchain</span><span class="behavior-value">Ethereum</span></div>
-          <div class="behavior-row"><span class="behavior-label">Backend</span><span class="behavior-value">Python Flask</span></div>
+          <div class="behavior-row"><span class="behavior-label">Backend</span><span class="behavior-value">Node.js / Express</span></div>
           <div class="behavior-row"><span class="behavior-label">Risk Engine</span><span class="behavior-value">Rule-based</span></div>
           <div class="behavior-row"><span class="behavior-label">Exchange Dataset</span><span class="behavior-value">Enabled</span></div>
-          <div class="behavior-row"><span class="behavior-label">Database</span><span class="behavior-value">SQLite</span></div>
+          <div class="behavior-row"><span class="behavior-label">Database</span><span class="behavior-value">MongoDB</span></div>
           <div class="behavior-row"><span class="behavior-label">Blockchain API</span><span class="behavior-value" id="apiConnectionStatus">Checking configuration…</span></div>
           <button class="small-btn" onclick="showDashboard()">Back to Dashboard</button>
         </section>
@@ -1221,6 +1239,18 @@ tr:hover td {
 
 
 
+            <div class="card">
+                <div class="card-title">Blockchain Provider</div>
+                <div class="card-subtitle">Primary and fallback data source</div>
+                <div id="providerSummary" class="evidence-meta">Run an investigation to view provider evidence.</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">External Intelligence</div>
+                <div class="card-subtitle">Chainabuse address screening</div>
+                <div id="chainabuseSummary" class="evidence-meta">Run an investigation to screen the primary wallet.</div>
+            </div>
+
             <!-- ================= INDICATORS ================= -->
 
             <div class="card indicators-card">
@@ -1384,6 +1414,32 @@ tr:hover td {
                 <div id="monitoringAlerts" style="margin-top: 12px;"></div>
             </div>
 
+            <div id="fraudNetworkPanel" class="card network-card">
+                <div class="card-title">Fraud Network Intelligence</div>
+                <div class="card-subtitle">Potentially related investigations based on deterministic shared blockchain infrastructure.</div>
+                <div class="network-metrics">
+                    <div class="network-metric">Related Investigations<strong id="networkRelatedCount">0</strong></div>
+                    <div class="network-metric">Shared Wallets<strong id="networkWalletCount">0</strong></div>
+                    <div class="network-metric">Common Intermediaries<strong id="networkIntermediaryCount">0</strong></div>
+                    <div class="network-metric">Shared VASP Destinations<strong id="networkVaspCount">0</strong></div>
+                </div>
+                <div class="history-toolbar">
+                    <strong style="color:#b8c5d8;">Potentially Related Cases</strong>
+                    <button id="networkGraphButton" class="small-btn" onclick="openFraudNetworkGraph()" disabled>Open Network Graph</button>
+                </div>
+                <div id="relatedCases"><div class="recommendation">Complete or open an investigation to discover shared infrastructure.</div></div>
+            </div>
+
+            <div id="copilotPanel" class="card recommendations-card">
+                <div class="card-title">TraceX Investigation Copilot</div>
+                <div class="card-subtitle">Ask evidence-grounded questions about the stored investigation.</div>
+                <div class="copilot-controls">
+                    <textarea id="copilotQuestion" class="copilot-input" maxlength="2000" placeholder="Why was this wallet assigned this risk score?"></textarea>
+                    <button id="copilotButton" class="small-btn" onclick="askCopilot()">Ask Copilot</button>
+                </div>
+                <div id="copilotAnswer" class="recommendation copilot-answer" style="margin-top:12px;">Complete or open an investigation, then ask a question.</div>
+            </div>
+
             <!-- ================= TRANSACTIONS ================= -->
 
             <div
@@ -1473,12 +1529,16 @@ tr:hover td {
 
 <script>
     let currentTraceData = null;
+    let currentFraudNetwork = null;
 
     fetch("/api/config")
         .then(response => response.json())
         .then(config => {
             const element = document.getElementById("apiConnectionStatus");
-            if (element) element.textContent = config.apiConfigured ? "Configured; connectivity not checked" : "Offline — API key missing";
+            if (element) {
+                const providers = [config.providers?.alchemy && "Alchemy", config.providers?.etherscan && "Etherscan"].filter(Boolean);
+                element.textContent = config.apiConfigured ? `${providers.join(" + ")} configured` : "Offline — provider key missing";
+            }
         })
         .catch(() => {
             const element = document.getElementById("apiConnectionStatus");
@@ -1526,6 +1586,60 @@ async function downloadInvestigationReport() {
         console.error(error);
         alert("Could not generate report.");
     }
+}
+
+async function askCopilot() {
+    const answer = document.getElementById("copilotAnswer");
+    const button = document.getElementById("copilotButton");
+    const question = document.getElementById("copilotQuestion").value.trim();
+    if (!currentTraceData?.investigation_id) { answer.textContent = "Complete or open a saved investigation first."; return; }
+    if (!question) { answer.textContent = "Enter an investigation question."; return; }
+    button.disabled = true;
+    answer.textContent = "Reviewing stored TraceX evidence…";
+    try {
+        const response = await fetch("/api/copilot", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({case_id:currentTraceData.investigation_id, question}) });
+        const data = await response.json();
+        answer.textContent = response.ok ? `${data.answer}\n\nModel: ${data.model}` : (data.error || "Copilot is unavailable.");
+    } catch (_) { answer.textContent = "Copilot is temporarily unavailable. The investigation remains accessible."; }
+    finally { button.disabled = false; }
+}
+
+async function loadFraudNetwork(caseId) {
+    const container = document.getElementById("relatedCases");
+    currentFraudNetwork = null;
+    document.getElementById("networkGraphButton").disabled = true;
+    if (!caseId) { container.innerHTML = '<div class="recommendation">This investigation has not been stored yet.</div>'; return; }
+    container.innerHTML = '<div class="recommendation">Analyzing shared blockchain infrastructure…</div>';
+    try {
+        const response = await fetch(`/api/fraud-network/${encodeURIComponent(caseId)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Fraud network analysis failed");
+        currentFraudNetwork = data;
+        const summary = data.summary || {};
+        document.getElementById("networkRelatedCount").textContent = Number(summary.related_investigations) || 0;
+        document.getElementById("networkWalletCount").textContent = Number(summary.shared_wallets) || 0;
+        document.getElementById("networkIntermediaryCount").textContent = Number(summary.common_intermediaries) || 0;
+        document.getElementById("networkVaspCount").textContent = Number(summary.shared_vasp_destinations) || 0;
+        document.getElementById("networkGraphButton").disabled = !(data.graph?.nodes?.length);
+        const related = data.related_cases || [];
+        if (!related.length) { container.innerHTML = '<div class="recommendation">No previous investigations met the shared-infrastructure threshold.</div>'; return; }
+        container.innerHTML = related.map(item => `<div class="related-case">
+            <div class="related-case-title"><span>${escapeHTML(item.case_label || item.case_id)}</span><span>${Number(item.similarity_score) || 0}% similarity</span></div>
+            ${(item.reasons || []).map(reason => `<div class="relationship-reason">+${Number(reason.points) || 0} ${escapeHTML(reason.message)}</div>`).join("")}
+            <div class="history-toolbar"><span class="card-subtitle">Potential relationship detected — shared infrastructure is not proof of common ownership.</span><button class="small-btn" onclick="openInvestigation('${escapeHTML(item.case_id)}')">Inspect Case</button></div>
+        </div>`).join("");
+    } catch (error) { container.innerHTML = `<div class="recommendation">${escapeHTML(error.message || "Fraud network analysis is unavailable.")}</div>`; }
+}
+
+function openFraudNetworkGraph() {
+    if (!currentFraudNetwork?.graph) return;
+    const transferEdges = (currentFraudNetwork.graph.edges || []).filter(edge => edge.type === "TRANSFERRED_TO");
+    sessionStorage.setItem("traceGraph", JSON.stringify({
+        graph: { nodes: currentFraudNetwork.graph.nodes, edges: (currentFraudNetwork.graph.edges || []).map(edge => ({...edge, hash:edge.tx_hash || "", asset:edge.asset || "", label:edge.type === "TRANSFERRED_TO" ? `${edge.amount || 0} ${edge.asset || ""}` : edge.type})) },
+        paths: transferEdges.map(edge => ({...edge, from:edge.source, to:edge.target, hash:edge.tx_hash || ""})),
+        transactions: [], start_wallet: currentFraudNetwork.seed_case?.suspect_wallet, network_mode:true
+    }));
+    window.location.href = "/graph";
 }
 
 async function startMonitoring() {
@@ -1646,7 +1760,7 @@ async function loadHistory() {
     const body = document.getElementById("historyBody");
     body.innerHTML = items.map(item => `<tr data-wallet="${escapeHTML(item.wallet_address).toLowerCase()}">
       <td class="address">${escapeHTML(item.wallet_address)}</td><td>${escapeHTML(item.risk_level)}</td><td>${item.risk_score}</td><td>${item.transaction_count}</td><td>${escapeHTML(item.timestamp)}</td>
-      <td><div class="history-actions"><button class="small-btn" onclick="openInvestigation(${item.id})">View Investigation</button><button class="small-btn danger-btn" onclick="deleteInvestigation(${item.id})">Delete</button></div></td></tr>`).join("") || '<tr><td colspan="6">No saved investigations yet.</td></tr>';
+      <td><div class="history-actions"><button class="small-btn" onclick="openInvestigation('${item.id}')">View Investigation</button><button class="small-btn danger-btn" onclick="deleteInvestigation('${item.id}')">Delete</button></div></td></tr>`).join("") || '<tr><td colspan="6">No saved investigations yet.</td></tr>';
 }
 
 function filterHistory() {
@@ -1935,6 +2049,13 @@ function renderInvestigation(data) {
             .getElementById("behaviorHops")
             .innerText =
             data.max_hops;
+
+        const provider = data.provider || {};
+        document.getElementById("providerSummary").innerHTML = `Selected: <strong>${escapeHTML(provider.selected || "unknown")}</strong><br>Primary: ${escapeHTML(provider.primary || "alchemy")}<br>Fallback used: ${provider.fallback_used ? "Yes" : "No"}<br>Providers in evidence: ${escapeHTML((provider.providers_used || []).join(", ") || "unknown")}`;
+        const threat = data.external_intelligence?.chainabuse || {};
+        document.getElementById("chainabuseSummary").innerHTML = `Status: <strong>${escapeHTML(threat.status || "unavailable")}</strong><br>Reports: ${Number(threat.report_count) || 0}<br>Categories: ${escapeHTML((threat.categories || []).join(", ") || "None")}<br>Source: Chainabuse${threat.cached ? " (cached)" : ""}`;
+        document.getElementById("copilotAnswer").textContent = "Ask a question about this stored investigation. Copilot uses only its saved evidence.";
+        loadFraudNetwork(data.investigation_id);
 
 
 

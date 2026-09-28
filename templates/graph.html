@@ -977,6 +977,9 @@
                 graphData.nodes.map(node => {
 
 
+                    const nodeType = String(node.type || "WALLET").toUpperCase();
+
+
                     const hop =
                         hopMap[node.id];
 
@@ -984,7 +987,7 @@
                     let nodeLabel;
 
 
-                    if (node.type === "suspect") {
+                    if (nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET") {
 
                         nodeLabel =
                             "SUSPECT\n" +
@@ -993,13 +996,25 @@
 
                     }
 
-                    else if (node.type === "exchange") {
+                    else if (nodeType === "EXCHANGE" || nodeType === "EXCHANGE_VASP") {
 
                         nodeLabel =
                             node.label +
                             "\n" +
                             node.id.slice(0, 8) +
                             "...";
+
+                    }
+
+                    else if (nodeType === "CASE") {
+
+                        nodeLabel = node.label || node.id;
+
+                    }
+
+                    else if (nodeType === "INTERMEDIARY") {
+
+                        nodeLabel = "INTERMEDIARY\n" + String(node.address || node.id).slice(0, 8) + "...";
 
                     }
 
@@ -1022,21 +1037,25 @@
                         title:
                             node.id,
 
-                        shape: "dot",
+                        shape: nodeType === "CASE" ? "box" : nodeType === "SUSPECT_WALLET" ? "diamond" : nodeType === "EXCHANGE_VASP" ? "hexagon" : "dot",
 
                         size:
-                            node.type === "suspect"
+                            nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET" || nodeType === "CASE"
                                 ? 32
-                                : node.type === "exchange"
+                                : nodeType === "EXCHANGE" || nodeType === "EXCHANGE_VASP"
                                     ? 28
                                     : 22,
 
                         color: {
 
                             background:
-                                node.type === "suspect"
+                                nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET"
                                     ? "#ff5969"
-                                    : node.type === "exchange"
+                                    : nodeType === "CASE"
+                                        ? "#9b6dff"
+                                    : nodeType === "INTERMEDIARY"
+                                        ? "#ffb347"
+                                    : nodeType === "EXCHANGE" || nodeType === "EXCHANGE_VASP"
                                         ? "#36d98b"
                                         : "#6da2ff",
 
@@ -1047,7 +1066,7 @@
                                 background: "#ffffff",
 
                                 border:
-                                    node.type === "suspect"
+                                    nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET"
                                         ? "#ff5969"
                                         : "#6da2ff"
 
@@ -1060,7 +1079,7 @@
                             color: "#ffffff",
 
                             size:
-                                node.type === "suspect"
+                                nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET" || nodeType === "CASE"
                                     ? 15
                                     : 12,
 
@@ -1071,7 +1090,7 @@
                         },
 
                         borderWidth:
-                            node.type === "suspect"
+                            nodeType === "SUSPECT" || nodeType === "SUSPECT_WALLET" || nodeType === "CASE"
                                 ? 3
                                 : 2
 
@@ -1124,16 +1143,14 @@
                             },
 
 
-                            label:
-                                amount.toFixed(4) +
-                                " ETH",
+                            label: edge.label || (edge.type === "TRANSFERRED_TO" ? `${amount.toFixed(4)} ${edge.asset || "ETH"}` : (edge.type || "relationship")),
 
 
                             title:
 
                                 "Amount: " +
                                 amount +
-                                " ETH\n\n" +
+                                " " + (edge.asset || "") + "\n\n" +
 
                                 "Hop: " +
                                 hop +
@@ -1148,7 +1165,8 @@
                                 "\n\n" +
 
                                 "Transaction:\n" +
-                                edge.hash,
+                                (edge.hash || edge.tx_hash || "Not applicable") +
+                                (edge.similarity_score !== undefined ? "\n\nSimilarity: " + edge.similarity_score + "/100" : ""),
 
 
                             width:
@@ -1341,9 +1359,13 @@
                     document.getElementById(
                         "detailsTitle"
                     ).innerText =
-                        node.type === "suspect"
+                        String(node.type).toUpperCase() === "SUSPECT" || String(node.type).toUpperCase() === "SUSPECT_WALLET"
                             ? "Suspect Wallet"
-                            : node.type === "exchange"
+                            : String(node.type).toUpperCase() === "CASE"
+                                ? "Investigation Case"
+                            : String(node.type).toUpperCase() === "INTERMEDIARY"
+                                ? "Common Intermediary"
+                            : ["EXCHANGE", "EXCHANGE_VASP"].includes(String(node.type).toUpperCase())
                                 ? "Exchange Wallet"
                                 : "Associated Wallet";
 
@@ -1363,7 +1385,7 @@
                         (tx.from || "").toLowerCase() === node.id.toLowerCase() ||
                         (tx.to || "").toLowerCase() === node.id.toLowerCase());
                     document.getElementById("detailTransactions").innerText = nodeTransactions.length;
-                    document.getElementById("detailExchange").innerText = node.type === "exchange" ? node.label : "Not identified";
+                    document.getElementById("detailExchange").innerText = ["EXCHANGE", "EXCHANGE_VASP"].includes(String(node.type).toUpperCase()) ? node.label : "Not identified";
 
 
                     document.getElementById(
