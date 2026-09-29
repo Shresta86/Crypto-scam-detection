@@ -10,8 +10,8 @@ test('evidence integrity hash is stable across object key ordering and changes o
 });
 
 test('bounded snapshots retain object data without accepting oversized payloads', () => {
-  assert.deepEqual(boundedSnapshot({ transaction_hash: '0xabc', value: 5 }), { transaction_hash: '0xabc', value: 5 });
-  assert.throws(() => boundedSnapshot({ value: 'x'.repeat(51000) }), /too large/);
+  assert.deepEqual(boundedSnapshot('TRANSACTION', { transaction_hash: '0xabc', value: 5 }), { transaction_hash: '0xabc' });
+  assert.throws(() => boundedSnapshot('EXTERNAL_INTELLIGENCE', { reports: 'x'.repeat(51000) }), /snapshot_too_large/);
 });
 
 test('case workflow allows controlled close and reopen transitions', () => {
@@ -24,7 +24,7 @@ test('case workflow allows controlled close and reopen transitions', () => {
 
 test('case completeness exposes missing investigator workflow steps', () => {
   const value = caseCompleteness({ investigation: { transactions: [1], risk: { score: 10 }, external_intelligence: {} }, evidenceCount: 0, noteCount: 0, findingCount: 0, monitoring: false, reportGenerated: false });
-  assert.equal(value.complete, false);
-  assert.ok(value.steps.some(item => item.key === 'evidence' && !item.complete));
-  assert.ok(value.steps.some(item => item.key === 'report' && item.optional));
+  assert.ok(value.completed < value.total);
+  assert.ok(value.steps.some(item => item.id === 'evidence_selected' && !item.complete));
+  assert.ok(value.steps.some(item => item.id === 'report_generated' && item.optional));
 });

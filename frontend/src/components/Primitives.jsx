@@ -18,6 +18,7 @@ export function CopyValue({ value, label, compact = true }) {
 }
 
 export function Drawer({ title, subtitle, children, onClose }) {
+  React.useEffect(()=>{const handler=event=>{if(event.key==='Escape')onClose();};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[onClose]);
   if (!children) return null;
   return <div className="drawer-backdrop" onMouseDown={event => event.target === event.currentTarget && onClose()}><aside className="drawer" role="dialog" aria-modal="true" aria-label={title}><header><div><span className="eyebrow">Evidence inspector</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div><button className="icon-button" onClick={onClose} aria-label="Close inspector"><Icon name="close"/></button></header><div className="drawer-content">{children}</div></aside></div>;
 }

@@ -2,6 +2,19 @@ import axios from 'axios';
 
 const ETHERSCAN_URL = 'https://api.etherscan.io/v2/api';
 const lower = value => String(value || '').toLowerCase();
+const retryableProviderCode = code => ['unavailable', 'timeout', 'provider_error'].includes(code);
+async function retryOnce(operation) {
+  let firstError;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try { return await operation(); }
+    catch (error) {
+      firstError = error;
+      if (attempt || !retryableProviderCode(error?.code)) throw error;
+      await new Promise(resolve => setTimeout(resolve, 180));
+    }
+  }
+  throw firstError;
+}
 
 export class ProviderError extends Error {
   constructor(provider, code, message, cause = null) {
@@ -181,7 +194,8 @@ export class AlchemyProvider {
   get configured() { return Boolean(this.rpcUrl); }
 
   async rpc(method, params) {
-    try {
+    return retryOnce(async () => {
+      try {
       const { data, status } = await this.client.post(this.rpcUrl, {
         jsonrpc: '2.0', id: 1, method, params
       }, { timeout: this.timeoutMs, headers: { 'content-type': 'application/json' } });
@@ -191,12 +205,13 @@ export class AlchemyProvider {
         throw new ProviderError(this.name, code, data?.error?.message || 'Alchemy request failed');
       }
       return data?.result;
-    } catch (error) {
+      } catch (error) {
       if (error instanceof ProviderError) throw error;
       const status = error?.response?.status;
       const code = status === 401 || status === 403 ? 'authentication' : status === 429 ? 'rate_limit' : error?.code === 'ECONNABORTED' ? 'timeout' : 'unavailable';
       throw new ProviderError(this.name, code, `Alchemy ${code.replace('_', ' ')}`, error);
-    }
+      }
+    });
   }
 
   async fetchTransactions(wallet, limit = 100) {
@@ -226,7 +241,8 @@ export class EtherscanProvider {
   get configured() { return Boolean(this.apiKey); }
 
   async fetchAction(action, wallet, limit) {
-    try {
+    return retryOnce(async () => {
+      try {
       const { data } = await this.client.get(ETHERSCAN_URL, {
         timeout: this.timeoutMs,
         params: { chainid: 1, module: 'account', action, address: wallet, startblock: 0, endblock: 999999999, page: 1, offset: limit, sort: 'desc', apikey: this.apiKey }
@@ -236,12 +252,13 @@ export class EtherscanProvider {
       if (/no transactions found/i.test(message)) return [];
       const code = /invalid api key|missing api key/i.test(message) ? 'authentication' : /rate limit|max rate/i.test(message) ? 'rate_limit' : 'provider_error';
       throw new ProviderError(this.name, code, `Etherscan ${code.replace('_', ' ')}`);
-    } catch (error) {
+      } catch (error) {
       if (error instanceof ProviderError) throw error;
       const status = error?.response?.status;
       const code = status === 401 || status === 403 ? 'authentication' : status === 429 ? 'rate_limit' : error?.code === 'ECONNABORTED' ? 'timeout' : 'unavailable';
       throw new ProviderError(this.name, code, `Etherscan ${code.replace('_', ' ')}`, error);
-    }
+      }
+    });
   }
 
   async fetchTransactions(wallet, limit = 100) {
