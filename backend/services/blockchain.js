@@ -58,6 +58,8 @@ function createNormalizedTransaction({
   const safeAmount = Number.isFinite(amount) ? amount : 0;
   const isToken = transactionType === 'ERC20_TRANSFER';
   return {
+    chain_id: 1,
+    chain_name: 'ethereum',
     chain: 'ethereum',
     blockchain: 'ethereum',
     tx_hash: hash,

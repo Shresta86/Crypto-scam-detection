@@ -6,7 +6,7 @@ export const COPILOT_SYSTEM_PROMPT = `You are the TraceX Investigation Copilot.
 
 You assist investigators in understanding blockchain investigation evidence. Use only the TraceX investigation evidence provided in the context. Never invent transactions, wallet ownership, exchange attribution, blockchain activity, threat-intelligence reports, risk indicators, case IDs, or cross-case relationships. Fraud-network relationships are deterministic TraceX findings; explain only relationships present in fraud_network.related_cases and never discover new relationships yourself.
 
-Clearly distinguish: (1) observed blockchain facts, (2) TraceX-generated behavioral indicators, (3) external threat intelligence, (4) entity/VASP attribution, and (5) investigative hypotheses.
+Clearly distinguish: (1) observed blockchain facts, (2) TraceX-generated behavioral indicators, (3) external threat intelligence, (4) entity/VASP attribution, (5) investigator-authored notes/findings, and (6) investigative hypotheses. Investigator-authored material is a lead unless its referenced evidence supports it; do not elevate it to an observed fact.
 
 A TraceX risk score is an investigative indicator, not proof of criminal activity. A third-party report is supporting intelligence, not proof of criminal ownership. If an external source is unavailable, say its result is unknown; never convert unavailable into zero reports. The transactions and paths in context may be labeled samples, so never generalize sample composition to the whole case. Do not describe mixing, laundering, funneling, structuring, criminal intent, or wallet ownership unless that exact conclusion exists in the supplied evidence. Behavioral indicators describe rule matches only. If evidence is insufficient, explicitly state that. When possible, reference concrete transaction hashes, wallet addresses, assets, amounts, timestamps, traced paths, indicators, and external-intelligence sources. Do not claim certainty where attribution is uncertain. Keep responses concise, structured, evidence-oriented, and useful to an investigator.`;
 
@@ -27,6 +27,7 @@ export function buildCopilotEvidence(investigation) {
   const transactionSample = allTransactions.slice(0, 5);
   const pathSample = allPaths.slice(0, 5);
   const network = data.fraud_network;
+  const workspace = data.case_workspace || {};
   return {
     case_id: data.investigation_id || null,
     investigated_wallet: data.start_wallet || null,
@@ -87,7 +88,14 @@ export function buildCopilotEvidence(investigation) {
           related_case: compactRelationshipEvidence(item.evidence?.related_case)
         }
       }))
-    } : { summary: {}, related_cases: [] }
+    } : { summary: {}, related_cases: [] },
+    case_management: {
+      case: data.case ? { case_reference: data.case.case_reference, case_status: data.case.case_status, priority: data.case.priority, assigned_investigator: data.case.assigned_investigator, tags: asArray(data.case.tags) } : null,
+      evidence: asArray(workspace.evidence).slice(0, 40).map(item => ({ evidence_id: item.evidence_id, evidence_type: item.evidence_type, title: item.title, transaction_hash: item.transaction_hash, wallet_address: item.wallet_address, source_provider: item.source_provider, captured_at: item.captured_at, integrity_hash: item.integrity_hash })),
+      investigator_findings: asArray(workspace.findings).slice(0, 30).map(item => ({ finding_id: item.finding_id, title: item.title, description: item.description, classification: item.classification, evidence_ids: asArray(item.evidence_ids) })),
+      investigator_notes: asArray(workspace.notes).slice(0, 20).map(item => ({ note_id: item.note_id, note_type: item.note_type, content: item.content, reference_id: item.reference_id, created_at: item.created_at })),
+      recent_audit_events: asArray(workspace.audit).slice(0, 20).map(item => ({ event_type: item.event_type, timestamp: item.timestamp, metadata: item.metadata }))
+    }
   };
 }
 
@@ -138,7 +146,14 @@ export function applyGroundingGuard(answer, question, evidence) {
   const allowedCaseIds = new Set([evidence.case_id, ...asArray(evidence.fraud_network?.related_cases).map(item => item.case_id)].filter(Boolean).map(lowerCase));
   const mentionedCaseIds = [...String(answer).matchAll(/\b[0-9a-f]{24}\b/gi)].map(match => lowerCase(match[0]));
   const inventedCase = mentionedCaseIds.some(id => !allowedCaseIds.has(id));
-  if (unsupportedClaim || unavailableMisstated || inventedCase) {
+  const allowedRecordIds = new Set([
+    ...asArray(evidence.case_management?.evidence).map(item => item.evidence_id),
+    ...asArray(evidence.case_management?.investigator_findings).map(item => item.finding_id),
+    ...asArray(evidence.case_management?.investigator_notes).map(item => item.note_id)
+  ].filter(Boolean).map(value => String(value).toUpperCase()));
+  const mentionedRecordIds = [...String(answer).matchAll(/\b(?:EV|FN|NT)-\d{4}\b/gi)].map(match => String(match[0]).toUpperCase());
+  const inventedRecord = mentionedRecordIds.some(id => !allowedRecordIds.has(id));
+  if (unsupportedClaim || unavailableMisstated || inventedCase || inventedRecord) {
     return { answer: buildSafeEvidenceAnswer(question, evidence), groundingGuardApplied: true };
   }
   return { answer, groundingGuardApplied: false };

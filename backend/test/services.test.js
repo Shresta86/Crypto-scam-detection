@@ -109,6 +109,22 @@ test('multi-hop path evidence preserves separate ETH and ERC-20 assets', async (
   assert.deepEqual(result.paths.map(path => path.hash), ['0xeth', '0xusdt']);
 });
 
+test('multi-hop tracing preserves retrieved evidence when a later hop provider fails', async () => {
+  let calls = 0;
+  const service = {
+    fetchTransactions: async () => {
+      calls += 1;
+      if (calls > 1) throw Object.assign(new Error('provider unavailable'), { provider: 'alchemy', code: 'unavailable' });
+      return [{ hash: '0xpartial', from: wallet, to: other, counterparty: other, direction: 'OUT', amount: 1, raw_amount: '1', asset: 'ETH', type: 'normal', provider: 'alchemy' }];
+    },
+    summary: () => ({ selected: 'alchemy' })
+  };
+  const result = await traceWallet(wallet, 2, 8, service);
+  assert.equal(result.transactions.length, 1);
+  assert.equal(result.trace_warnings.length, 1);
+  assert.equal(result.evidence_completeness, 'partial_provider_coverage');
+});
+
 test('Copilot grounding guard replaces unsupported criminal claims and unavailable-report assertions', () => {
   const evidence = buildCopilotEvidence({
     start_wallet: wallet, transactions: [], paths: [], risk: { score: 20, level: 'LOW' },

@@ -8,7 +8,7 @@ The project has been migrated from Flask + SQLite to a MERN architecture:
 
 - **MongoDB / Mongoose:** investigations, a derived cross-case network index, monitoring records, and alerts are persisted in MongoDB.
 - **Express / Node.js:** `backend/server.js` implements tracing, history, JSON/CSV export, PDF reports, monitoring, alert acknowledgement/resolution, graph data, external intelligence, and Copilot routes.
-- **React / Vite:** `frontend/` is the new React entry point. It hosts the established dashboard in a React shell during the UI migration, preserving its complete interaction flow and visualisation code without removing functionality.
+- **React / Vite:** `frontend/` is the active componentized investigation workspace with client-side navigation, fund-flow and cross-case graphs, transaction/path intelligence, case management, monitoring, alerts, reports, provider status, and the grounded Copilot. The older HTML dashboard routes remain available only for compatibility.
 - **Node services:** Alchemy Asset Transfers is the primary Ethereum provider and Etherscan V2 is the fallback. Both normalize to one transaction schema before tracing and monitoring. Chainabuse is cached in MongoDB. Fraud-network matches are calculated deterministically from saved evidence; Groq only explains that supplied evidence when an investigator asks.
 
 The old Python files and SQLite database are intentionally retained as an archival reference; the Node server does not call them.
@@ -50,7 +50,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Vite serves the React client and proxies API/dashboard requests to Express on `http://localhost:5001`.
+Open `http://localhost:5173`. Vite serves the React command center and proxies canonical `/api/...` requests to Express on `http://localhost:5001`.
 
 If you prefer separate terminals:
 
@@ -75,12 +75,24 @@ All original browser endpoints remain available:
 - `POST /api/copilot` (loads evidence from a stored investigation)
 - `GET /api/cases/:caseId/similar` (ranked, explainable related-case matches)
 - `GET /api/fraud-network/:caseId` (summary, relationships, and typed network graph)
+- `GET /api/cases/:caseId/compare/:otherCaseId` (deterministic evidence comparison)
+- `GET /api/cases/:caseId/audit` (persistent investigation activity and provenance events)
 - `GET, DELETE /history` and `GET, DELETE /history/:id`
 - `GET /export/:id.json` and `GET /export/:id.csv`
 - `POST /report`
 - `POST /monitor/start`, `POST /monitor/stop`, `GET /monitor/status`
 - `GET /alerts`, `POST /alerts/:id/acknowledge`, `POST /alerts/:id/resolve`
 - `GET /graph`, `GET /dashboard`, and `GET /api/config`
+
+The React client uses backward-compatible `/api/trace`, `/api/history`, `/api/monitor`, `/api/alerts`, `/api/export`, and `/api/report` aliases so application routes such as `/monitoring`, `/alerts`, and `/reports` remain valid SPA pages.
+
+## Advanced investigation intelligence
+
+TraceX performs exact-match bridge detection against `data/bridge_registry.json`. Each registry entry carries its chain, contract role, official source, confidence, and verification date. A bridge interaction is evidence that a transaction touched that verified contract; it is not automatically a verified cross-chain continuation.
+
+The current provider configuration exposes Ethereum investigation data only. The application therefore reports cross-chain correlation as `destination_data_unavailable` and does not infer it from similar amounts and timestamps. Normalized transactions include `chain_id` and `chain_name` so additional evidence-backed chain providers can be introduced without changing the investigation schema.
+
+Network analytics classify collector, distributor, and high-connectivity candidates using explicit graph thresholds. These are topology descriptions, not claims of criminal ownership. Stored cases are safely enriched on read with bridge, cross-chain readiness, topology, investigation-story, and audit structures so existing demo evidence remains usable.
 
 ## Notes
 
