@@ -42,3 +42,174 @@ body{font-size:15px;background:radial-gradient(circle at 76% 8%,rgba(28,99,166,.
 .case-management-grid,.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.case-management-grid>div{display:flex;flex-direction:column;gap:6px;padding:12px;background:#0b1929;border-radius:10px}.case-management-grid span,label{font-size:12px;color:var(--muted)}.case-editor,.finding-form{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-soft)}label{display:grid;gap:6px}input,textarea,select{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;padding:9px;background:#091827;color:inherit;font:inherit}textarea{min-height:76px;resize:vertical}.inline-actions{display:flex;gap:10px}.align-end{display:flex;align-items:end}.evidence-filters{display:flex;gap:10px;margin:14px 0}.evidence-filters input{flex:1}.evidence-list,.workspace-records{display:grid;gap:8px}.evidence-list article,.workspace-records article{display:flex;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border-soft);border-radius:10px}.evidence-list article>div:first-child,.workspace-records article{display:grid;gap:6px}.evidence-list article>div:last-child{display:flex;align-items:center;gap:8px}.workspace-records{margin-top:16px}.workspace-records article p{margin:0}.workspace-records article small{color:var(--muted)}
 @media(max-width:800px){.case-management-grid,.form-grid{grid-template-columns:1fr 1fr}.evidence-list article{flex-direction:column}}@media(max-width:520px){.case-management-grid,.form-grid{grid-template-columns:1fr}.evidence-filters{flex-direction:column}}
 .demo-case-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding:12px 16px;background:linear-gradient(135deg,#0c233c,#081728);border:1px solid #295788;border-radius:12px;box-shadow:0 0 16px rgba(41,87,136,.25)}.demo-case-banner>span{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#15375c;color:var(--cyan)}.demo-case-banner>div{display:grid;gap:2px;flex:1}.demo-case-banner strong{font-size:13px;color:#cce4ff}.demo-case-banner span{font-size:12px;color:var(--muted)}.provider-recovery{margin-top:20px;border-color:#7a4422;background:linear-gradient(135deg,#24160c,#140d07)}.recovery-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}.recovery-header svg{color:#f59e0b;flex-shrink:0;margin-top:2px}.recovery-header h3{font-size:16px;margin:0 0 4px;color:#fde68a}.recovery-header p{font-size:13px;margin:0 0 6px;color:#fef3c7}.recovery-header small{font-size:11px;color:#d97706}.indicator-actions{display:flex;gap:8px;margin-top:10px}.indicator-actions button{font-size:11px;padding:5px 9px}.note-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.evidence-capture-action{margin-top:16px;padding-top:14px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end}
+
+/* Hero Top Row & Guided Walkthrough Button */
+.case-hero-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:14px;flex-wrap:wrap}
+.case-hero-quick-actions{display:flex;gap:10px;align-items:center}
+
+/* Guided Demo Walkthrough Banner */
+.walkthrough-overlay-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;background:linear-gradient(135deg,#132840,#0c1a2c);border:1px solid #2b6196;border-radius:14px;margin-bottom:20px;box-shadow:0 8px 32px rgba(9,30,52,.5);animation:fadeIn .25s ease}
+.walkthrough-badge{display:flex;align-items:center;gap:8px;background:rgba(54,201,223,.12);border:1px solid rgba(54,201,223,.3);padding:6px 12px;border-radius:8px;color:var(--cyan);font:700 11px 'Roboto Mono';white-space:nowrap}
+.walkthrough-info{flex:1;display:grid;gap:4px}
+.walkthrough-info strong{font-size:15px;color:#e1efff}
+.walkthrough-info p{font-size:13px;color:#a5c7eb;margin:0}
+.walkthrough-script{font-size:12px;font-style:italic;color:#67e8f9;display:block;margin-top:2px}
+.walkthrough-actions{display:flex;align-items:center;gap:10px}
+.icon-btn-text{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px 10px;font-size:12px;border-radius:6px}
+.icon-btn-text:hover{color:#fff;background:rgba(255,255,255,.05)}
+.walkthrough-exit-btn{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);cursor:pointer}
+.walkthrough-exit-btn:hover{color:#fff;background:rgba(239,68,68,.2);border-color:#ef4444}
+
+/* Investigation Journey Strip */
+.investigation-journey-strip{display:flex;align-items:center;background:linear-gradient(90deg,#0a1928,#081422);border:1px solid #1e3a58;border-radius:12px;margin-top:18px;overflow-x:auto;padding:6px}
+.journey-step-btn{display:flex;align-items:center;gap:10px;background:transparent;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;color:inherit;transition:all .18s ease;white-space:nowrap;flex:1}
+.journey-step-btn:hover{background:rgba(55,142,241,.12)}
+.journey-step-btn.active{background:#163654;box-shadow:inset 0 0 0 1px #2f6ea6}
+.step-num{font:700 11px 'Roboto Mono';color:var(--cyan);opacity:.85}
+.step-texts{display:grid;gap:2px;text-align:left}
+.step-texts strong{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#d4e8fc}
+.step-texts small{font:600 11px 'Roboto Mono';color:#7ab5ed}
+.step-arrow{color:#2a4a6e;display:grid;place-items:center;margin-left:auto}
+
+/* Categorized Investigation Navigation Hub */
+.investigation-nav-hub{display:flex;flex-wrap:wrap;gap:16px;background:linear-gradient(135deg,#0a1b2b,#061320);border:1px solid #1a3959;border-radius:14px;padding:12px 18px;margin:20px 0}
+.nav-group{display:flex;flex-direction:column;gap:6px;border-right:1px solid rgba(44,80,117,.4);padding-right:16px}
+.nav-group:last-child{border-right:0;padding-right:0}
+.nav-group-title{font:700 10px 'Roboto Mono';letter-spacing:.12em;text-transform:uppercase;color:#5a84ad}
+.nav-group-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.nav-hub-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #1f4266;background:#0d2338;border-radius:8px;color:#c0daf7;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s ease}
+.nav-hub-btn:hover{background:#173756;border-color:#3872a8;color:#fff}
+.nav-hub-btn.active{background:linear-gradient(135deg,#1b456e,#143555);border-color:var(--cyan);color:#fff;box-shadow:0 0 12px rgba(54,201,223,.25)}
+.nav-hub-btn small{font:500 10px 'Roboto Mono';color:#78a6d4;background:rgba(0,0,0,.25);padding:2px 6px;border-radius:4px}
+.nav-hub-btn.active small{color:#b6e9f5;background:rgba(54,201,223,.2)}
+
+/* What TraceX Found Hero */
+.what-tracex-found-panel{padding:24px 26px;background:linear-gradient(135deg,#0c233c,#081729);border-color:#2a5785;margin-bottom:18px}
+.found-hero-head{margin-bottom:18px}
+.found-hero-head h2{font-size:24px;margin:4px 0 6px;color:#e8f3ff}
+.found-hero-head p{font-size:13px;color:#9bc0e6;margin:0}
+.found-hero-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.found-card{background:#0a1a2b;border:1px solid #1f4267;border-radius:12px;padding:16px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s ease;position:relative}
+.found-card:hover{transform:translateY(-2px);border-color:var(--cyan);box-shadow:0 6px 20px rgba(12,38,64,.6)}
+.found-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.found-score{font:700 18px 'Manrope';color:#f43f5e}
+.found-score b{font-size:11px;color:var(--muted);font-weight:500}
+.found-stat{font:700 14px 'Roboto Mono';color:var(--cyan)}
+.found-card h4{font-size:14px;color:#e2f0ff;margin:0 0 6px}
+.found-card p{font-size:12px;color:#85abcf;line-height:1.45;margin:0 0 14px;flex:1}
+.found-card .text-button{font-size:11px;color:var(--cyan);display:flex;align-items:center;gap:5px;padding:0;background:transparent;border:0;cursor:pointer}
+.found-card .text-button:hover{color:#fff}
+
+/* Investigation Map / Pipeline */
+.investigation-pipeline-map{padding:22px 26px;margin-bottom:18px;background:linear-gradient(135deg,#0a1b2e,#071422)}
+.pipeline-flow-diagram{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:6px}
+.pipeline-node{flex:1;min-width:140px;background:#0d2238;border:1px solid #23486f;border-radius:10px;padding:12px 14px;text-align:left;cursor:pointer;transition:all .18s ease;display:grid;gap:2px}
+.pipeline-node:hover{background:#15375a;border-color:var(--cyan)}
+.node-eyebrow{font:700 9px 'Roboto Mono';color:#5c8bb8;letter-spacing:.08em}
+.pipeline-node strong{font-size:13px;color:#dcebff}
+.pipeline-node small{font:500 11px 'Roboto Mono';color:#82abd4}
+.pipeline-connector{color:#3a6188;display:grid;place-items:center}
+.pipeline-branch{display:flex;flex-direction:column;gap:8px;min-width:150px}
+.pipeline-branch .pipeline-node{min-width:100%}
+
+/* ExplainView Component */
+.explain-view{background:linear-gradient(135deg,#0b1f33,#081625);border:1px solid #20466e;border-radius:12px;margin-bottom:18px;overflow:hidden;transition:all .2s ease}
+.explain-toggle-bar{padding:10px 16px}
+.explain-toggle-btn{display:flex;align-items:center;gap:10px;background:transparent;border:0;color:inherit;width:100%;text-align:left;cursor:pointer}
+.explain-badge{width:22px;height:22px;border-radius:50%;background:#1d436c;color:var(--cyan);display:grid;place-items:center;font:700 12px 'Roboto Mono'}
+.explain-toggle-btn strong{font-size:13px;color:#cce4ff}
+.explain-toggle-btn small{font-size:12px;color:var(--muted);margin-left:6px}
+.explain-chevron{margin-left:auto;color:#5a84ad}
+.explain-drawer-body{padding:16px 20px 20px;border-top:1px solid #1a3b5c;background:rgba(0,0,0,.2)}
+.explain-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.explain-col{display:grid;gap:6px}
+.explain-col h4{font-size:13px;color:#e1efff;margin:0}
+.explain-col p{font-size:12px;color:#8ab2d9;line-height:1.45;margin:0}
+.try-this-col{background:rgba(54,201,223,.06);border:1px solid rgba(54,201,223,.2);border-radius:10px;padding:12px 14px}
+.try-this-col ol{margin:0;padding-left:16px;font-size:12px;color:#a2daf0;line-height:1.5}
+
+/* Time Machine Watch Box */
+.timeline-watch-box{display:flex;align-items:center;gap:12px;background:#091b2c;border:1px solid #1e456e;border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.timeline-watch-box svg{color:var(--cyan)}
+.timeline-watch-box strong{font-size:12px;color:#d5ebff;display:block}
+.timeline-watch-box small{font-size:11px;color:#85abcf;display:block}
+.timeline-watch-box button{margin-left:auto;white-space:nowrap}
+
+/* Transaction Drawer Why Matters */
+.why-it-matters-card{background:linear-gradient(135deg,#0c233c,#081729);border:1px solid #235282;border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.why-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:var(--cyan)}
+.why-header strong{font-size:12px;color:#dff1ff}
+.why-it-matters-card ul{margin:0;padding-left:18px;font-size:12px;color:#a6cbef;line-height:1.45}
+.drawer-actions-row{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-soft)}
+
+/* Evidence Wizard Modal */
+.evidence-wizard-drawer{width:min(660px,96vw)}
+.wizard-stepper{display:flex;border-bottom:1px solid var(--border);background:#071422}
+.step-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 6px;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);font-size:12px;cursor:pointer}
+.step-tab span{width:20px;height:20px;border-radius:50%;background:#132d48;display:grid;place-items:center;font:700 10px 'Roboto Mono'}
+.step-tab.active{color:#fff;border-bottom-color:var(--cyan);background:rgba(54,201,223,.06)}
+.step-tab.active span{background:var(--cyan);color:#081827}
+.step-tab.done span{background:#10b981;color:#fff}
+.wizard-body{padding:20px 24px}
+.wizard-step-pane{display:grid;gap:10px}
+.wizard-step-pane h3{font-size:17px;margin:2px 0 4px;color:#e6f2ff}
+.wizard-step-pane p{font-size:12px;color:#8fb6dd;margin:0 0 10px}
+.snapshot-preview-box{background:#040d17;border:1px solid #163654;border-radius:8px;padding:12px;max-height:180px;overflow-y:auto}
+.snapshot-preview-box pre{margin:0;font:500 11px 'Roboto Mono';color:#a5d3f7}
+.integrity-explanation-box{background:linear-gradient(135deg,#0c2642,#08192c);border:1px solid #2a649c;border-radius:12px;padding:18px}
+.explanation-head{display:flex;gap:14px;align-items:center;margin-bottom:16px;color:#38ef7d}
+.explanation-head strong{font-size:14px;color:#e8f4ff;display:block}
+.explanation-head p{font-size:12px;color:#9ec2e8;margin:2px 0 0}
+.integrity-detail-list{display:grid;gap:8px}
+.integrity-detail-list div{display:flex;justify-content:space-between;font-size:12px;padding:8px 10px;background:#081728;border-radius:6px}
+.integrity-detail-list span{color:var(--muted)}
+.integrity-detail-list strong{color:#cce4ff}
+.wizard-footer{display:flex;justify-content:space-between;padding:16px 24px;border-top:1px solid var(--border);background:#071422}
+
+/* Evidence Integrity Ledger & Pipeline */
+.evidence-integrity-card{background:linear-gradient(135deg,#0d2238,#081728);border-color:#245380}
+.integrity-banner{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
+.integrity-orb{width:42px;height:42px;border-radius:12px;background:#153f68;color:#38ef7d;display:grid;place-items:center;flex-shrink:0}
+.integrity-banner h3{font-size:18px;margin:3px 0 6px;color:#e4f1ff}
+.integrity-banner p{font-size:13px;color:#90b7df;margin:0;line-height:1.45}
+.integrity-pipeline{display:flex;align-items:center;justify-content:space-between;background:#071524;border:1px solid #1a3d62;border-radius:10px;padding:14px 18px;overflow-x:auto}
+.pipeline-step{display:grid;gap:3px}
+.pipeline-step span{width:22px;height:22px;border-radius:50%;background:#1d4872;color:var(--cyan);display:grid;place-items:center;font:700 11px 'Roboto Mono'}
+.pipeline-step strong{font-size:12px;color:#d5ebff}
+.pipeline-step small{font-size:10px;color:#77a2cc}
+.pipeline-arrow{color:#2a5078}
+
+/* Evidence Ledger Item */
+.evidence-ledger-item{display:flex;justify-content:space-between;gap:16px;padding:16px;background:#091a2c;border:1px solid #1a3d60;border-radius:12px}
+.evidence-meta-col{display:grid;gap:6px;flex:1}
+.evidence-head-row{display:flex;align-items:center;gap:10px}
+.evidence-code{font:700 11px 'Roboto Mono';color:var(--cyan)}
+.evidence-source{font-size:11px;color:var(--muted)}
+.evidence-ref{display:flex;align-items:center;gap:8px;font-size:12px}
+.evidence-ref span{color:var(--muted)}
+.evidence-hash{display:flex;align-items:center;gap:8px;font:500 11px 'Roboto Mono';color:#a3cff8}
+.evidence-actions-col{display:flex;flex-direction:column;align-items:flex-end;gap:10px;justify-content:center}
+
+/* Feature Test Lab */
+.feature-test-lab-panel{background:linear-gradient(135deg,#0a1b2e,#071424)}
+.feature-test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.feature-test-card{background:#09192a;border:1px solid #1c3e62;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.feat-top{display:flex;justify-content:space-between;align-items:center}
+.feat-num{font:700 12px 'Roboto Mono';color:var(--cyan)}
+.feature-test-card strong{font-size:14px;color:#e1efff}
+.feature-test-card p{font-size:12px;color:#85abcf;line-height:1.45;margin:0 0 10px;flex:1}
+
+/* Responsive adjustments */
+@media(max-width:1440px){
+  .found-hero-grid{grid-template-columns:repeat(3,1fr)}
+  .explain-grid{grid-template-columns:1fr 1fr}
+  .feature-test-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:1100px){
+  .found-hero-grid{grid-template-columns:1fr 1fr}
+  .nav-group{border-right:0;padding-right:0;width:100%}
+  .investigation-pipeline-map .pipeline-flow-diagram{flex-direction:column;align-items:stretch}
+  .pipeline-connector{transform:rotate(90deg);margin:4px auto}
+  .feature-test-grid{grid-template-columns:1fr}
+}
+
