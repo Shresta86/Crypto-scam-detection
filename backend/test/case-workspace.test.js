@@ -28,3 +28,28 @@ test('case completeness exposes missing investigator workflow steps', () => {
   assert.ok(value.steps.some(item => item.id === 'evidence_selected' && !item.complete));
   assert.ok(value.steps.some(item => item.id === 'report_generated' && item.optional));
 });
+
+test('evidence tamper test: snapshot creation verifies and protected field mutation triggers mismatch', () => {
+  const item = {
+    evidence_id: 'EV-0002',
+    case_id: '65f3a0b8c5f8a34d9b1e0002',
+    evidence_type: 'TRANSACTION',
+    title: 'High value transfer',
+    source_type: 'TRACEX',
+    source_provider: 'alchemy',
+    source_reference: '0x123abc',
+    captured_at: '2026-09-29 12:00:00 UTC',
+    transaction_hash: '0x123abc',
+    snapshot: { hash: '0x123abc', amount: 15.5, asset: 'ETH', from: '0xaaa', to: '0xbbb' }
+  };
+  item.integrity_hash = integrityHash(item);
+
+  // Status must verify with original data
+  const initialStatus = integrityHash(item) === item.integrity_hash ? 'VERIFIED' : 'INTEGRITY_MISMATCH';
+  assert.equal(initialStatus, 'VERIFIED');
+
+  // Altering protected snapshot data (simulating tampering/corruption)
+  const tampered = { ...item, snapshot: { ...item.snapshot, amount: 999.0 } };
+  const tamperedStatus = integrityHash(tampered) === tampered.integrity_hash ? 'VERIFIED' : 'INTEGRITY_MISMATCH';
+  assert.equal(tamperedStatus, 'INTEGRITY_MISMATCH');
+});

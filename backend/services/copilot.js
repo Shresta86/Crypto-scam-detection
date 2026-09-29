@@ -6,6 +6,13 @@ export const COPILOT_SYSTEM_PROMPT = `You are the TraceX Investigation Copilot.
 
 You assist investigators in understanding blockchain investigation evidence. Use only the TraceX investigation evidence provided in the context. Never invent transactions, wallet ownership, exchange attribution, blockchain activity, threat-intelligence reports, risk indicators, case IDs, or cross-case relationships. Fraud-network relationships are deterministic TraceX findings; explain only relationships present in fraud_network.related_cases and never discover new relationships yourself.
 
+When addressing investigative questions, organize responses with structured source labeling headings where applicable:
+### OBSERVED BLOCKCHAIN EVIDENCE
+### TRACEX ANALYSIS
+### EXTERNAL INTELLIGENCE
+### INVESTIGATOR MATERIAL
+### NEXT INVESTIGATIVE STEPS
+
 Clearly distinguish: (1) observed blockchain facts, (2) TraceX-generated behavioral indicators, (3) external threat intelligence, (4) entity/VASP attribution, (5) investigator-authored notes/findings, and (6) investigative hypotheses. Investigator-authored material is a lead unless its referenced evidence supports it; do not elevate it to an observed fact.
 
 A TraceX risk score is an investigative indicator, not proof of criminal activity. A third-party report is supporting intelligence, not proof of criminal ownership. If an external source is unavailable, say its result is unknown; never convert unavailable into zero reports. The transactions and paths in context may be labeled samples, so never generalize sample composition to the whole case. Do not describe mixing, laundering, funneling, structuring, criminal intent, or wallet ownership unless that exact conclusion exists in the supplied evidence. Behavioral indicators describe rule matches only. If evidence is insufficient, explicitly state that. When possible, reference concrete transaction hashes, wallet addresses, assets, amounts, timestamps, traced paths, indicators, and external-intelligence sources. Do not claim certainty where attribution is uncertain. Keep responses concise, structured, evidence-oriented, and useful to an investigator.`;
@@ -105,35 +112,42 @@ export function buildSafeEvidenceAnswer(question, evidence) {
   const threat = evidence.external_intelligence?.chainabuse;
   const exchanges = asArray(evidence.exchange_attributions);
   const relatedCases = asArray(evidence.fraud_network?.related_cases);
+  const workspace = evidence.case_management || {};
   const transactionReferences = asArray(evidence.transaction_sample).slice(0, 3).map(tx => `${tx.hash} (${tx.amount} ${tx.asset})`).join('; ');
   const lines = [
-    `TraceX evidence summary for ${evidence.investigated_wallet || 'the investigated wallet'}:`,
+    `### OBSERVED BLOCKCHAIN EVIDENCE`,
+    `- Investigated wallet: ${evidence.investigated_wallet || 'Not specified'} on ${evidence.blockchain || 'ethereum'}`,
+    `- Observed transfers: ${summary.transaction_count || 0} (${summary.native_transaction_count || 0} native ETH, ${summary.token_transaction_count || 0} token)`,
+    `- Direction: ${summary.incoming_transaction_count || 0} incoming, ${summary.outgoing_transaction_count || 0} outgoing`,
+    `- Traced paths: ${summary.path_count || 0} across ${summary.wallets_traced || 0} wallets (max hop depth: ${summary.max_hops || 0})`,
+    `- Provider evidence: ${evidence.blockchain_provider?.selected || 'blockchain service'}`,
+    transactionReferences ? `- Concrete transaction references: ${transactionReferences}` : '- No transaction samples available',
     '',
-    'Observed blockchain facts',
-    `- ${summary.transaction_count || 0} transactions: ${summary.native_transaction_count || 0} native and ${summary.token_transaction_count || 0} token transfers.`,
-    `- ${summary.incoming_transaction_count || 0} incoming and ${summary.outgoing_transaction_count || 0} outgoing transactions.`,
-    `- ${summary.path_count || 0} traced paths across ${summary.wallets_traced || 0} wallets, with a maximum configured depth of ${summary.max_hops || 0}.`,
-    `- Blockchain provider evidence: ${evidence.blockchain_provider?.selected || 'unknown'}.`,
-    transactionReferences ? `- Sample transaction references: ${transactionReferences}.` : '- No transaction samples are available.',
-    '',
-    'TraceX risk calculation',
-    ...(indicators.length ? indicators.map(item => `- ${item.message} (+${Number(item.points) || 0}, source: ${item.source || 'TraceX rule engine'}).`) : ['- No behavioral indicators were recorded.']),
-    `- Final score: ${evidence.risk?.score ?? 0} (${evidence.risk?.level || 'UNKNOWN'}).`,
-    '- This score is an investigative indicator, not proof of fraud or criminal activity.',
-    '',
-    'External intelligence and attribution',
-    threat?.status === 'available'
-      ? `- Chainabuse returned ${Number(threat.report_count) || 0} report(s); any reports are supporting intelligence only.`
-      : `- Chainabuse status: ${threat?.status || 'not available'}. Its report status is unknown.`,
+    `### TRACEX ANALYSIS`,
+    `- Risk score: ${evidence.risk?.score ?? 0}/100 (${evidence.risk?.level || 'UNKNOWN'} investigative priority)`,
+    ...(indicators.length ? indicators.map(item => `- Behavioral indicator: ${item.message} (+${Number(item.points) || 0} pts, rule: ${item.type || 'deterministic_rule'})`) : ['- No behavioral risk indicators were triggered.']),
+    `- Graph connectivity: ${evidence.graph_summary?.node_count || 0} nodes, ${evidence.graph_summary?.edge_count || 0} evidence edges`,
     exchanges.length
-      ? `- Dataset-matched exchange attribution: ${exchanges.map(item => `${item.exchange} (${item.address})`).join(', ')}.`
-      : '- No exchange/VASP dataset match was recorded.',
+      ? `- Identified VASP/Exchange endpoints: ${exchanges.map(item => `${item.exchange} (${item.address})`).join(', ')}`
+      : '- No exchange/VASP dataset match was recorded in the bounded trace',
     '',
-    'Fraud network intelligence',
+    `### EXTERNAL INTELLIGENCE`,
+    threat?.status === 'available'
+      ? `- Chainabuse reports: ${Number(threat.report_count) || 0} report(s) (supporting intelligence only; does not establish crime)`
+      : `- Chainabuse provider status: ${threat?.status || 'not available'} (report status is unknown, not zero)`,
+    '',
+    `### INVESTIGATOR MATERIAL`,
+    `- Retained evidence items: ${asArray(workspace.evidence).length} item(s)`,
+    `- Investigator findings: ${asArray(workspace.investigator_findings).length ? asArray(workspace.investigator_findings).map(f => `${f.finding_id}: ${f.title}`).join('; ') : 'No investigator findings recorded yet'}`,
+    `- Investigator notes: ${asArray(workspace.investigator_notes).length} note(s)`,
     relatedCases.length
-      ? `- ${relatedCases.length} potentially related investigation(s) were found from deterministic shared-infrastructure evidence.`
-      : '- No potentially related investigations met the deterministic similarity threshold.',
-    ...relatedCases.slice(0, 5).map(item => `- ${item.case_label || item.case_id}: ${item.similarity_score}/100 — ${asArray(item.reasons).map(reason => reason.message).join('; ')}.`),
+      ? `- Potentially related cases: ${relatedCases.map(item => `${item.case_label || item.case_id} (${item.similarity_score}/100 similarity)`).join(', ')}`
+      : '- No related cases met similarity threshold',
+    '',
+    `### NEXT INVESTIGATIVE STEPS`,
+    `- Verify transaction evidence for highest-volume transfers`,
+    `- Cross-reference intermediary wallets against related case infrastructure`,
+    `- Preserve critical transfers into the SHA-256 evidence workspace`,
     '',
     `Question addressed: ${question}`
   ];

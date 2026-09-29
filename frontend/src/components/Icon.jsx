@@ -18,6 +18,7 @@ const paths = {
   command: <><path d="M8 8h8M8 12h8M8 16h5"/><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9l-5 3v-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></>,
   filter: <path d="M4 5h16l-6 7v6l-4 2v-8z"/>, play: <path d="m8 5 11 7-11 7z"/>, pause: <><path d="M9 5v14M15 5v14"/></>,
   zoomIn: <><circle cx="10" cy="10" r="6"/><path d="M10 7v6M7 10h6m2.5 5.5L21 21"/></>,
+  zoomOut: <><circle cx="10" cy="10" r="6"/><path d="M7 10h6m2.5 5.5L21 21"/></>,
   target: <><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></>
 };
 
