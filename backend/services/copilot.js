@@ -232,6 +232,7 @@ export class GroqCopilotService {
         include_reasoning: false,
         messages: [
           { role: 'system', content: COPILOT_SYSTEM_PROMPT },
+          { role: 'system', content: 'Format every response with these exact Markdown headings: ## Direct answer, ## Evidence observed, ## Interpretation & limits, ## Recommended next step. Keep each section concise; use bullets for evidence and actions.' },
           { role: 'user', content: `TraceX evidence (authoritative JSON):\n${JSON.stringify(evidence)}\n\nInvestigator question: ${question}` }
         ]
       }, {

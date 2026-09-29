@@ -5,6 +5,7 @@ import InvestigationPage from './pages/InvestigationPage.jsx';
 import { AlertsPage, CasesPage, MonitoringPage, NetworkLanding, ReportsPage, StandaloneCopilot, SystemPage } from './pages/OperationsPages.jsx';
 import { api } from './api.js';
 import { caseLabel, formatDate, riskTone, shortAddress } from './utils.js';
+import LandingPage from './pages/LandingPage.jsx';
 
 export default function App() {
   const route = useRoute();
@@ -45,6 +46,7 @@ export default function App() {
   const addNote=async payload=>{const result=await api.addNote(current.investigation_id,payload);await loadWorkspace(current.investigation_id);return result;};
   const addFinding=async payload=>{const result=await api.addFinding(current.investigation_id,payload);await loadWorkspace(current.investigation_id);return result;};
 
+  if(route==='/')return <LandingPage/>;
   const content=renderRoute({route,config,cases,monitors,alerts,current,workspace,network,networkLoading,networkError,loading,error,monitor,investigate,loadCase,removeCase,toggleMonitor,stopMonitor,updateAlert,notify,compareCases,updateCase,addEvidence,verifyEvidence,addNote,addFinding});
   return <AppShell route={route} config={config} currentCase={current} alerts={alerts} cases={cases}>{content}<Toast message={toast?.message} tone={toast?.tone} onClose={()=>setToast(null)}/><CompareDrawer comparison={compare} loading={compareLoading} onClose={()=>setCompare(null)}/></AppShell>;
 }
@@ -52,7 +54,7 @@ export default function App() {
 function renderRoute(context){
   const {route,cases,monitors,alerts,current,network,networkLoading,networkError,loading,error,monitor}=context;
   const requestedTab=new URLSearchParams(window.location.search).get('tab')||'overview';
-  if(route==='/'||route==='/investigate')return <InvestigationPage investigation={null} onInvestigate={context.investigate} loading={loading} error={error} recent={cases} onOpenCase={context.loadCase}/>;
+  if(route==='/investigate')return <InvestigationPage investigation={null} onInvestigate={context.investigate} loading={loading} error={error} recent={cases} onOpenCase={context.loadCase}/>;
   if(route==='/cases')return <CasesPage cases={cases} monitors={monitors} onOpenCase={context.loadCase} onDelete={context.removeCase}/>;
   if(/^\/cases\/[a-f0-9]{24}$/i.test(route))return loading&&!current?<LoadingPage/>:error&&!current?<ErrorState message={error.message}/>:<InvestigationPage investigation={current} workspace={context.workspace} network={network} networkLoading={networkLoading} networkError={networkError} monitor={monitor} alerts={alerts} onMonitor={context.toggleMonitor} recent={cases} onOpenCase={context.loadCase} onCompare={context.compareCases} onToast={context.notify} onUpdateCase={context.updateCase} onAddEvidence={context.addEvidence} onVerifyEvidence={context.verifyEvidence} onAddNote={context.addNote} onAddFinding={context.addFinding} initialTab={requestedTab}/>;
   if(route==='/network')return <NetworkLanding cases={cases} onOpenCase={context.loadCase}/>;

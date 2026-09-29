@@ -1,107 +1,1414 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import Icon from './Icon.jsx';
-import GraphCanvas from './GraphCanvas.jsx';
-import { Badge, Button, CopyValue, EmptyState, ErrorState, MetricCard, Panel, SectionHeader, Skeleton } from './Primitives.jsx';
-import { api, downloadExport, downloadReport } from '../api.js';
-import { assetSummary, caseLabel, counterpartySummary, formatAmount, formatDate, riskTone, shortAddress, unique } from '../utils.js';
+import React, { useEffect, useMemo, useState } from "react";
+import Icon from "./Icon.jsx";
+import GraphCanvas from "./GraphCanvas.jsx";
+import {
+  Badge,
+  Button,
+  CopyValue,
+  EmptyState,
+  ErrorState,
+  MetricCard,
+  Panel,
+  SectionHeader,
+  Skeleton,
+} from "./Primitives.jsx";
+import { api, downloadExport, downloadReport } from "../api.js";
+import {
+  assetSummary,
+  caseLabel,
+  counterpartySummary,
+  formatAmount,
+  formatDate,
+  riskTone,
+  shortAddress,
+  unique,
+} from "../utils.js";
 
 export function RiskPanel({ investigation }) {
-  const risk = investigation.risk || {}, indicators = investigation.suspicious_activity?.indicators || [];
-  return <Panel className="risk-panel"><SectionHeader eyebrow="Explainable intelligence" title="Risk intelligence" description="Deterministic indicators derived from observed evidence."/>
-    <div className="risk-layout"><div className={`risk-gauge risk-${riskTone(risk.level)}`} style={{ '--score': `${Number(risk.score) || 0}%` }}><div><strong>{risk.score ?? 0}</strong><span>/ 100</span><small>{risk.level || 'UNKNOWN'} priority</small></div></div>
-      <div className="risk-breakdown">{indicators.length ? indicators.map((indicator, index) => <details key={`${indicator.type}-${index}`}><summary><span className={`severity-dot severity-${indicator.severity || 'medium'}`}/><div><strong>{indicator.message}</strong><small>{String(indicator.source || 'TraceX analytics').replaceAll('_',' ')}</small></div><b>+{indicator.points || 0}</b></summary><p>Rule <code>{indicator.type}</code> matched TraceX evidence. Supporting transfers can be reviewed in the transaction and path views. This signal supports prioritization; it does not establish criminal activity.</p></details>) : <EmptyState title="No deterministic indicators" description="No configured behavioral rule was triggered. Absence of an indicator is not proof of safety."/>}</div>
-    </div><p className="disclaimer">Risk indicators support investigation prioritization and are not proof of criminal activity.</p></Panel>;
+  const risk = investigation.risk || {},
+    indicators = investigation.suspicious_activity?.indicators || [];
+  return (
+    <Panel className="risk-panel">
+      <SectionHeader
+        eyebrow="Explainable intelligence"
+        title="Risk intelligence"
+        description="Deterministic indicators derived from observed evidence."
+      />
+      <div className="risk-layout">
+        <div
+          className={`risk-gauge risk-${riskTone(risk.level)}`}
+          style={{ "--score": `${Number(risk.score) || 0}%` }}
+        >
+          <div>
+            <strong>{risk.score ?? 0}</strong>
+            <span>/ 100</span>
+            <small>{risk.level || "UNKNOWN"} priority</small>
+          </div>
+        </div>
+        <div className="risk-breakdown">
+          {indicators.length ? (
+            indicators.map((indicator, index) => (
+              <details key={`${indicator.type}-${index}`}>
+                <summary>
+                  <span
+                    className={`severity-dot severity-${indicator.severity || "medium"}`}
+                  />
+                  <div>
+                    <strong>{indicator.message}</strong>
+                    <small>
+                      {String(
+                        indicator.source || "TraceX analytics",
+                      ).replaceAll("_", " ")}
+                    </small>
+                  </div>
+                  <b>+{indicator.points || 0}</b>
+                </summary>
+                <p>
+                  Rule <code>{indicator.type}</code> matched TraceX evidence.
+                  Supporting transfers can be reviewed in the transaction and
+                  path views. This signal supports prioritization; it does not
+                  establish criminal activity.
+                </p>
+              </details>
+            ))
+          ) : (
+            <EmptyState
+              title="No deterministic indicators"
+              description="No configured behavioral rule was triggered. Absence of an indicator is not proof of safety."
+            />
+          )}
+        </div>
+      </div>
+      <p className="disclaimer">
+        Risk indicators support investigation prioritization and are not proof
+        of criminal activity.
+      </p>
+    </Panel>
+  );
 }
 
-export function OverviewIntelligence({ investigation, network, monitor, onTab, onMonitor }) {
-  const assets = assetSummary(investigation.transactions), counterparties = counterpartySummary(investigation.transactions).slice(0, 6);
+export function OverviewIntelligence({
+  investigation,
+  network,
+  monitor,
+  onTab,
+  onMonitor,
+}) {
+  const assets = assetSummary(investigation.transactions),
+    counterparties = counterpartySummary(investigation.transactions).slice(
+      0,
+      6,
+    );
   const story = investigation.investigation_story || [];
-  return <><InvestigationOverviewMap investigation={investigation} network={network} onTab={onTab}/><div className="overview-columns"><div className="overview-main"><RiskPanel investigation={investigation}/><Panel className="story-panel"><SectionHeader eyebrow="Deterministic narrative" title="Investigation story" description="A chronological explanation built only from stored TraceX evidence."/><div className="story-rail">{story.map((item,index)=><article key={`${item.type}-${index}`}><span>{String(index+1).padStart(2,'0')}</span><div><strong>{item.title}</strong><p>{item.detail}</p><small>Source · {item.source}</small></div></article>)}</div></Panel><Panel><SectionHeader eyebrow="TraceX derived" title="Recommended next actions" description="Actions generated from the current deterministic findings."/>
-    <div className="action-list">{(investigation.investigator_recommendations || []).map((text, index) => <button key={index} onClick={() => onTab(text.toLowerCase().includes('intermed') ? 'paths' : text.toLowerCase().includes('transaction') ? 'transactions' : 'overview')}><span>{String(index + 1).padStart(2,'0')}</span><div><strong>{text}</strong><small>Review supporting evidence before drawing conclusions.</small></div><Icon name="arrow"/></button>)}
-      {network?.related_cases?.length > 0 && <button onClick={() => onTab('network')}><span>+</span><div><strong>Compare the strongest related investigation</strong><small>{network.related_cases[0].case_label} · {network.related_cases[0].similarity_score}/100 similarity</small></div><Icon name="arrow"/></button>}
-      {monitor?.status !== 'monitoring' && <button onClick={onMonitor}><span>+</span><div><strong>Enable wallet monitoring</strong><small>Watch for new provider-observed activity.</small></div><Icon name="arrow"/></button>}
-    </div></Panel></div>
-    <div className="overview-side"><Panel><SectionHeader eyebrow="Asset provenance" title="Asset flow summary"/><div className="asset-summary">{assets.slice(0, 7).map(item => <div key={item.asset}><span className="asset-icon">{item.asset.slice(0,2)}</span><div><strong>{item.asset}</strong><small>{item.count} observed transfers</small></div><dl><dt>In</dt><dd>{formatAmount(item.incoming)}</dd><dt>Out</dt><dd>{formatAmount(item.outgoing)}</dd></dl></div>)}</div></Panel>
-    <Panel><SectionHeader eyebrow="Wallet profile" title="Top counterparties"/><div className="counterparty-list">{counterparties.map(item => <div key={item.address}><CopyValue value={item.address}/><span>{item.count} interactions</span><small>{item.exchange || item.assets.join(', ')}</small></div>)}</div></Panel></div></div></>;
+  return (
+    <>
+      <InvestigationOverviewMap
+        investigation={investigation}
+        network={network}
+        onTab={onTab}
+      />
+      <div className="overview-columns">
+        <div className="overview-main">
+          <RiskPanel investigation={investigation} />
+          <Panel className="story-panel">
+            <SectionHeader
+              eyebrow="Deterministic narrative"
+              title="Investigation story"
+              description="A chronological explanation built only from stored TraceX evidence."
+            />
+            <div className="story-rail">
+              {story.map((item, index) => (
+                <article key={`${item.type}-${index}`}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                    <small>Source · {item.source}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Panel>
+          <ActivityCharts investigation={investigation} />
+          <Panel>
+            <SectionHeader
+              eyebrow="TraceX derived"
+              title="Recommended next actions"
+              description="Actions generated from the current deterministic findings."
+            />
+            <div className="action-list">
+              {(investigation.investigator_recommendations || []).map(
+                (text, index) => (
+                  <button
+                    key={index}
+                    onClick={() =>
+                      onTab(
+                        text.toLowerCase().includes("intermed")
+                          ? "paths"
+                          : text.toLowerCase().includes("transaction")
+                            ? "transactions"
+                            : "overview",
+                      )
+                    }
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <strong>{text}</strong>
+                      <small>
+                        Review supporting evidence before drawing conclusions.
+                      </small>
+                    </div>
+                    <Icon name="arrow" />
+                  </button>
+                ),
+              )}
+              {network?.related_cases?.length > 0 && (
+                <button onClick={() => onTab("network")}>
+                  <span>+</span>
+                  <div>
+                    <strong>Compare the strongest related investigation</strong>
+                    <small>
+                      {network.related_cases[0].case_label} ·{" "}
+                      {network.related_cases[0].similarity_score}/100 similarity
+                    </small>
+                  </div>
+                  <Icon name="arrow" />
+                </button>
+              )}
+              {monitor?.status !== "monitoring" && (
+                <button onClick={onMonitor}>
+                  <span>+</span>
+                  <div>
+                    <strong>Enable wallet monitoring</strong>
+                    <small>Watch for new provider-observed activity.</small>
+                  </div>
+                  <Icon name="arrow" />
+                </button>
+              )}
+            </div>
+          </Panel>
+        </div>
+        <div className="overview-side">
+          <Panel>
+            <SectionHeader
+              eyebrow="Asset provenance"
+              title="Asset flow summary"
+            />
+            <div className="asset-summary">
+              {assets.slice(0, 7).map((item) => (
+                <div key={item.asset}>
+                  <span className="asset-icon">{item.asset.slice(0, 2)}</span>
+                  <div>
+                    <strong>{item.asset}</strong>
+                    <small>{item.count} observed transfers</small>
+                  </div>
+                  <dl>
+                    <dt>In</dt>
+                    <dd>{formatAmount(item.incoming)}</dd>
+                    <dt>Out</dt>
+                    <dd>{formatAmount(item.outgoing)}</dd>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </Panel>
+          <Panel>
+            <SectionHeader
+              eyebrow="Wallet profile"
+              title="Top counterparties"
+            />
+            <div className="counterparty-list">
+              {counterparties.map((item) => (
+                <div key={item.address}>
+                  <CopyValue value={item.address} />
+                  <span>{item.count} interactions</span>
+                  <small>{item.exchange || item.assets.join(", ")}</small>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      </div>
+    </>
+  );
 }
 
 function InvestigationOverviewMap({ investigation, network, onTab }) {
   const indicators = investigation.suspicious_activity?.indicators || [];
-  const movement = `${investigation.start_wallet ? 'Suspect' : 'Wallet'} → ${Math.max(0,(investigation.wallets_traced||1)-1)} intermediaries → ${investigation.exchange_attributions?.length ? 'Potential VASP' : 'Observed endpoints'}`;
+  const movement = `${investigation.start_wallet ? "Suspect" : "Wallet"} → ${Math.max(0, (investigation.wallets_traced || 1) - 1)} intermediaries → ${investigation.exchange_attributions?.length ? "Potential VASP" : "Observed endpoints"}`;
   const facts = [
-    ['Fund movement', movement, 'fund-flow'],
-    ['Behavior', indicators.slice(0,2).map(item=>item.type.replaceAll('_',' ')).join(' + ') || 'No configured rule triggered', 'overview'],
-    ['Network', `${investigation.graph?.nodes?.length||0} nodes · ${investigation.graph?.edges?.length||0} evidence edges`, 'fund-flow'],
-    ['Cross-case', `${network?.summary?.related_investigations||0} related investigations`, 'network'],
-    ['External intelligence', investigation.external_intelligence?.chainabuse?.status==='available' ? `${investigation.external_intelligence.chainabuse.report_count||0} Chainabuse reports` : 'Report status unavailable', 'external']
+    ["Fund movement", movement, "fund-flow"],
+    [
+      "Behavior",
+      indicators
+        .slice(0, 2)
+        .map((item) => item.type.replaceAll("_", " "))
+        .join(" + ") || "No configured rule triggered",
+      "overview",
+    ],
+    [
+      "Network",
+      `${investigation.graph?.nodes?.length || 0} nodes · ${investigation.graph?.edges?.length || 0} evidence edges`,
+      "fund-flow",
+    ],
+    [
+      "Cross-case",
+      `${network?.summary?.related_investigations || 0} related investigations`,
+      "network",
+    ],
+    [
+      "External intelligence",
+      investigation.external_intelligence?.chainabuse?.status === "available"
+        ? `${investigation.external_intelligence.chainabuse.report_count || 0} Chainabuse reports`
+        : "Report status unavailable",
+      "external",
+    ],
   ];
-  return <Panel className="overview-map"><SectionHeader eyebrow="Five-second case briefing" title="Investigation overview map" description="What happened, where funds moved, what matters, and which evidence to inspect next."/><div className="overview-map-grid">{facts.map(([label,value,tab],index)=><button key={label} onClick={()=>onTab(tab)}><span>{String(index+1).padStart(2,'0')}</span><small>{label}</small><strong>{value}</strong><Icon name="arrow"/></button>)}</div></Panel>;
+  return (
+    <Panel className="overview-map">
+      <SectionHeader
+        eyebrow="Five-second case briefing"
+        title="Investigation overview map"
+        description="What happened, where funds moved, what matters, and which evidence to inspect next."
+      />
+      <div className="overview-map-grid">
+        {facts.map(([label, value, tab], index) => (
+          <button key={label} onClick={() => onTab(tab)}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <small>{label}</small>
+            <strong>{value}</strong>
+            <Icon name="arrow" />
+          </button>
+        ))}
+      </div>
+    </Panel>
+  );
 }
 
 export function AdvancedIntelligence({ investigation }) {
   const bridges = investigation.bridge_intelligence?.interactions || [];
-  const analytics = investigation.network_analytics || { candidates: [], methodology: {} };
+  const analytics = investigation.network_analytics || {
+    candidates: [],
+    methodology: {},
+  };
   const crossChain = investigation.cross_chain || {};
-  return <div className="advanced-stack"><Panel className="bridge-surface"><SectionHeader eyebrow="Verified contract intelligence" title="Bridge interactions" description="Exact matches against a provenance-backed bridge registry. Pattern guesses are excluded."/>{bridges.length?<div className="bridge-list">{bridges.map(event=><article key={`${event.transaction_hash}-${event.bridge_contract}`}><div className="bridge-symbol"><Icon name="network" size={24}/></div><div><span className="eyebrow">Bridge interaction observed</span><h3>{event.bridge}</h3><CopyValue value={event.bridge_contract} compact={false}/><div className="bridge-facts"><span><small>Source chain</small><strong>{event.source_chain}</strong></span><span><small>Asset</small><strong>{formatAmount(event.amount)} {event.asset}</strong></span><span><small>Provider</small><strong>{event.provider}</strong></span><span><small>Destination</small><strong>Not correlated</strong></span></div><CopyValue value={event.transaction_hash} compact={false}/><p>Registry provenance: {event.provenance?.confidence} · <a href={event.provenance?.source} target="_blank" rel="noreferrer">official contract source</a></p></div></article>)}</div>:<EmptyState icon="network" title="No verified bridge interaction observed" description="No transaction touched a contract in the current verified registry. This does not rule out unidentified bridge activity."/>}</Panel>
-    <Panel className="cross-chain-state"><SectionHeader eyebrow="Cross-chain continuation" title="Evidence availability" description="TraceX will not infer destination-chain movement from amount and timing alone."/><div className="cross-chain-message"><span><Icon name="system" size={26}/></span><div><Badge tone="warning">Not verified</Badge><h3>Destination-chain evidence unavailable</h3><p>{crossChain.reason || 'The configured blockchain providers currently expose Ethereum investigation data only.'}</p><small>{crossChain.warning}</small></div></div></Panel>
-    <Panel><SectionHeader eyebrow="Topology intelligence" title="Network hubs, collectors & distributors" description="Deterministic roles derived from bounded graph connectivity and observed transfers."/>{analytics.candidates?.length?<div className="topology-grid">{analytics.candidates.slice(0,12).map(item=><article key={item.address}><header><Badge tone={item.role==='COLLECTOR_CANDIDATE'?'warning':item.role==='DISTRIBUTOR_CANDIDATE'?'purple':'blue'}>{item.role.replaceAll('_',' ')}</Badge><strong>{item.degree} connections</strong></header><CopyValue value={item.address} compact={false}/><p>{item.reason}</p><dl><div><dt>Incoming</dt><dd>{item.incoming_transfers}</dd></div><div><dt>Outgoing</dt><dd>{item.outgoing_transfers}</dd></div><div><dt>Sources</dt><dd>{item.distinct_sources}</dd></div><div><dt>Destinations</dt><dd>{item.distinct_destinations}</dd></div></dl><small>{item.disclaimer}</small></article>)}</div>:<EmptyState title="No high-connectivity role detected" description="No address crossed the explicit collector, distributor, or hub thresholds in this bounded trace."/>}<details className="methodology"><summary>View classification methodology</summary><p>{analytics.methodology?.collector}</p><p>{analytics.methodology?.distributor}</p><p>{analytics.methodology?.hub}</p></details></Panel></div>;
+  return (
+    <div className="advanced-stack">
+      <Panel className="bridge-surface">
+        <SectionHeader
+          eyebrow="Verified contract intelligence"
+          title="Bridge interactions"
+          description="Exact matches against a provenance-backed bridge registry. Pattern guesses are excluded."
+        />
+        {bridges.length ? (
+          <div className="bridge-list">
+            {bridges.map((event) => (
+              <article
+                key={`${event.transaction_hash}-${event.bridge_contract}`}
+              >
+                <div className="bridge-symbol">
+                  <Icon name="network" size={24} />
+                </div>
+                <div>
+                  <span className="eyebrow">Bridge interaction observed</span>
+                  <h3>{event.bridge}</h3>
+                  <CopyValue value={event.bridge_contract} compact={false} />
+                  <div className="bridge-facts">
+                    <span>
+                      <small>Source chain</small>
+                      <strong>{event.source_chain}</strong>
+                    </span>
+                    <span>
+                      <small>Asset</small>
+                      <strong>
+                        {formatAmount(event.amount)} {event.asset}
+                      </strong>
+                    </span>
+                    <span>
+                      <small>Provider</small>
+                      <strong>{event.provider}</strong>
+                    </span>
+                    <span>
+                      <small>Destination</small>
+                      <strong>Not correlated</strong>
+                    </span>
+                  </div>
+                  <CopyValue value={event.transaction_hash} compact={false} />
+                  <p>
+                    Registry provenance: {event.provenance?.confidence} ·{" "}
+                    <a
+                      href={event.provenance?.source}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      official contract source
+                    </a>
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon="network"
+            title="No verified bridge interaction observed"
+            description="No transaction touched a contract in the current verified registry. This does not rule out unidentified bridge activity."
+          />
+        )}
+      </Panel>
+      <Panel className="cross-chain-state">
+        <SectionHeader
+          eyebrow="Cross-chain continuation"
+          title="Evidence availability"
+          description="TraceX will not infer destination-chain movement from amount and timing alone."
+        />
+        <div className="cross-chain-message">
+          <span>
+            <Icon name="system" size={26} />
+          </span>
+          <div>
+            <Badge tone="warning">Not verified</Badge>
+            <h3>Destination-chain evidence unavailable</h3>
+            <p>
+              {crossChain.reason ||
+                "The configured blockchain providers currently expose Ethereum investigation data only."}
+            </p>
+            <small>{crossChain.warning}</small>
+          </div>
+        </div>
+      </Panel>
+      <Panel>
+        <SectionHeader
+          eyebrow="Topology intelligence"
+          title="Network hubs, collectors & distributors"
+          description="Deterministic roles derived from bounded graph connectivity and observed transfers."
+        />
+        {analytics.candidates?.length ? (
+          <div className="topology-grid">
+            {analytics.candidates.slice(0, 12).map((item) => (
+              <article key={item.address}>
+                <header>
+                  <Badge
+                    tone={
+                      item.role === "COLLECTOR_CANDIDATE"
+                        ? "warning"
+                        : item.role === "DISTRIBUTOR_CANDIDATE"
+                          ? "purple"
+                          : "blue"
+                    }
+                  >
+                    {item.role.replaceAll("_", " ")}
+                  </Badge>
+                  <strong>{item.degree} connections</strong>
+                </header>
+                <CopyValue value={item.address} compact={false} />
+                <p>{item.reason}</p>
+                <dl>
+                  <div>
+                    <dt>Incoming</dt>
+                    <dd>{item.incoming_transfers}</dd>
+                  </div>
+                  <div>
+                    <dt>Outgoing</dt>
+                    <dd>{item.outgoing_transfers}</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>{item.distinct_sources}</dd>
+                  </div>
+                  <div>
+                    <dt>Destinations</dt>
+                    <dd>{item.distinct_destinations}</dd>
+                  </div>
+                </dl>
+                <small>{item.disclaimer}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No high-connectivity role detected"
+            description="No address crossed the explicit collector, distributor, or hub thresholds in this bounded trace."
+          />
+        )}
+        <details className="methodology">
+          <summary>View classification methodology</summary>
+          <p>{analytics.methodology?.collector}</p>
+          <p>{analytics.methodology?.distributor}</p>
+          <p>{analytics.methodology?.hub}</p>
+        </details>
+      </Panel>
+    </div>
+  );
 }
 
 export function AuditTrail({ investigation }) {
-  const [events,setEvents]=useState(investigation.audit_trail||[]),[loading,setLoading]=useState(true),[error,setError]=useState('');
-  useEffect(()=>{let live=true;setLoading(true);api.audit(investigation.investigation_id).then(data=>{if(live)setEvents(data.events||[]);}).catch(err=>{if(live)setError(err.message);}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[investigation.investigation_id]);
-  return <Panel className="audit-panel"><SectionHeader eyebrow="Chain of investigation" title="Investigation activity" description="Meaningful system actions recorded with timestamps, sources, and non-secret structured metadata."/>{loading&&<Skeleton lines={6}/>} {error&&<ErrorState message={error}/>} {!loading&&!error&&<div className="audit-timeline">{events.map((event,index)=><article key={event.id||`${event.event_type}-${index}`}><time>{formatDate(event.timestamp)}</time><span><i/></span><div><strong>{event.event_type.replaceAll('_',' ')}</strong><small>Source · {event.source}</small><p>{Object.entries(event.metadata||{}).map(([key,value])=>`${key.replaceAll('_',' ')}: ${Array.isArray(value)?value.join(', '):String(value)}`).join(' · ')}</p></div></article>)}</div>}</Panel>;
+  const [events, setEvents] = useState(investigation.audit_trail || []),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    setLoading(true);
+    api
+      .audit(investigation.investigation_id)
+      .then((data) => {
+        if (live) setEvents(data.events || []);
+      })
+      .catch((err) => {
+        if (live) setError(err.message);
+      })
+      .finally(() => {
+        if (live) setLoading(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [investigation.investigation_id]);
+  return (
+    <Panel className="audit-panel">
+      <SectionHeader
+        eyebrow="Chain of investigation"
+        title="Investigation activity"
+        description="Meaningful system actions recorded with timestamps, sources, and non-secret structured metadata."
+      />
+      {loading && <Skeleton lines={6} />}{" "}
+      {error && <ErrorState message={error} />}{" "}
+      {!loading && !error && (
+        <div className="audit-timeline">
+          {events.map((event, index) => (
+            <article key={event.id || `${event.event_type}-${index}`}>
+              <time>{formatDate(event.timestamp)}</time>
+              <span>
+                <i />
+              </span>
+              <div>
+                <strong>{event.event_type.replaceAll("_", " ")}</strong>
+                <small>Source · {event.source}</small>
+                <p>
+                  {Object.entries(event.metadata || {})
+                    .map(
+                      ([key, value]) =>
+                        `${key.replaceAll("_", " ")}: ${Array.isArray(value) ? value.join(", ") : String(value)}`,
+                    )
+                    .join(" · ")}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
 }
 
 export function ExternalIntel({ investigation }) {
   const intel = investigation.external_intelligence?.chainabuse;
-  const unavailable = !intel || intel.status !== 'available';
-  return <Panel><SectionHeader eyebrow="Third-party source" title="External threat intelligence" description="Separated from TraceX blockchain facts and deterministic analytics."/>
-    <div className={`intel-status ${unavailable ? 'intel-unavailable' : 'intel-available'}`}><div className="intel-provider"><span className="chain-mark">C</span><div><strong>Chainabuse</strong><small>External intelligence provider</small></div></div><Badge tone={unavailable ? 'warning' : 'success'} dot>{unavailable ? 'Temporarily unavailable' : 'Available'}</Badge></div>
-    {unavailable ? <EmptyState icon="alerts" title="External intelligence temporarily unavailable" description="Core TraceX blockchain analysis remains available. Report status is unknown—not zero."/> : <div className="intel-grid"><MetricCard label="External reports" value={intel.report_count ?? 0} tone={Number(intel.report_count) > 0 ? 'amber' : 'teal'}/><MetricCard label="Categories" value={(intel.categories || []).length} tone="blue"/><div className="intel-detail"><span>Last checked</span><strong>{formatDate(intel.last_checked || intel.checked_at)}</strong><span>Cache</span><strong>{intel.cached ? 'Cached result' : 'Provider result'}</strong></div></div>}
-    <p className="disclaimer">External reports are supporting intelligence and do not prove criminal ownership or activity.</p></Panel>;
+  const unavailable = !intel || intel.status !== "available";
+  return (
+    <Panel>
+      <SectionHeader
+        eyebrow="Third-party source"
+        title="External threat intelligence"
+        description="Separated from TraceX blockchain facts and deterministic analytics."
+      />
+      <div
+        className={`intel-status ${unavailable ? "intel-unavailable" : "intel-available"}`}
+      >
+        <div className="intel-provider">
+          <span className="chain-mark">C</span>
+          <div>
+            <strong>Chainabuse</strong>
+            <small>External intelligence provider</small>
+          </div>
+        </div>
+        <Badge tone={unavailable ? "warning" : "success"} dot>
+          {unavailable ? "Temporarily unavailable" : "Available"}
+        </Badge>
+      </div>
+      {unavailable ? (
+        <EmptyState
+          icon="alerts"
+          title="External intelligence temporarily unavailable"
+          description="Core TraceX blockchain analysis remains available. Report status is unknown—not zero."
+        />
+      ) : (
+        <div className="intel-grid">
+          <MetricCard
+            label="External reports"
+            value={intel.report_count ?? 0}
+            tone={Number(intel.report_count) > 0 ? "amber" : "teal"}
+          />
+          <MetricCard
+            label="Categories"
+            value={(intel.categories || []).length}
+            tone="blue"
+          />
+          <div className="intel-detail">
+            <span>Last checked</span>
+            <strong>
+              {formatDate(intel.last_checked || intel.checked_at)}
+            </strong>
+            <span>Cache</span>
+            <strong>
+              {intel.cached ? "Cached result" : "Provider result"}
+            </strong>
+          </div>
+        </div>
+      )}
+      <p className="disclaimer">
+        External reports are supporting intelligence and do not prove criminal
+        ownership or activity.
+      </p>
+    </Panel>
+  );
 }
 
 export function EntityIntelligence({ investigation }) {
   const entities = investigation.exchange_attributions || [];
-  return <Panel><SectionHeader eyebrow="Attribution dataset" title="Exchange / VASP intelligence" description="Potential entity matches based on the configured TraceX address dataset."/>{entities.length ? <div className="entity-grid">{entities.map((entity, index) => <article key={`${entity.address}-${index}`}><header><span className="entity-mark">{entity.exchange?.slice(0,1)}</span><div><strong>{entity.exchange}</strong><small>Potential VASP endpoint</small></div><Badge tone="success">{entity.confidence || 'Dataset match'}</Badge></header><CopyValue value={entity.address} compact={false}/><footer><span>{entity.transaction_count || entity.interactions || 0} interactions</span><span>Source: TraceX dataset</span></footer></article>)}</div> : <EmptyState title="No known VASP attribution identified" description="The current attribution dataset did not match an observed destination. This does not establish that no service was used."/>}</Panel>;
+  return (
+    <Panel>
+      <SectionHeader
+        eyebrow="Attribution dataset"
+        title="Exchange / VASP intelligence"
+        description="Potential entity matches based on the configured TraceX address dataset."
+      />
+      {entities.length ? (
+        <div className="entity-grid">
+          {entities.map((entity, index) => (
+            <article key={`${entity.address}-${index}`}>
+              <header>
+                <span className="entity-mark">
+                  {entity.exchange?.slice(0, 1)}
+                </span>
+                <div>
+                  <strong>{entity.exchange}</strong>
+                  <small>Potential VASP endpoint</small>
+                </div>
+                <Badge tone="success">
+                  {entity.confidence || "Dataset match"}
+                </Badge>
+              </header>
+              <CopyValue value={entity.address} compact={false} />
+              <footer>
+                <span>
+                  {entity.transaction_count || entity.interactions || 0}{" "}
+                  interactions
+                </span>
+                <span>Source: TraceX dataset</span>
+              </footer>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No known VASP attribution identified"
+          description="The current attribution dataset did not match an observed destination. This does not establish that no service was used."
+        />
+      )}
+    </Panel>
+  );
 }
 
 export function PathExplorer({ paths = [], onGraph }) {
-  const [asset, setAsset] = useState('all'), [page, setPage] = useState(1); const size = 12;
-  const assets = unique(paths.map(path => path.asset)); const filtered = paths.filter(path => asset === 'all' || path.asset === asset); const visible = filtered.slice((page-1)*size, page*size); const pages = Math.max(1, Math.ceil(filtered.length/size));
-  return <Panel><SectionHeader eyebrow="Observed evidence" title="Traced fund paths" description="Directional path segments created from real outgoing transfers. Assets remain separated by transfer." action={<select value={asset} onChange={event => {setAsset(event.target.value);setPage(1);}}><option value="all">All assets</option>{assets.map(value => <option key={value}>{value}</option>)}</select>}/>{visible.length ? <div className="path-list">{visible.map((path,index) => <article key={`${path.hash}-${index}`}><div className="path-hop">HOP {path.hop}</div><div className="path-route"><div><span>Source</span><CopyValue value={path.from}/></div><Icon name="arrow"/><div><span>{path.exchange ? 'VASP destination' : 'Destination'}</span><CopyValue value={path.to}/>{path.exchange && <Badge tone="success">{path.exchange}</Badge>}</div></div><div className="path-meta"><strong>{formatAmount(path.amount)} {path.asset}</strong><span>{formatDate(path.timestamp)}</span><span>{path.provider}</span><button onClick={onGraph}>View on graph</button></div></article>)}</div> : <EmptyState title="No traced paths" description="No supported outgoing path evidence was found for the current filters."/>}<div className="pagination"><span>Page {page} of {pages}</span><div><button disabled={page===1} onClick={()=>setPage(value=>value-1)}>Previous</button><button disabled={page===pages} onClick={()=>setPage(value=>value+1)}>Next</button></div></div></Panel>;
+  const [asset, setAsset] = useState("all"),
+    [page, setPage] = useState(1);
+  const size = 12;
+  const assets = unique(paths.map((path) => path.asset));
+  const filtered = paths.filter(
+    (path) => asset === "all" || path.asset === asset,
+  );
+  const visible = filtered.slice((page - 1) * size, page * size);
+  const pages = Math.max(1, Math.ceil(filtered.length / size));
+  return (
+    <Panel>
+      <SectionHeader
+        eyebrow="Observed evidence"
+        title="Traced fund paths"
+        description="Directional path segments created from real outgoing transfers. Assets remain separated by transfer."
+        action={
+          <select
+            value={asset}
+            onChange={(event) => {
+              setAsset(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="all">All assets</option>
+            {assets.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        }
+      />
+      {visible.length ? (
+        <div className="path-list">
+          {visible.map((path, index) => (
+            <article key={`${path.hash}-${index}`}>
+              <div className="path-hop">HOP {path.hop}</div>
+              <div className="path-route">
+                <div>
+                  <span>Source</span>
+                  <CopyValue value={path.from} />
+                </div>
+                <Icon name="arrow" />
+                <div>
+                  <span>
+                    {path.exchange ? "VASP destination" : "Destination"}
+                  </span>
+                  <CopyValue value={path.to} />
+                  {path.exchange && (
+                    <Badge tone="success">{path.exchange}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="path-meta">
+                <strong>
+                  {formatAmount(path.amount)} {path.asset}
+                </strong>
+                <span>{formatDate(path.timestamp)}</span>
+                <span>{path.provider}</span>
+                <button onClick={onGraph}>View on graph</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No traced paths"
+          description="No supported outgoing path evidence was found for the current filters."
+        />
+      )}
+      <div className="pagination">
+        <span>
+          Page {page} of {pages}
+        </span>
+        <div>
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </button>
+          <button
+            disabled={page === pages}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </Panel>
+  );
 }
 
-export function FraudNetwork({ network, loading, error, onOpenCase, onCompare }) {
-  if (loading) return <Panel><Skeleton lines={7}/></Panel>;
-  if (error) return <ErrorState title="Network intelligence unavailable" message={error}/>;
+export function FraudNetwork({
+  network,
+  loading,
+  error,
+  onOpenCase,
+  onCompare,
+}) {
+  if (loading)
+    return (
+      <Panel>
+        <Skeleton lines={7} />
+      </Panel>
+    );
+  if (error)
+    return (
+      <ErrorState title="Network intelligence unavailable" message={error} />
+    );
   if (!network) return null;
   const summary = network.summary || {};
-  return <div className="network-stack"><div className="metric-grid five"><MetricCard label="Related investigations" value={summary.related_investigations || 0} tone="purple"/><MetricCard label="Shared wallets" value={summary.shared_wallets || 0}/><MetricCard label="Intermediaries" value={summary.common_intermediaries || 0} tone="amber"/><MetricCard label="Destinations" value={summary.shared_destinations || 0} tone="teal"/><MetricCard label="Shared VASPs" value={summary.shared_vasp_destinations || 0} tone="green"/></div>
-      <Panel><SectionHeader eyebrow="Cross-case correlation" title="Potentially related investigations" description="Ranked using explainable shared-infrastructure evidence."/>{network.related_cases?.length ? <div className="similar-cases">{network.related_cases.map(item => <article key={item.case_id}><div className="similar-score"><strong>{item.similarity_score}</strong><span>/100</span></div><div className="similar-content"><header><div><span className="eyebrow">Potential relationship</span><h3>{item.case_label || caseLabel(item.case_id)}</h3></div><CopyValue value={item.suspect_wallet}/></header><div className="reason-chips">{item.reasons.map(reason => <span key={reason.type}><b>+{reason.points}</b>{reason.type.replaceAll('_',' ')}</span>)}</div><ul>{item.reasons.slice(0,4).map(reason => <li key={reason.type}>{reason.total_matches || reason.values?.length || 1} {reason.type.replaceAll('_',' ')} match{(reason.total_matches || reason.values?.length || 1)===1?'':'es'}{reason.values?.[0] ? ` · ${shortAddress(reason.values[0])}` : ''}</li>)}</ul><footer><Button variant="secondary" onClick={() => onOpenCase(item.case_id)}>Open case</Button><Button variant="ghost" onClick={() => onCompare(item.case_id)}>Compare evidence</Button></footer></div></article>)}</div> : <EmptyState title="No meaningful cross-case relationships detected" description="No stored investigation met the configured deterministic similarity threshold."/>}</Panel>
-    <Panel className="graph-panel"><GraphCanvas graph={network.graph} mode="network" title="Cross-case infrastructure graph" network={network} onOpenCase={onOpenCase}/></Panel></div>;
+  return (
+    <div className="network-stack">
+      <div className="metric-grid five">
+        <MetricCard
+          label="Related investigations"
+          value={summary.related_investigations || 0}
+          tone="purple"
+        />
+        <MetricCard
+          label="Shared wallets"
+          value={summary.shared_wallets || 0}
+        />
+        <MetricCard
+          label="Intermediaries"
+          value={summary.common_intermediaries || 0}
+          tone="amber"
+        />
+        <MetricCard
+          label="Destinations"
+          value={summary.shared_destinations || 0}
+          tone="teal"
+        />
+        <MetricCard
+          label="Shared VASPs"
+          value={summary.shared_vasp_destinations || 0}
+          tone="green"
+        />
+      </div>
+      <Panel>
+        <SectionHeader
+          eyebrow="Cross-case correlation"
+          title="Potentially related investigations"
+          description="Ranked using explainable shared-infrastructure evidence."
+        />
+        {network.related_cases?.length ? (
+          <div className="similar-cases">
+            {network.related_cases.map((item) => (
+              <article key={item.case_id}>
+                <div className="similar-score">
+                  <strong>{item.similarity_score}</strong>
+                  <span>/100</span>
+                </div>
+                <div className="similar-content">
+                  <header>
+                    <div>
+                      <span className="eyebrow">Potential relationship</span>
+                      <h3>{item.case_label || caseLabel(item.case_id)}</h3>
+                    </div>
+                    <CopyValue value={item.suspect_wallet} />
+                  </header>
+                  <div className="reason-chips">
+                    {item.reasons.map((reason) => (
+                      <span key={reason.type}>
+                        <b>+{reason.points}</b>
+                        {reason.type.replaceAll("_", " ")}
+                      </span>
+                    ))}
+                  </div>
+                  <ul>
+                    {item.reasons.slice(0, 4).map((reason) => (
+                      <li key={reason.type}>
+                        {reason.total_matches || reason.values?.length || 1}{" "}
+                        {reason.type.replaceAll("_", " ")} match
+                        {(reason.total_matches ||
+                          reason.values?.length ||
+                          1) === 1
+                          ? ""
+                          : "es"}
+                        {reason.values?.[0]
+                          ? ` · ${shortAddress(reason.values[0])}`
+                          : ""}
+                      </li>
+                    ))}
+                  </ul>
+                  <footer>
+                    <Button
+                      variant="secondary"
+                      onClick={() => onOpenCase(item.case_id)}
+                    >
+                      Open case
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onCompare(item.case_id)}
+                    >
+                      Compare evidence
+                    </Button>
+                  </footer>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No meaningful cross-case relationships detected"
+            description="No stored investigation met the configured deterministic similarity threshold."
+          />
+        )}
+      </Panel>
+      <Panel className="graph-panel">
+        <GraphCanvas
+          graph={network.graph}
+          mode="network"
+          title="Cross-case infrastructure graph"
+          network={network}
+          onOpenCase={onOpenCase}
+        />
+      </Panel>
+    </div>
+  );
 }
 
 export function Timeline({ transactions = [] }) {
-  const events = useMemo(() => [...transactions].filter(tx => tx.timestamp).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).slice(0,200), [transactions]);
-  const [index,setIndex]=useState(0), [playing,setPlaying]=useState(false), [speed,setSpeed]=useState(1);
-  useEffect(()=>{ if(!playing||!events.length)return; const timer=setInterval(()=>setIndex(value=>value>=events.length-1?(setPlaying(false),value):value+1),900/speed); return()=>clearInterval(timer); },[playing,events.length,speed]);
-  const current=events[index];
-  return <Panel className="time-machine"><SectionHeader eyebrow="Chronological evidence" title="Transaction time machine" description="Replays existing provider-observed transfers; it does not reconstruct missing activity."/>{current ? <div className="timeline-player"><div className="timeline-window"><span>{formatDate(events[0]?.timestamp)}</span><div><i style={{width:`${events.length>1?(index/(events.length-1))*100:0}%`}}/><b style={{left:`${events.length>1?(index/(events.length-1))*100:0}%`}}/></div><span>{formatDate(events.at(-1)?.timestamp)}</span></div><div className="timeline-focus"><span className="timeline-time">{formatDate(current.timestamp)} · BLOCK {current.block_number||'N/A'}</span><div className="timeline-route"><CopyValue value={current.from}/><Icon name="arrow"/><CopyValue value={current.to}/></div><strong>{formatAmount(current.amount)} {current.asset}</strong><Badge tone={current.direction==='OUT'?'warning':'success'}>{current.direction}</Badge><small>Provider · {current.provider||'unknown'} · Event {index+1} of {events.length}</small></div><input type="range" min="0" max={events.length-1} value={index} onChange={event=>{setIndex(Number(event.target.value));setPlaying(false);}} aria-label="Timeline position"/><div className="timeline-controls"><button onClick={()=>setIndex(0)}>|‹</button><button onClick={()=>setIndex(value=>Math.max(0,value-1))}>‹</button><button className="timeline-play" onClick={()=>setPlaying(value=>!value)}><Icon name={playing?'pause':'play'}/>{playing?'Pause':'Play'}</button><button onClick={()=>setIndex(value=>Math.min(events.length-1,value+1))}>›</button><button onClick={()=>setIndex(events.length-1)}>›|</button><span>{index+1} / {events.length}</span><div className="speed-control">{[.5,1,2].map(value=><button key={value} className={speed===value?'active':''} onClick={()=>setSpeed(value)}>{value}x</button>)}</div></div></div> : <EmptyState title="No chronological evidence" description="No timestamped transactions are available for replay."/>}</Panel>;
+  const events = useMemo(
+    () =>
+      [...transactions]
+        .filter((tx) => tx.timestamp)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        .slice(0, 200),
+    [transactions],
+  );
+  const [index, setIndex] = useState(0),
+    [playing, setPlaying] = useState(false),
+    [speed, setSpeed] = useState(1);
+  useEffect(() => {
+    if (!playing || !events.length) return;
+    const timer = setInterval(
+      () =>
+        setIndex((value) =>
+          value >= events.length - 1 ? (setPlaying(false), value) : value + 1,
+        ),
+      900 / speed,
+    );
+    return () => clearInterval(timer);
+  }, [playing, events.length, speed]);
+  const current = events[index];
+  return (
+    <Panel className="time-machine">
+      <SectionHeader
+        eyebrow="Chronological evidence"
+        title="Transaction time machine"
+        description="Replays existing provider-observed transfers; it does not reconstruct missing activity."
+      />
+      {current ? (
+        <div className="timeline-player">
+          <div className="timeline-window">
+            <span>{formatDate(events[0]?.timestamp)}</span>
+            <div>
+              <i
+                style={{
+                  width: `${events.length > 1 ? (index / (events.length - 1)) * 100 : 0}%`,
+                }}
+              />
+              <b
+                style={{
+                  left: `${events.length > 1 ? (index / (events.length - 1)) * 100 : 0}%`,
+                }}
+              />
+            </div>
+            <span>{formatDate(events.at(-1)?.timestamp)}</span>
+          </div>
+          <div className="timeline-focus">
+            <span className="timeline-time">
+              {formatDate(current.timestamp)} · BLOCK{" "}
+              {current.block_number || "N/A"}
+            </span>
+            <div className="timeline-route">
+              <CopyValue value={current.from} />
+              <Icon name="arrow" />
+              <CopyValue value={current.to} />
+            </div>
+            <strong>
+              {formatAmount(current.amount)} {current.asset}
+            </strong>
+            <Badge tone={current.direction === "OUT" ? "warning" : "success"}>
+              {current.direction}
+            </Badge>
+            <small>
+              Provider · {current.provider || "unknown"} · Event {index + 1} of{" "}
+              {events.length}
+            </small>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={events.length - 1}
+            value={index}
+            onChange={(event) => {
+              setIndex(Number(event.target.value));
+              setPlaying(false);
+            }}
+            aria-label="Timeline position"
+          />
+          <div className="timeline-controls">
+            <button onClick={() => setIndex(0)}>|‹</button>
+            <button onClick={() => setIndex((value) => Math.max(0, value - 1))}>
+              ‹
+            </button>
+            <button
+              className="timeline-play"
+              onClick={() => setPlaying((value) => !value)}
+            >
+              <Icon name={playing ? "pause" : "play"} />
+              {playing ? "Pause" : "Play"}
+            </button>
+            <button
+              onClick={() =>
+                setIndex((value) => Math.min(events.length - 1, value + 1))
+              }
+            >
+              ›
+            </button>
+            <button
+              onClick={() => {
+                setIndex((value) => Math.min(events.length - 1, value + 5));
+                setPlaying(false);
+              }}
+              title="Forward 5 events"
+              aria-label="Forward 5 events"
+            >
+              <Icon name="fastForward" />
+            </button>
+            <button onClick={() => setIndex(events.length - 1)}>›|</button>
+            <span>
+              {index + 1} / {events.length}
+            </span>
+            <div className="speed-control">
+              {[0.5, 1, 2, 4, 8].map((value) => (
+                <button
+                  key={value}
+                  className={speed === value ? "active" : ""}
+                  onClick={() => setSpeed(value)}
+                >
+                  {value}x
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <EmptyState
+          title="No chronological evidence"
+          description="No timestamped transactions are available for replay."
+        />
+      )}
+    </Panel>
+  );
 }
 
 export function EvidenceCenter({ investigation, network, onToast }) {
-  const [busy,setBusy]=useState(false);
-  const report=async()=>{try{setBusy(true);await downloadReport(investigation);onToast('PDF investigation report generated.');}catch(error){onToast(error.message,'error');}finally{setBusy(false);}};
-  const categories=[['Blockchain transactions',investigation.transactions?.length||0,'Alchemy / Etherscan'],['Fund paths',investigation.paths?.length||0,'TraceX tracing'],['Risk indicators',investigation.suspicious_activity?.indicators?.length||0,'TraceX analytics'],['Entity attribution',investigation.exchange_attributions?.length||0,'TraceX dataset'],['External intelligence',investigation.external_intelligence?.chainabuse?.status==='available'?(investigation.external_intelligence.chainabuse.report_count||0):0,'Chainabuse'],['Related cases',network?.related_cases?.length||0,'TraceX fraud network']];
-  return <div className="evidence-layout"><Panel><SectionHeader eyebrow="Evidence provenance" title="Investigation evidence" description="Every category retains its source and observed context."/><div className="evidence-categories">{categories.map(([name,count,source])=><div key={name}><span><Icon name="check"/></span><div><strong>{name}</strong><small>Source: {source}</small></div><b>{count}</b></div>)}</div></Panel><Panel><SectionHeader eyebrow="Evidence outputs" title="Generate investigation report" description="Export the current stored investigation without rerunning analysis."/><div className="report-actions"><button onClick={report} disabled={busy}><span className="report-icon pdf">PDF</span><div><strong>Investigation report</strong><small>Risk, trace, intelligence, and evidence summary</small></div><Icon name="download"/></button><button onClick={()=>downloadExport(investigation.investigation_id,'csv')}><span className="report-icon csv">CSV</span><div><strong>Transaction evidence</strong><small>Normalized transaction rows for analysis</small></div><Icon name="download"/></button><button onClick={()=>downloadExport(investigation.investigation_id,'json')}><span className="report-icon json">JSON</span><div><strong>Complete evidence object</strong><small>Full stored TraceX investigation data</small></div><Icon name="download"/></button></div></Panel></div>;
+  const [busy, setBusy] = useState(false);
+  const report = async () => {
+    try {
+      setBusy(true);
+      await downloadReport(investigation);
+      onToast("PDF investigation report generated.");
+    } catch (error) {
+      onToast(error.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const categories = [
+    [
+      "Blockchain transactions",
+      investigation.transactions?.length || 0,
+      "Alchemy / Etherscan",
+    ],
+    ["Fund paths", investigation.paths?.length || 0, "TraceX tracing"],
+    [
+      "Risk indicators",
+      investigation.suspicious_activity?.indicators?.length || 0,
+      "TraceX analytics",
+    ],
+    [
+      "Entity attribution",
+      investigation.exchange_attributions?.length || 0,
+      "TraceX dataset",
+    ],
+    [
+      "External intelligence",
+      investigation.external_intelligence?.chainabuse?.status === "available"
+        ? investigation.external_intelligence.chainabuse.report_count || 0
+        : 0,
+      "Chainabuse",
+    ],
+    [
+      "Related cases",
+      network?.related_cases?.length || 0,
+      "TraceX fraud network",
+    ],
+  ];
+  return (
+    <div className="evidence-layout">
+      <Panel>
+        <SectionHeader
+          eyebrow="Evidence provenance"
+          title="Investigation evidence"
+          description="Every category retains its source and observed context."
+        />
+        <div className="evidence-categories">
+          {categories.map(([name, count, source]) => (
+            <div key={name}>
+              <span>
+                <Icon name="check" />
+              </span>
+              <div>
+                <strong>{name}</strong>
+                <small>Source: {source}</small>
+              </div>
+              <b>{count}</b>
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel>
+        <SectionHeader
+          eyebrow="Evidence outputs"
+          title="Generate investigation report"
+          description="Export the current stored investigation without rerunning analysis."
+        />
+        <div className="report-actions">
+          <button onClick={report} disabled={busy}>
+            <span className="report-icon pdf">PDF</span>
+            <div>
+              <strong>Investigation report</strong>
+              <small>Risk, trace, intelligence, and evidence summary</small>
+            </div>
+            <Icon name="download" />
+          </button>
+          <button
+            onClick={() =>
+              downloadExport(investigation.investigation_id, "csv")
+            }
+          >
+            <span className="report-icon csv">CSV</span>
+            <div>
+              <strong>Transaction evidence</strong>
+              <small>Normalized transaction rows for analysis</small>
+            </div>
+            <Icon name="download" />
+          </button>
+          <button
+            onClick={() =>
+              downloadExport(investigation.investigation_id, "json")
+            }
+          >
+            <span className="report-icon json">JSON</span>
+            <div>
+              <strong>Complete evidence object</strong>
+              <small>Full stored TraceX investigation data</small>
+            </div>
+            <Icon name="download" />
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function StructuredCopilotAnswer({ text }) {
+  const sections = [];
+  let current = { title: "Response", lines: [] };
+  const headingPattern = /^(TraceX evidence summary|Observed blockchain facts|TraceX risk calculation|External intelligence and attribution|Fraud network intelligence|Question addressed)/i;
+  String(text || "").replace(/\r/g, "").split("\n").forEach((raw) => {
+    const line = raw.trim();
+    if (!line) return;
+    const isHeading = /^#{1,3}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(line) || headingPattern.test(line);
+    if (isHeading) {
+      if (current.lines.length) sections.push(current);
+      current = { title: line.replace(/^#{1,3}\s+|\*\*/g, "").replace(/\*\*$/g, "").replace(/:$/, ""), lines: [] };
+    } else {
+      current.lines.push({ text: line.replace(/^[-*]\s+/, ""), bullet: /^[-*]\s+/.test(line) });
+    }
+  });
+  if (current.lines.length) sections.push(current);
+  return (
+    <div className="copilot-answer">
+      {sections.map((section, index) => (
+        <section key={section.title + index}>
+          <h4>{section.title}</h4>
+          {section.lines.length === 1 && !section.lines[0].bullet ? (
+            <p>{section.lines[0].text}</p>
+          ) : (
+            <ul>{section.lines.map((line, lineIndex) => <li key={lineIndex}>{line.text}</li>)}</ul>
+          )}
+        </section>
+      ))}
+    </div>
+  );
 }
 
 export function CopilotPanel({ investigation, standalone = false }) {
-  const prompts=['Summarize this investigation','Why is this wallet high risk?','Where did the funds go?','Which transactions triggered indicators?','Are there related investigations?','What should I inspect next?'];
-  const [question,setQuestion]=useState(''),[messages,setMessages]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState('');
-  const ask=async text=>{const value=(text||question).trim();if(!value||!investigation?.investigation_id)return;setMessages(items=>[...items,{role:'user',text:value}]);setQuestion('');setLoading(true);setError('');try{const result=await api.copilot(investigation.investigation_id,value);setMessages(items=>[...items,{role:'assistant',text:result.answer,model:result.model,guard:result.grounding_guard_applied}]);}catch(err){setError(err.message);}finally{setLoading(false);}};
-  if(!investigation)return <EmptyState icon="copilot" title="Open an investigation first" description="Copilot requires a stored TraceX case so every answer can be grounded in authoritative evidence."/>;
-  return <Panel className={`copilot-panel ${standalone?'copilot-standalone':''}`}><div className="copilot-header"><span className="copilot-orb"><Icon name="copilot" size={24}/></span><div><span className="eyebrow">Evidence-grounded assistance</span><h2>TraceX Investigation Copilot</h2><p>Explains deterministic evidence. It does not discover or invent relationships.</p></div><Badge tone="purple" dot>Case context active</Badge></div><div className="prompt-row">{prompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}</button>)}</div><div className="copilot-thread">{!messages.length&&<div className="copilot-welcome"><Icon name="command" size={28}/><h3>Ask an evidence-focused question</h3><p>Copilot can explain observed blockchain facts, TraceX indicators, external intelligence, attribution, and related-case evidence.</p></div>}{messages.map((message,index)=><div key={index} className={`message message-${message.role}`}><span>{message.role==='assistant'?'TX':'YOU'}</span><div>{message.role==='assistant'&&<small>TRACEX EVIDENCE EXPLANATION · {message.model}</small>}<p>{message.text}</p>{message.guard&&<Badge tone="warning">Grounding safeguard applied</Badge>}</div></div>)}{loading&&<div className="message message-assistant"><span>TX</span><div><Skeleton lines={3}/></div></div>}</div>{error&&<ErrorState title="Copilot temporarily unavailable" message={`${error} Investigation data remains available.`}/>}<form className="copilot-input" onSubmit={event=>{event.preventDefault();ask();}}><textarea value={question} onChange={event=>setQuestion(event.target.value)} placeholder="Ask TraceX to explain the current evidence…" maxLength="2000"/><button disabled={loading||!question.trim()} aria-label="Ask Copilot"><Icon name="arrow"/></button></form></Panel>;
+  const prompts = [
+    "Summarize this investigation",
+    "Why is this wallet high risk?",
+    "Where did the funds go?",
+    "Which transactions triggered indicators?",
+    "Are there related investigations?",
+    "What should I inspect next?",
+  ];
+  const [question, setQuestion] = useState(""),
+    [messages, setMessages] = useState([]),
+    [loading, setLoading] = useState(false),
+    [error, setError] = useState("");
+  const ask = async (text) => {
+    const value = (text || question).trim();
+    if (!value || !investigation?.investigation_id) return;
+    setMessages((items) => [...items, { role: "user", text: value }]);
+    setQuestion("");
+    setLoading(true);
+    setError("");
+    try {
+      const result = await api.copilot(investigation.investigation_id, value);
+      setMessages((items) => [
+        ...items,
+        {
+          role: "assistant",
+          text: result.answer,
+          model: result.model,
+          guard: result.grounding_guard_applied,
+        },
+      ]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (!investigation)
+    return (
+      <EmptyState
+        icon="copilot"
+        title="Open an investigation first"
+        description="Copilot requires a stored TraceX case so every answer can be grounded in authoritative evidence."
+      />
+    );
+  return (
+    <Panel
+      className={`copilot-panel ${standalone ? "copilot-standalone" : ""}`}
+    >
+      <div className="copilot-windowbar" aria-label="TraceX Copilot secure session">
+        <span className="window-controls" aria-hidden="true"><i /><i /><i /></span>
+        <span>TRACEX COPILOT</span>
+        <small>SECURE EVIDENCE SESSION</small>
+      </div>
+      <div className="copilot-header">
+        <span className="copilot-orb">
+          <Icon name="copilot" size={24} />
+        </span>
+        <div>
+          <span className="eyebrow">Evidence-grounded assistance</span>
+          <h2>TraceX Investigation Copilot</h2>
+          <p>
+            Explains deterministic evidence. It does not discover or invent
+            relationships.
+          </p>
+        </div>
+        <Badge tone="purple" dot>
+          Case context active
+        </Badge>
+      </div>
+      <div className="prompt-row">
+        {prompts.map((prompt) => (
+          <button key={prompt} onClick={() => ask(prompt)}>
+            {prompt}
+          </button>
+        ))}
+      </div>
+      <div className="copilot-thread">
+        {!messages.length && (
+          <div className="copilot-welcome">
+            <Icon name="command" size={28} />
+            <h3>Ask an evidence-focused question</h3>
+            <p>
+              Copilot can explain observed blockchain facts, TraceX indicators,
+              external intelligence, attribution, and related-case evidence.
+            </p>
+          </div>
+        )}
+        {messages.map((message, index) => (
+          <div key={index} className={`message message-${message.role}`}>
+            <span>{message.role === "assistant" ? "TX" : "YOU"}</span>
+            <div>
+              {message.role === "assistant" && (
+                <small>TRACEX EVIDENCE EXPLANATION · {message.model}</small>
+              )}
+              {message.role === "assistant" ? <StructuredCopilotAnswer text={message.text} /> : <p>{message.text}</p>}
+              {message.guard && (
+                <Badge tone="warning">Grounding safeguard applied</Badge>
+              )}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="message message-assistant">
+            <span>TX</span>
+            <div>
+              <Skeleton lines={3} />
+            </div>
+          </div>
+        )}
+      </div>
+      {error && (
+        <ErrorState
+          title="Copilot temporarily unavailable"
+          message={`${error} Investigation data remains available.`}
+        />
+      )}
+      <form
+        className="copilot-input"
+        onSubmit={(event) => {
+          event.preventDefault();
+          ask();
+        }}
+      >
+        <textarea
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          placeholder="Ask TraceX to explain the current evidence…"
+          maxLength="2000"
+        />
+        <button disabled={loading || !question.trim()} aria-label="Ask Copilot">
+          <Icon name="arrow" />
+        </button>
+      </form>
+    </Panel>
+  );
+}
+
+export function ActivityCharts({ investigation }) {
+  const transactions = [...(investigation.transactions || [])].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+  if (transactions.length === 0) return null;
+
+  const incoming = transactions.filter(tx => tx.direction === "IN");
+  const outgoing = transactions.filter(tx => tx.direction === "OUT");
+  const assetsForReview = assetSummary(transactions).slice(0, 4);
+  const indicatorsForReview = investigation.suspicious_activity?.indicators || [];
+  const dated = transactions.filter(tx => tx.timestamp && !Number.isNaN(new Date(tx.timestamp).getTime()));
+  const activityByDateForReview = dated.reduce((groups, tx) => {
+    const key = new Date(tx.timestamp).toISOString().slice(0, 10);
+    groups[key] = (groups[key] || 0) + 1;
+    return groups;
+  }, {});
+  const activityForReview = Object.entries(activityByDateForReview).sort(([a], [b]) => a.localeCompare(b)).slice(-12);
+  const maxActivityForReview = Math.max(...activityForReview.map(([, count]) => count), 1);
+  const intervals = dated.slice(1).map((tx, index) => (new Date(tx.timestamp) - new Date(dated[index].timestamp)) / 3600000).filter(hours => hours >= 0);
+  const rapidTransfers = intervals.filter(hours => hours <= 1).length;
+  const rapidRate = intervals.length ? Math.round((rapidTransfers / intervals.length) * 100) : 0;
+  const counterparties = outgoing.map(tx => String(tx.to || tx.counterparty || "").toLowerCase()).filter(Boolean);
+  const counterpartyCounts = counterparties.reduce((all, address) => ({ ...all, [address]: (all[address] || 0) + 1 }), {});
+  const largestCounterpartyCount = Math.max(0, ...Object.values(counterpartyCounts));
+  const concentration = outgoing.length ? Math.round((largestCounterpartyCount / outgoing.length) * 100) : 0;
+  const priorityReview = indicatorsForReview.length >= 2 || rapidRate >= 50 || concentration >= 70;
+  const reviewReason = indicatorsForReview.length
+    ? indicatorsForReview.length + " deterministic rule match" + (indicatorsForReview.length === 1 ? "" : "es") + " recorded"
+    : rapidRate >= 50
+      ? rapidRate + "% of observed intervals were within one hour"
+      : "No elevated timing or concentration signal in the observed sample";
+
+  return (
+    <Panel className="activity-charts evidence-signals">
+      <SectionHeader
+        eyebrow="Evidence signal view"
+        title="What the observed activity supports"
+        description="Review cues use stored transactions and deterministic rules. They are not a forecast of future activity or proof of intent."
+      />
+      <div className="signal-summary">
+        <div className={"signal-priority " + (priorityReview ? "priority-high" : "")}>
+          <span>Review cue</span>
+          <strong>{priorityReview ? "PRIORITIZE REVIEW" : "ROUTINE REVIEW"}</strong>
+          <p>{reviewReason}.</p>
+        </div>
+        <div className="signal-stat"><span>Observed direction</span><strong>{outgoing.length} <small>out</small> · {incoming.length} <small>in</small></strong><p>Transfer count, not cross-asset value.</p></div>
+        <div className="signal-stat"><span>Rapid intervals</span><strong>{rapidRate}<small>%</small></strong><p>{rapidTransfers} of {intervals.length} adjacent observed intervals ≤ 1h.</p></div>
+        <div className="signal-stat"><span>Top endpoint share</span><strong>{concentration}<small>%</small></strong><p>Outgoing transfers to one observed endpoint.</p></div>
+      </div>
+      <div className="signal-grid">
+        <div className="chart-box">
+          <h4>Observed activity cadence</h4>
+          <div className="activity-plot" aria-label="Observed transaction count by date">
+            {activityForReview.length ? activityForReview.map(([date, count]) => <div key={date} className="activity-bar" title={date + ": " + count + " observed transfer" + (count === 1 ? "" : "s")}><i style={{ height: Math.max(8, (count / maxActivityForReview) * 100) + "%" }} /><span>{date.slice(5)}</span></div>) : <p>No valid transaction timestamps are available.</p>}
+          </div>
+          {activityForReview.length > 0 && <p className="chart-note">Each bar is a calendar day; taller bars mean more observed transfers, not greater value.</p>}
+        </div>
+        <div className="chart-box">
+          <h4>Evidence composition</h4>
+          <div className="evidence-composition">
+            <div><span>Assets observed</span><strong>{assetsForReview.length}</strong></div>
+            <div><span>Outgoing endpoints</span><strong>{Object.keys(counterpartyCounts).length}</strong></div>
+            <div><span>Rule matches</span><strong>{indicatorsForReview.length}</strong></div>
+          </div>
+          <ul className="signal-findings">
+            {assetsForReview.map(asset => <li key={asset.asset}><span>{asset.asset}</span><b>{asset.count} observed transfer{asset.count === 1 ? "" : "s"}</b></li>)}
+            {!assetsForReview.length && <li>No asset labels are present in the observed transfer set.</li>}
+          </ul>
+          <p className="chart-note">Asset counts remain separate; token units are never combined into a misleading total.</p>
+        </div>
+        <div className="chart-box signal-evidence">
+          <h4>Why this review cue was raised</h4>
+          <div className="signal-findings">
+            {indicatorsForReview.length ? indicatorsForReview.slice(0, 4).map((indicator, index) => <div key={indicator.type || index}><b>{String(indicator.type || "TRACEX RULE").replaceAll("_", " ")}</b><p>{indicator.message || "Deterministic behavioral rule matched observed evidence."}</p></div>) : <div><b>No deterministic rule match recorded</b><p>Continue review using the observed timing, endpoint, and asset evidence above.</p></div>}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+
+  // IN/OUT volume
+  let inVol = 0, outVol = 0;
+  transactions.forEach(t => {
+    if (t.direction === 'IN') inVol += Number(t.amount);
+    else if (t.direction === 'OUT') outVol += Number(t.amount);
+  });
+  const maxVol = Math.max(inVol, outVol) || 1;
+
+  // Assets
+  const assets = assetSummary(transactions);
+  const maxAsset = Math.max(...assets.map(a => a.count)) || 1;
+
+  // Dates
+  const activityByDate = {};
+  transactions.forEach(t => {
+    if (!t.timestamp) return;
+    const d = new Date(t.timestamp).toLocaleDateString();
+    activityByDate[d] = (activityByDate[d] || 0) + 1;
+  });
+  const dateKeys = Object.keys(activityByDate).sort((a, b) => new Date(a) - new Date(b));
+  const maxActivity = Math.max(...Object.values(activityByDate)) || 1;
+
+  return (
+    <Panel className="activity-charts">
+      <SectionHeader
+        eyebrow="Visual intelligence"
+        title="Activity visualization"
+      />
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="chart-box">
+          <h4>Incoming vs Outgoing Volume</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+            <div>
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                 <span>INCOMING</span><span>{formatAmount(inVol)}</span>
+               </div>
+               <div style={{ width: '100%', height: '8px', background: '#314259', borderRadius: '4px', overflow: 'hidden' }}>
+                 <div style={{ width: `${(inVol/maxVol)*100}%`, height: '100%', background: 'var(--success, #10b981)' }} />
+               </div>
+            </div>
+            <div>
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                 <span>OUTGOING</span><span>{formatAmount(outVol)}</span>
+               </div>
+               <div style={{ width: '100%', height: '8px', background: '#314259', borderRadius: '4px', overflow: 'hidden' }}>
+                 <div style={{ width: `${(outVol/maxVol)*100}%`, height: '100%', background: 'var(--warning, #f59e0b)' }} />
+               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-box">
+          <h4>Asset Distribution (Tx Count)</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+            {assets.slice(0, 4).map(a => (
+               <div key={a.asset}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                   <span>{a.asset}</span><span>{a.count}</span>
+                 </div>
+                 <div style={{ width: '100%', height: '8px', background: '#314259', borderRadius: '4px', overflow: 'hidden' }}>
+                   <div style={{ width: `${(a.count/maxAsset)*100}%`, height: '100%', background: 'var(--blue, #3b82f6)' }} />
+                 </div>
+               </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="chart-box" style={{ gridColumn: 'span 2' }}>
+          <h4>Transaction Activity Over Time</h4>
+          <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', gap: '4px', marginTop: '12px', borderBottom: '1px solid #314259' }}>
+            {dateKeys.map(d => (
+              <div key={d} style={{ flex: 1, background: 'var(--purple, #8b5cf6)', height: `${(activityByDate[d]/maxActivity)*100}%`, minHeight: '4px', borderRadius: '4px 4px 0 0', position: 'relative' }} title={`${d}: ${activityByDate[d]} txs`}>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>
+            <span>{dateKeys[0]}</span>
+            <span>{dateKeys[dateKeys.length - 1]}</span>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
 }

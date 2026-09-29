@@ -1,46 +1,577 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import Icon from '../components/Icon.jsx';
-import GraphCanvas from '../components/GraphCanvas.jsx';
-import TransactionExplorer from '../components/TransactionExplorer.jsx';
-import { Badge, Button, CopyValue, ErrorState, MetricCard, Panel, SectionHeader, Skeleton } from '../components/Primitives.jsx';
-import { AdvancedIntelligence, AuditTrail, CopilotPanel, EntityIntelligence, EvidenceCenter, ExternalIntel, FraudNetwork, OverviewIntelligence, PathExplorer, Timeline } from '../components/IntelligencePanels.jsx';
-import { navigate } from '../components/AppShell.jsx';
-import { CaseInspector, EvidenceCapture, EvidenceWorkspace } from '../components/CaseManagement.jsx';
-import { caseLabel, formatDate, formatNumber, isEthereumAddress, riskTone, unique } from '../utils.js';
+import React, { useEffect, useMemo, useState } from "react";
+import Icon from "../components/Icon.jsx";
+import GraphCanvas from "../components/GraphCanvas.jsx";
+import TransactionExplorer from "../components/TransactionExplorer.jsx";
+import {
+  Badge,
+  Button,
+  CopyValue,
+  ErrorState,
+  MetricCard,
+  Panel,
+  SectionHeader,
+  Skeleton,
+} from "../components/Primitives.jsx";
+import {
+  AdvancedIntelligence,
+  AuditTrail,
+  CopilotPanel,
+  EntityIntelligence,
+  EvidenceCenter,
+  ExternalIntel,
+  FraudNetwork,
+  OverviewIntelligence,
+  PathExplorer,
+  Timeline,
+} from "../components/IntelligencePanels.jsx";
+import { navigate } from "../components/AppShell.jsx";
+import {
+  CaseInspector,
+  EvidenceCapture,
+  EvidenceWorkspace,
+} from "../components/CaseManagement.jsx";
+import InvestigationExplainer from "../components/InvestigationExplainer.jsx";
+import {
+  caseLabel,
+  formatDate,
+  formatNumber,
+  isEthereumAddress,
+  riskTone,
+  unique,
+} from "../utils.js";
 
-const stages=['Validating wallet','Connecting to blockchain provider','Retrieving blockchain activity','Normalizing ETH / ERC-20 transfers','Tracing multi-hop fund movement','Constructing wallet graph','Detecting suspicious behavior','Checking VASP attribution','Checking external intelligence','Calculating explainable risk','Discovering related investigations','Building investigation evidence'];
-const tabs=[['overview','Overview'],['fund-flow','Fund Flow'],['transactions','Transactions'],['intelligence','Intelligence'],['evidence','Evidence'],['activity','Activity'],['copilot','Copilot'],['report','Report']];
+const stages = [
+  "Validating wallet",
+  "Connecting to blockchain provider",
+  "Retrieving blockchain activity",
+  "Normalizing ETH / ERC-20 transfers",
+  "Tracing multi-hop fund movement",
+  "Constructing wallet graph",
+  "Detecting suspicious behavior",
+  "Checking VASP attribution",
+  "Checking external intelligence",
+  "Calculating explainable risk",
+  "Discovering related investigations",
+  "Building investigation evidence",
+];
+const tabs = [
+  ["overview", "Overview"],
+  ["fund-flow", "Fund Flow"],
+  ["transactions", "Transactions"],
+  ["intelligence", "Intelligence"],
+  ["evidence", "Evidence"],
+  ["activity", "Activity"],
+  ["copilot", "Copilot"],
+  ["report", "Report"],
+];
 
-export function InvestigationEntry({ onInvestigate, loading, error, recent = [], onOpenCase }) {
-  const [wallet,setWallet]=useState(''),[localError,setLocalError]=useState('');
-  const submit=event=>{event.preventDefault();const value=wallet.trim();if(!isEthereumAddress(value)){setLocalError('Invalid Ethereum address. Check the address and try again.');return;}setLocalError('');onInvestigate(value);};
-  return <div className="investigation-entry page-enter"><div className="hero-grid"><div className="hero-copy"><Badge tone="blue" dot>Ethereum intelligence workspace</Badge><h1>Trace cryptocurrency movement.<br/><span>Reveal the network.</span></h1><p>Investigate wallet activity, follow multi-hop fund flows, identify suspicious behavior, and connect shared infrastructure across stored cases.</p><div className="trust-row"><span><Icon name="check"/>Provider-backed evidence</span><span><Icon name="check"/>Explainable scoring</span><span><Icon name="check"/>Grounded AI analysis</span></div></div><Panel className="search-console"><div className="console-top"><div><span className="eyebrow">New investigation</span><h2>Report the wallet</h2></div><Badge tone="neutral">ETH · MAINNET</Badge></div><form onSubmit={submit}><label htmlFor="wallet-address">Ethereum wallet address</label><div className={`wallet-input ${localError?'invalid':''}`}><span>0x</span><input id="wallet-address" value={wallet} onChange={event=>setWallet(event.target.value)} placeholder="Enter the remaining 40 hexadecimal characters" autoComplete="off"/><button disabled={loading}><Icon name="investigate"/>{loading?'Investigating…':'Investigate'}</button></div>{localError&&<p className="field-error">{localError}</p>}<small>Format: 0x followed by 40 hexadecimal characters. TraceX currently supports Ethereum.</small></form><div className="console-foot"><span><i/>Live provider configuration</span><span>Bounded trace · 2 hops · 8 wallets</span></div></Panel></div>
-    {error&&<ErrorState title={error.code==='no_activity'?'No supported activity found':'Investigation could not complete'} message={error.message}/>} {loading&&<LoadingPipeline/>}
-    {!loading&&recent.length>0&&<section className="recent-section"><SectionHeader eyebrow="Stored evidence" title="Recent investigations" description="Reopen complete case context without repeating provider calls." action={<button className="text-button" onClick={()=>navigate('/cases')}>View all cases <Icon name="arrow"/></button>}/><div className="recent-grid">{recent.slice(0,3).map(item=><button key={item.id} onClick={()=>onOpenCase(item.id)}><div><span className={`risk-line risk-${riskTone(item.risk_level)}`}/><span className="eyebrow">{caseLabel(item.id)}</span><strong>{item.wallet_address}</strong></div><div className="recent-meta"><span>{item.transaction_count} transactions</span><span>{item.wallet_count} wallets</span><Badge tone={riskTone(item.risk_level)}>{item.risk_level} · {item.risk_score}</Badge></div><Icon name="arrow"/></button>)}</div></section>}
-  </div>;
+export function InvestigationEntry({
+  onInvestigate,
+  loading,
+  error,
+  recent = [],
+  onOpenCase,
+}) {
+  const [wallet, setWallet] = useState(""),
+    [localError, setLocalError] = useState("");
+  const submit = (event) => {
+    event.preventDefault();
+    const value = wallet.trim();
+    if (!isEthereumAddress(value)) {
+      setLocalError(
+        "Invalid Ethereum address. Check the address and try again.",
+      );
+      return;
+    }
+    setLocalError("");
+    onInvestigate(value);
+  };
+  return (
+    <div className="investigation-entry page-enter">
+      <div className="hero-grid">
+        <div className="hero-copy">
+          <Badge tone="blue" dot>
+            Ethereum intelligence workspace
+          </Badge>
+          <h1>
+            Trace cryptocurrency movement.
+            <br />
+            <span>Reveal the network.</span>
+          </h1>
+          <p>
+            Investigate wallet activity, follow multi-hop fund flows, identify
+            suspicious behavior, and connect shared infrastructure across stored
+            cases.
+          </p>
+          <div className="trust-row">
+            <span>
+              <Icon name="check" />
+              Provider-backed evidence
+            </span>
+            <span>
+              <Icon name="check" />
+              Explainable scoring
+            </span>
+            <span>
+              <Icon name="check" />
+              Grounded AI analysis
+            </span>
+          </div>
+        </div>
+        <Panel className="search-console">
+          <div className="console-top">
+            <div>
+              <span className="eyebrow">New investigation</span>
+              <h2>Report the wallet</h2>
+            </div>
+            <Badge tone="neutral">ETH · MAINNET</Badge>
+          </div>
+          <form onSubmit={submit}>
+            <label htmlFor="wallet-address">Ethereum wallet address</label>
+            <div className={`wallet-input ${localError ? "invalid" : ""}`}>
+              <span>0x</span>
+              <input
+                id="wallet-address"
+                value={wallet}
+                onChange={(event) => setWallet(event.target.value)}
+                placeholder="Enter the remaining 40 hexadecimal characters"
+                autoComplete="off"
+              />
+              <button disabled={loading}>
+                <Icon name="investigate" />
+                {loading ? "Investigating…" : "Investigate"}
+              </button>
+            </div>
+            {localError && <p className="field-error">{localError}</p>}
+            <small>
+              Format: 0x followed by 40 hexadecimal characters. TraceX currently
+              supports Ethereum.
+            </small>
+          </form>
+          <div className="console-foot">
+            <span>
+              <i />
+              Live provider configuration
+            </span>
+            <span>Bounded trace · 2 hops · 8 wallets</span>
+          </div>
+        </Panel>
+      </div>
+      {error && (
+        <ErrorState
+          title={
+            error.code === "no_activity"
+              ? "No supported activity found"
+              : "Investigation could not complete"
+          }
+          message={error.message}
+        />
+      )}{" "}
+      {loading && <LoadingPipeline />}
+      {!loading && recent.length > 0 && (
+        <section className="recent-section">
+          <SectionHeader
+            eyebrow="Stored evidence"
+            title="Recent investigations"
+            description="Reopen complete case context without repeating provider calls."
+            action={
+              <button
+                className="text-button"
+                onClick={() => navigate("/cases")}
+              >
+                View all cases <Icon name="arrow" />
+              </button>
+            }
+          />
+          <div className="recent-grid">
+            {recent.slice(0, 3).map((item) => (
+              <button key={item.id} onClick={() => onOpenCase(item.id)}>
+                <div>
+                  <span
+                    className={`risk-line risk-${riskTone(item.risk_level)}`}
+                  />
+                  <span className="eyebrow">{caseLabel(item.id)}</span>
+                  <strong>{item.wallet_address}</strong>
+                </div>
+                <div className="recent-meta">
+                  <span>{item.transaction_count} transactions</span>
+                  <span>{item.wallet_count} wallets</span>
+                  <Badge tone={riskTone(item.risk_level)}>
+                    {item.risk_level} · {item.risk_score}
+                  </Badge>
+                </div>
+                <Icon name="arrow" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
 }
 
-function LoadingPipeline(){const [active,setActive]=useState(1);useEffect(()=>{const timer=setInterval(()=>setActive(value=>Math.min(stages.length-1,value+1)),1300);return()=>clearInterval(timer);},[]);return <Panel className="loading-pipeline"><div className="pipeline-head"><div><span className="eyebrow">Investigation in progress</span><h2>Building blockchain evidence</h2><p>TraceX is processing this investigation as one secured request. Final completion states appear only after evidence returns.</p></div><span className="radar"><i/><i/><b/></span></div><div className="pipeline-grid">{stages.map((stage,index)=><div key={stage} className={index<active?'complete':index===active?'active':''}><span>{index<active?<Icon name="check" size={14}/>:String(index+1).padStart(2,'0')}</span><div><strong>{stage}</strong><small>{index<active?'Phase completed':index===active?'Currently processing':'Pending evidence'}</small></div></div>)}</div></Panel>;}
+function LoadingPipeline() {
+  const [active, setActive] = useState(1);
+  useEffect(() => {
+    const timer = setInterval(
+      () => setActive((value) => Math.min(stages.length - 1, value + 1)),
+      1300,
+    );
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <Panel className="loading-pipeline">
+      <div className="pipeline-head">
+        <div>
+          <span className="eyebrow">Investigation in progress</span>
+          <h2>Building blockchain evidence</h2>
+          <p>
+            TraceX is processing this investigation as one secured request.
+            Final completion states appear only after evidence returns.
+          </p>
+        </div>
+        <span className="radar">
+          <i />
+          <i />
+          <b />
+        </span>
+      </div>
+      <div className="pipeline-grid">
+        {stages.map((stage, index) => (
+          <div
+            key={stage}
+            className={
+              index < active ? "complete" : index === active ? "active" : ""
+            }
+          >
+            <span>
+              {index < active ? (
+                <Icon name="check" size={14} />
+              ) : (
+                String(index + 1).padStart(2, "0")
+              )}
+            </span>
+            <div>
+              <strong>{stage}</strong>
+              <small>
+                {index < active
+                  ? "Phase completed"
+                  : index === active
+                    ? "Currently processing"
+                    : "Pending evidence"}
+              </small>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
 
-export default function InvestigationPage({ investigation, workspace, network, networkLoading, networkError, monitor, alerts, onInvestigate, loading, error, recent, onOpenCase, onMonitor, onCompare, onToast, onUpdateCase, onAddEvidence, onVerifyEvidence, onAddNote, onAddFinding, initialTab='overview' }) {
-  const [tab,setTab]=useState(initialTab); useEffect(()=>setTab(initialTab),[initialTab]);
-  const [capture,setCapture]=useState(null);
-  if(!investigation)return <InvestigationEntry onInvestigate={onInvestigate} loading={loading} error={error} recent={recent} onOpenCase={onOpenCase}/>;
-  const assets=unique(investigation.transactions?.map(tx=>tx.asset)); const graph=investigation.graph||{nodes:[],edges:[]}; const threat=investigation.external_intelligence?.chainabuse;
-  const captureEvidence=async form=>{try{await onAddEvidence({...form,snapshot:{case_id:investigation.investigation_id,wallet:form.wallet_address||investigation.start_wallet,transaction_hash:form.transaction_hash||null,risk_score:investigation.risk?.score}});setCapture(null);onToast('Evidence snapshot captured and SHA-256 hashed.');}catch(error){onToast(error.message,'error');}};
-  const metrics=[['Transactions',investigation.transactions?.length||0,'Normalized evidence','blue'],['Traced paths',investigation.paths?.length||0,`Up to ${investigation.max_hops||0} hops`,'purple'],['Wallets discovered',investigation.wallets_traced||0,'Bounded trace','teal'],['Graph nodes',graph.nodes?.length||0,`${graph.edges?.length||0} evidence edges`,'amber'],['Assets involved',assets.length,assets.slice(0,3).join(', ')||'None','blue'],['VASP connections',investigation.exchange_attributions?.length||0,'Dataset attribution','green'],['Related cases',network?.summary?.related_investigations??'—','Deterministic matches','purple'],['External reports',threat?.status==='available'?(threat.report_count||0):'—',threat?.status==='available'?'Chainabuse':'Temporarily unavailable','amber'],['Active alerts',alerts?.filter(item=>item.status==='NEW').length||0,'Monitoring evidence','red']];
-  return <div className="case-workspace page-enter"><section className="case-hero"><div className="case-breadcrumb"><button onClick={()=>window.location.assign('/investigate')}>Investigations</button><Icon name="chevron" size={13}/><span>{caseLabel(investigation.investigation_id)}</span></div><div className="case-title"><div><div className="case-kicker"><Badge tone={riskTone(investigation.risk?.level)} dot>{investigation.risk?.level} priority</Badge><Badge tone={monitor?.status==='monitoring'?'success':'neutral'} dot>{monitor?.status==='monitoring'?'Monitoring active':'Not monitored'}</Badge></div><h1>{caseLabel(investigation.investigation_id)}</h1><CopyValue value={investigation.start_wallet} compact={false}/></div><div className="risk-score-compact"><span>Risk score</span><strong>{investigation.risk?.score??0}<small>/100</small></strong><p>{investigation.risk?.level||'UNKNOWN'} investigative priority</p></div></div><div className="case-facts"><div><span>Chain</span><strong>Ethereum Mainnet</strong></div><div><span>Investigated</span><strong>{formatDate(investigation.timestamp)}</strong></div><div><span>Provider</span><strong>{investigation.provider?.selected||'Unknown'}{investigation.provider?.fallback_used?' · fallback':''}</strong></div><div><span>Evidence status</span><strong>Stored in MongoDB</strong></div><Button variant={monitor?.status==='monitoring'?'secondary':'primary'} onClick={onMonitor} icon="monitoring">{monitor?.status==='monitoring'?'Stop monitoring':'Start monitoring'}</Button></div></section>
-    <div className="metric-grid investigation-metrics">{metrics.map(([label,value,detail,tone])=><MetricCard key={label} label={label} value={formatNumber(value)==='0'&&value==='—'?'—':value} detail={detail} tone={tone}/>)}</div>
-    <nav className="case-tabs" aria-label="Investigation sections">{tabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>
-    <div className="tab-content">
-      {tab==='overview'&&<div className="stack"><CaseInspector workspace={workspace} onUpdate={onUpdateCase} onToast={onToast}/><OverviewIntelligence investigation={investigation} network={network} monitor={monitor} onTab={setTab} onMonitor={onMonitor}/></div>} 
-      {tab==='fund-flow'&&<Panel className="graph-panel"><GraphCanvas graph={graph} title="Investigation fund-flow graph" transactions={investigation.transactions} network={network}/></Panel>}
-      {tab==='transactions'&&<Panel><SectionHeader eyebrow="Normalized evidence" title="Transaction intelligence" description="Search, filter, sort, and inspect provider-observed ETH and ERC-20 transfers."/><TransactionExplorer transactions={investigation.transactions} startWallet={investigation.start_wallet}/></Panel>}
-      {tab==='intelligence'&&<div className="stack"><AdvancedIntelligence investigation={investigation}/><FraudNetwork network={network} loading={networkLoading} error={networkError} onOpenCase={onOpenCase} onCompare={onCompare}/><ExternalIntel investigation={investigation}/><EntityIntelligence investigation={investigation}/><PathExplorer paths={investigation.paths} onGraph={()=>setTab('fund-flow')}/><Timeline transactions={investigation.transactions}/></div>} 
-      {tab==='evidence'&&<EvidenceWorkspace workspace={workspace} onVerify={onVerifyEvidence} onAddNote={onAddNote} onAddFinding={onAddFinding} onCapture={setCapture} onToast={onToast}/>} 
-      {tab==='activity'&&<AuditTrail investigation={investigation} audit={workspace?.audit}/>} 
-      {tab==='copilot'&&<CopilotPanel investigation={investigation}/>} 
-      {tab==='report'&&<EvidenceCenter investigation={investigation} network={network} onToast={onToast}/>} 
-    </div><EvidenceCapture draft={capture} onClose={()=>setCapture(null)} onSave={captureEvidence}/>
-  </div>;
+export default function InvestigationPage({
+  investigation,
+  workspace,
+  network,
+  networkLoading,
+  networkError,
+  monitor,
+  alerts,
+  onInvestigate,
+  loading,
+  error,
+  recent,
+  onOpenCase,
+  onMonitor,
+  onCompare,
+  onToast,
+  onUpdateCase,
+  onAddEvidence,
+  onVerifyEvidence,
+  onAddNote,
+  onAddFinding,
+  initialTab = "overview",
+}) {
+  const [tab, setTab] = useState(initialTab);
+  const [explainerMode, setExplainerMode] = useState(false);
+  useEffect(() => setTab(initialTab), [initialTab]);
+  const [capture, setCapture] = useState(null);
+  if (!investigation)
+    return (
+      <InvestigationEntry
+        onInvestigate={onInvestigate}
+        loading={loading}
+        error={error}
+        recent={recent}
+        onOpenCase={onOpenCase}
+      />
+    );
+  const assets = unique(investigation.transactions?.map((tx) => tx.asset));
+  const graph = investigation.graph || { nodes: [], edges: [] };
+  const threat = investigation.external_intelligence?.chainabuse;
+  const captureEvidence = async (form) => {
+    try {
+      await onAddEvidence({
+        ...form,
+        snapshot: {
+          case_id: investigation.investigation_id,
+          wallet: form.wallet_address || investigation.start_wallet,
+          transaction_hash: form.transaction_hash || null,
+          risk_score: investigation.risk?.score,
+        },
+      });
+      setCapture(null);
+      onToast("Evidence snapshot captured and SHA-256 hashed.");
+    } catch (error) {
+      onToast(error.message, "error");
+    }
+  };
+  const metrics = [
+    [
+      "Transactions",
+      investigation.transactions?.length || 0,
+      "Normalized evidence",
+      "blue",
+    ],
+    [
+      "Traced paths",
+      investigation.paths?.length || 0,
+      `Up to ${investigation.max_hops || 0} hops`,
+      "purple",
+    ],
+    [
+      "Wallets discovered",
+      investigation.wallets_traced || 0,
+      "Bounded trace",
+      "teal",
+    ],
+    [
+      "Graph nodes",
+      graph.nodes?.length || 0,
+      `${graph.edges?.length || 0} evidence edges`,
+      "amber",
+    ],
+    [
+      "Assets involved",
+      assets.length,
+      assets.slice(0, 3).join(", ") || "None",
+      "blue",
+    ],
+    [
+      "VASP connections",
+      investigation.exchange_attributions?.length || 0,
+      "Dataset attribution",
+      "green",
+    ],
+    [
+      "Related cases",
+      network?.summary?.related_investigations ?? "—",
+      "Deterministic matches",
+      "purple",
+    ],
+    [
+      "External reports",
+      threat?.status === "available" ? threat.report_count || 0 : "—",
+      threat?.status === "available" ? "Chainabuse" : "Temporarily unavailable",
+      "amber",
+    ],
+    [
+      "Active alerts",
+      alerts?.filter((item) => item.status === "NEW").length || 0,
+      "Monitoring evidence",
+      "red",
+    ],
+  ];
+  return (
+    <div className="case-workspace page-enter">
+      <section className="case-hero">
+        <div className="case-breadcrumb">
+          <button onClick={() => window.location.assign("/investigate")}>
+            Investigations
+          </button>
+          <Icon name="chevron" size={13} />
+          <span>{caseLabel(investigation.investigation_id)}</span>
+        </div>
+        <div className="case-title">
+          <div>
+            <div className="case-kicker">
+              <Badge tone={riskTone(investigation.risk?.level)} dot>
+                {investigation.risk?.level} priority
+              </Badge>
+              <Badge
+                tone={monitor?.status === "monitoring" ? "success" : "neutral"}
+                dot
+              >
+                {monitor?.status === "monitoring"
+                  ? "Monitoring active"
+                  : "Not monitored"}
+              </Badge>
+            </div>
+            <h1>{caseLabel(investigation.investigation_id)}</h1>
+            <CopyValue value={investigation.start_wallet} compact={false} />
+          </div>
+          <div className="risk-score-compact">
+            <span>Risk score</span>
+            <strong>
+              {investigation.risk?.score ?? 0}
+              <small>/100</small>
+            </strong>
+            <p>
+              {investigation.risk?.level || "UNKNOWN"} investigative priority
+            </p>
+          </div>
+        </div>
+        <div className="case-facts">
+          <div>
+            <span>Chain</span>
+            <strong>Ethereum Mainnet</strong>
+          </div>
+          <div>
+            <span>Investigated</span>
+            <strong>{formatDate(investigation.timestamp)}</strong>
+          </div>
+          <div>
+            <span>Provider</span>
+            <strong>
+              {investigation.provider?.selected || "Unknown"}
+              {investigation.provider?.fallback_used ? " · fallback" : ""}
+            </strong>
+          </div>
+          <div>
+            <span>Evidence status</span>
+            <strong>Stored in MongoDB</strong>
+          </div>
+          <Button
+            variant={monitor?.status === "monitoring" ? "secondary" : "primary"}
+            onClick={onMonitor}
+            icon="monitoring"
+          >
+            {monitor?.status === "monitoring"
+              ? "Stop monitoring"
+              : "Start monitoring"}
+          </Button>
+          <Button variant="primary" onClick={() => setExplainerMode(true)}>
+            <Icon name="play" /> EXPLAIN INVESTIGATION
+          </Button>
+        </div>
+      </section>
+      {explainerMode ? (
+        <InvestigationExplainer
+          investigation={investigation}
+          network={network}
+          onClose={() => setExplainerMode(false)}
+        />
+      ) : (
+        <>
+          <div className="metric-grid investigation-metrics">
+        {metrics.map(([label, value, detail, tone]) => (
+          <MetricCard
+            key={label}
+            label={label}
+            value={formatNumber(value) === "0" && value === "—" ? "—" : value}
+            detail={detail}
+            tone={tone}
+          />
+        ))}
+      </div>
+      <nav className="case-tabs" aria-label="Investigation sections">
+        {tabs.map(([id, label]) => (
+          <button
+            key={id}
+            className={tab === id ? "active" : ""}
+            onClick={() => setTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      <div className="tab-content">
+        {tab === "overview" && (
+          <div className="stack">
+            <CaseInspector
+              workspace={workspace}
+              onUpdate={onUpdateCase}
+              onToast={onToast}
+            />
+            <OverviewIntelligence
+              investigation={investigation}
+              network={network}
+              monitor={monitor}
+              onTab={setTab}
+              onMonitor={onMonitor}
+            />
+          </div>
+        )}
+        {tab === "fund-flow" && (
+          <Panel className="graph-panel">
+            <GraphCanvas
+              graph={graph}
+              title="Investigation fund-flow graph"
+              transactions={investigation.transactions}
+              network={network}
+            />
+          </Panel>
+        )}
+        {tab === "transactions" && (
+          <Panel>
+            <SectionHeader
+              eyebrow="Normalized evidence"
+              title="Transaction intelligence"
+              description="Search, filter, sort, and inspect provider-observed ETH and ERC-20 transfers."
+            />
+            <TransactionExplorer
+              transactions={investigation.transactions}
+              startWallet={investigation.start_wallet}
+            />
+          </Panel>
+        )}
+        {tab === "intelligence" && (
+          <div className="stack">
+            <AdvancedIntelligence investigation={investigation} />
+            <FraudNetwork
+              network={network}
+              loading={networkLoading}
+              error={networkError}
+              onOpenCase={onOpenCase}
+              onCompare={onCompare}
+            />
+            <ExternalIntel investigation={investigation} />
+            <EntityIntelligence investigation={investigation} />
+            <PathExplorer
+              paths={investigation.paths}
+              onGraph={() => setTab("fund-flow")}
+            />
+            <Timeline transactions={investigation.transactions} />
+          </div>
+        )}
+        {tab === "evidence" && (
+          <EvidenceWorkspace
+            workspace={workspace}
+            onVerify={onVerifyEvidence}
+            onAddNote={onAddNote}
+            onAddFinding={onAddFinding}
+            onCapture={setCapture}
+            onToast={onToast}
+          />
+        )}
+        {tab === "activity" && (
+          <AuditTrail investigation={investigation} audit={workspace?.audit} />
+        )}
+        {tab === "copilot" && <CopilotPanel investigation={investigation} />}
+        {tab === "report" && (
+          <EvidenceCenter
+            investigation={investigation}
+            network={network}
+            onToast={onToast}
+          />
+        )}
+      </div>
+      <EvidenceCapture
+        draft={capture}
+        onClose={() => setCapture(null)}
+        onSave={captureEvidence}
+      />
+      </>
+      )}
+    </div>
+  );
 }
