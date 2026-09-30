@@ -1,0 +1,556 @@
+/* ═════════════════════════════════════════════════════════════════════
+   TRACEX UNIFIED FUND-FLOW KNOWLEDGE GRAPH (FundFlowGraph.css)
+   Sovereign, High-Performance, DAGRE LR Canvas with Hop Columns
+   ═════════════════════════════════════════════════════════════════════ */
+
+.graph-panel {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-color: #1e293b !important;
+  background: transparent !important;
+}
+
+.fund-flow-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 170px);
+  min-height: 600px;
+  background: #07090e;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+}
+
+.fund-flow-container.fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+/* ─── 1. TOP TOOLBAR ─── */
+.ffg-toolbar {
+  height: 48px;
+  min-height: 48px;
+  background: #0d121f;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 20;
+}
+
+.ffg-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ffg-title-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.ffg-stats-badge {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.ffg-stats-badge strong {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+/* Search Input (Unclipped min 260px) */
+.ffg-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 260px;
+  max-width: 340px;
+  flex: 1 1 auto;
+}
+
+.ffg-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.ffg-search-input {
+  width: 100%;
+  height: 32px;
+  background: #070a12;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0 10px 0 32px;
+  color: #f8fafc;
+  font-size: 12px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.ffg-search-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.ffg-search-input::placeholder {
+  color: #64748b;
+}
+
+/* Filter Selects */
+.ffg-select {
+  height: 32px;
+  background: #070a12;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  padding: 0 10px;
+  cursor: pointer;
+  outline: none;
+  min-width: 90px;
+  white-space: nowrap;
+}
+
+.ffg-select:focus {
+  border-color: #38bdf8;
+}
+
+/* Toolbar Buttons */
+.ffg-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ffg-btn {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ffg-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.ffg-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.ffg-btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── 2. MAIN GRAPH VIEWPORT ─── */
+.ffg-viewport {
+  position: relative;
+  flex: 1 1 0%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, #0d1527 0%, #07090e 90%);
+}
+
+.ffg-rf-anchor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hop Column Headers Overlay */
+.ffg-hop-columns {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  height: 26px;
+  display: flex;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ffg-hop-header {
+  position: absolute;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── 3. FORENSIC NODE CARDS (180x56) ─── */
+.ffg-node-card {
+  width: 180px;
+  min-height: 56px;
+  background: #0e1526;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 10px 8px 12px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.ffg-node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border-color: #475569;
+}
+
+.ffg-node-card.selected {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(0, 0, 0, 0.7) !important;
+}
+
+.ffg-node-card.source-node {
+  width: 210px;
+  min-height: 62px;
+  border-color: #ef4444;
+}
+
+.ffg-node-card.pulse-suspect {
+  animation: ffg-pulse-red 2.2s infinite;
+}
+
+@keyframes ffg-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.ffg-node-card.dimmed {
+  opacity: 0.35;
+  filter: grayscale(40%);
+}
+
+.ffg-node-card.flash-search {
+  animation: ffg-flash-yellow 1.4s ease-out;
+}
+
+@keyframes ffg-flash-yellow {
+  0% { box-shadow: 0 0 0 6px #eab308; border-color: #eab308; }
+  100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+}
+
+/* Left Role Color Stripe */
+.ffg-node-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+/* Card Header */
+.ffg-node-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.ffg-node-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.ffg-cashout-tag {
+  background: #10b981;
+  color: #022c22;
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+}
+
+.ffg-node-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.ffg-node-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.ffg-node-amount {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+/* Stacked Group Node Card */
+.ffg-node-card.group-card {
+  background: #131b2e;
+  border: 1px dashed #38bdf8;
+}
+
+.ffg-group-stack-layer {
+  position: absolute;
+  inset: -3px 3px 3px -3px;
+  background: #0f172a;
+  border: 1px dashed #334155;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.ffg-group-stack-layer2 {
+  position: absolute;
+  inset: -6px 6px 6px -6px;
+  background: #090e17;
+  border: 1px dashed #1e293b;
+  border-radius: 8px;
+  z-index: -2;
+}
+
+.ffg-group-count {
+  background: #38bdf8;
+  color: #082f49;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* Simplified Pill Mode (Zoom < 0.6) */
+.ffg-node-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: #0e1526;
+  border: 1px solid #334155;
+  font-size: 10px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ─── 4. EDGE LABELS & PARTICLES ─── */
+.ffg-edge-pill {
+  background: rgba(10, 14, 23, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.ffg-edge-pill:hover,
+.ffg-edge-pill.selected {
+  border-color: #38bdf8;
+  background: #0f172a;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.ffg-edge-pill.dimmed {
+  opacity: 0.3;
+}
+
+/* ─── 5. FLOATING BOTTOM CONTROLS & MINIMAP ─── */
+.ffg-bottom-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 15;
+}
+
+.ffg-minimap-wrap {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 15;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ─── 6. DETAILS DRAWER (Case Overview & Inspector) ─── */
+.ffg-drawer {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  background: rgba(11, 16, 28, 0.96);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid #1e293b;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.ffg-drawer-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ffg-drawer-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ffg-drawer-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ffg-kv-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ffg-kv-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ffg-kv-val {
+  font-size: 12px;
+  color: #cbd5e1;
+  word-break: break-all;
+}
+
+.ffg-drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ffg-action-btn {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ffg-action-primary {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+}
+
+.ffg-action-primary:hover {
+  background: #0369a1;
+}
+
+.ffg-action-secondary {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+.ffg-action-secondary:hover {
+  background: #334155;
+  color: #f8fafc;
+}

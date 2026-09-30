@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Icon from '../components/Icon.jsx';
+import { navigate } from '../components/AppShell.jsx';
 import { caseLabel, formatDate, isEthereumAddress, riskTone, shortAddress } from '../utils.js';
 
 export default function HomePage({
@@ -92,14 +93,24 @@ export default function HomePage({
           </div>
         </div>
 
-        <button
-          className="btn btn-secondary"
-          onClick={() => setBriefingOpen(true)}
-          style={{ height: '28px', fontSize: '12px', padding: '0 10px' }}
-        >
-          <Icon name="info" size={13} />
-          <span>Platform Architecture Briefing</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/investigate')}
+            style={{ height: '28px', fontSize: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Icon name="target" size={13} />
+            <span>Forensic Command Centre</span>
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setBriefingOpen(true)}
+            style={{ height: '28px', fontSize: '12px', padding: '0 10px' }}
+          >
+            <Icon name="info" size={13} />
+            <span>Platform Architecture Briefing</span>
+          </button>
+        </div>
       </section>
 
       {/* Main Command & Trace Card */}

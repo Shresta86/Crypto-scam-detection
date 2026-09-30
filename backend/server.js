@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
+import { generateInvestigationPdf } from './reportGenerator.js';
 import { readFileSync } from 'node:fs';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
@@ -26,6 +27,7 @@ import {
   buildCaseKnowledgeGraph, getLatestKnowledgeGraph, getActiveBuildJob,
   getKnowledgeGraphHistory, findShortestPath
 } from './knowledgeGraph.js';
+import { seedAdminUser, authenticateUser, authMiddleware } from './auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -412,6 +414,29 @@ async function save(result) {
   return result;
 }
 function publicDoc(doc) { const item = doc.toObject ? doc.toObject() : doc; item.id = String(item._id); Object.assign(item, caseView(item)); delete item._id; delete item.result_json; return item; }
+
+// AUTHENTICATION ENDPOINTS
+app.post('/api/auth/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required', code: 'missing_credentials' });
+    }
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const result = await authenticateUser(email, password, ip);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 401).json({ error: error.message, code: error.code || 'auth_error' });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  res.json({ user: req.user });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
 
 app.get('/health', (_req, res) => res.status(mongoose.connection.readyState === 1 ? 200 : 503).json({
   status: mongoose.connection.readyState === 1 ? 'ready' : 'degraded',
@@ -972,9 +997,67 @@ app.get('/export/:id.:format', async (req, res, next) => {
       const quote = value => `"${String(value ?? '').replaceAll('"', '""')}"`;
       return res.attachment(`TraceX_${req.params.id}.csv`).type('text/csv').send([fields.join(','), ...data.transactions.map(tx => fields.map(field => quote(tx[field])).join(','))].join('\n'));
     }
-    throw new AppError(400, 'invalid_format', 'Format must be json or csv');
+    if (req.params.format === 'pdf') {
+      const caseId = String(doc._id);
+      const [workspaceDoc, networkIndex] = await Promise.all([
+        EvidenceItem.find({ case_id: caseId }).lean(),
+        fraudNetwork.ensureIndex(caseId)
+      ]);
+      const filename = `TraceX_Investigation_Report_${doc.case_reference || caseId}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      await generateInvestigationPdf(doc, {
+        workspace: { evidence: workspaceDoc },
+        network: { related_cases: [] }
+      }, res);
+      await recordAudit(caseId, 'REPORT_GENERATED', { format: 'PDF', file_name: filename }, doc.wallet_address, 'report_generator');
+      return;
+    }
+    throw new AppError(400, 'invalid_format', 'Format must be json, csv, or pdf');
   } catch (error) { next(error); }
 });
+
+app.get('/api/cases/:caseId/report/pdf', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+    const [evidence, notes, findings] = await Promise.all([
+      EvidenceItem.find({ case_id: caseId }).lean(),
+      InvestigatorNote.find({ case_id: caseId }).lean(),
+      InvestigatorFinding.find({ case_id: caseId }).lean()
+    ]);
+    const filename = `TraceX_Report_${doc.case_reference || caseId}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await generateInvestigationPdf(doc, {
+      workspace: { evidence, notes, findings },
+      network: { related_cases: [] }
+    }, res);
+    await recordAudit(caseId, 'REPORT_GENERATED', { format: 'PDF', file_name: filename }, doc.wallet_address, 'report_generator');
+  } catch (error) { next(error); }
+});
+
+app.post('/api/report', async (req, res, next) => {
+  try {
+    const caseId = req.body.caseId || req.body.investigation_id || req.body.id;
+    let doc;
+    if (caseId) {
+      doc = await requireCase(caseId);
+    } else if (req.body.investigation) {
+      doc = { _id: 'report_preview', result_json: req.body.investigation, ...req.body.investigation };
+    } else {
+      throw new AppError(400, 'case_required', 'Case ID or investigation object required');
+    }
+    const filename = `TraceX_Investigation_${doc.case_reference || 'Report'}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await generateInvestigationPdf(doc, {
+      workspace: req.body.workspace || {},
+      network: req.body.network || {}
+    }, res);
+  } catch (error) { next(error); }
+});
+
 
 async function createAlert(wallet, transaction, type, severity, title, description, blockchain = 'ethereum', investigationId = null, recipientInvestigatorIds = []) {
   const hash = transaction.transaction_hash || transaction.hash; if (!hash) return null;
@@ -1015,50 +1098,8 @@ app.post('/report', async (req, res, next) => {
       AuditEvent.find({ case_id: caseId }).sort({ timestamp: 1 }).lean()
     ]) : [[], [], [], []];
     const verified = evidence.filter(item => integrityHash(item) === item.integrity_hash).length;
-    const pdf = new PDFDocument({ margin: 44, bufferPages: true }), chunks = [];
-    const title = text => pdf.moveDown(0.7).font('Helvetica-Bold').fontSize(13).fillColor('#10263f').text(text).moveDown(0.25).font('Helvetica').fontSize(9).fillColor('#202c38');
-    const bullet = text => pdf.text(`• ${String(text || '').replace(/[\r\n]+/g, ' ')}`);
-    pdf.on('data', part => chunks.push(part));
-    pdf.on('end', () => res.attachment(`TraceX_Case_${data.case?.case_reference || caseId || data.start_wallet.slice(2, 10)}.pdf`).type('application/pdf').send(Buffer.concat(chunks)));
-    pdf.moveDown(4).font('Helvetica-Bold').fontSize(28).fillColor('#10263f').text('TRACEX', { align: 'center' });
-    pdf.font('Helvetica').fontSize(10).fillColor('#405166').text('BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE', { align: 'center' }).moveDown(4);
-    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('INVESTIGATION INTELLIGENCE REPORT', { align: 'center' }).moveDown(3);
-    pdf.font('Helvetica').fontSize(11).fillColor('#202c38').text(`CASE\n${data.case?.case_reference || 'Unpersisted analysis'}\n\nSUBJECT WALLET\n${data.start_wallet}\n\nNETWORK\nEthereum Mainnet\n\nCASE STATUS\n${data.case?.case_status || 'N/A'}\n\nPRIORITY\n${data.case?.priority || 'N/A'}\n\nBLOCKCHAIN RISK\n${data.risk?.score ?? 0} / 100 (${data.risk?.level || 'UNKNOWN'})\n\nASSIGNED INVESTIGATOR\n${data.case?.assigned_investigator || 'UNASSIGNED'}\n\nGENERATED\n${now()}`, { align: 'center' });
-    pdf.moveDown(4).font('Helvetica-Oblique').fontSize(10).fillColor('#405166').text('Report the Wallet. Trace the Money. Reveal the Network.', { align: 'center' });
-    pdf.addPage();
-    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('Executive Brief');
-    pdf.font('Helvetica').fontSize(9).fillColor('#202c38').text(`Evidence snapshot timestamp: ${data.timestamp || 'not recorded'}\nBlockchain provider: ${data.provider?.selected || 'not recorded'}${data.provider?.fallback_used ? ' (fallback active)' : ''}`).moveDown();
-    title('Executive Summary');
-    pdf.text(data.case?.case_summary || `TraceX analyzed ${(data.transactions || []).length} observed transaction(s) across ${data.wallets_traced || 0} traced wallet(s). This report is an investigative aid and not a determination of wrongdoing.`);
-    title('Risk Assessment');
-    pdf.text(`Risk score: ${data.risk?.score ?? 0}/100 (${data.risk?.level || 'UNKNOWN'}). Evidence completeness: ${data.evidence_completeness || 'not recorded'}.`);
-    (data.suspicious_activity?.indicators || []).slice(0, 10).forEach(item => bullet(item.message || item));
-    pdf.addPage();
-    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('Observed Fund-Flow Network').moveDown(.5);
-    drawReportGraph(pdf, data);
-    pdf.moveDown(24);
-    title('Fund Flow and Transaction Summary');
-    pdf.text(`Maximum trace depth: ${data.max_hops ?? 'N/A'} • Paths: ${(data.paths || []).length} • Transactions: ${(data.transactions || []).length}`);
-    (data.paths || []).slice(0, 12).forEach(path => bullet(`${path.from || '?'} → ${path.to || '?'} | ${path.amount ?? '?'} ${path.asset || 'ETH'} | ${path.hash || ''}`));
-    title('Entities, VASPs and External Intelligence');
-    const threat = data.external_intelligence?.chainabuse;
-    pdf.text(`Chainabuse: ${threat?.status || 'not available'}; reported categories: ${(threat?.categories || []).join(', ') || 'none recorded'}.`);
-    (data.exchange_attributions || []).slice(0, 12).forEach(item => bullet(`${item.exchange || 'Attributed entity'} — ${item.interactions || item.transaction_count || 0} observed interaction(s)`));
-    title('Evidence Integrity Summary');
-    pdf.text(`${evidence.length} evidence item(s) retained; ${verified}/${evidence.length} SHA-256 integrity hash(es) currently verify. Evidence is a bounded snapshot captured at the listed time.`);
-    evidence.slice(0, 25).forEach(item => bullet(`${item.evidence_id} | ${item.evidence_type} | ${item.title} | captured ${item.captured_at}`));
-    title('Investigator Findings');
-    if (findings.length) findings.forEach(item => bullet(`${item.finding_id} [${item.classification}] ${item.title}: ${item.description}`)); else pdf.text('No investigator-authored findings have been recorded.');
-    title('Notes and Audit Timeline');
-    notes.slice(0, 10).forEach(item => bullet(`Note ${item.note_id} (${item.note_type}): ${item.content}`));
-    audit.slice(-20).forEach(item => bullet(`${item.timestamp} — ${item.event_type}`));
-    title('Methodology and Limitations');
-    (data.investigator_recommendations || []).slice(0, 12).forEach(bullet);
-    pdf.text('Observed blockchain evidence is provider-retrieved within the configured trace scope. Risk and topology labels are deterministic TraceX analysis. Chainabuse material is external supporting intelligence. Investigator notes and findings are separately authored work product. Automated signals, labels, and third-party intelligence require independent review; provider coverage may be partial. No cross-chain destination movement is inferred without destination-chain evidence.');
-    const pageRange = pdf.bufferedPageRange();
-    for (let page = 0; page < pageRange.count; page += 1) { pdf.switchToPage(page); pdf.fontSize(7).fillColor('#687787').text(`TraceX • Confidential investigative working paper • Page ${page + 1} of ${pageRange.count}`, 44, pdf.page.height - 32, { align: 'center', width: pdf.page.width - 88 }); }
     await recordAudit(caseId, 'REPORT_GENERATED', { format: 'pdf', evidence_count: evidence.length, verified_evidence: verified }, data.start_wallet, 'reporting');
-    pdf.end();
+    return generateInvestigationPdf({ ...data, evidence, findings, notes, audit, verified_count: verified }, res);
   } catch (error) { next(error); }
 });
 
@@ -1076,6 +1117,7 @@ app.use((error, _req, res, _next) => {
 let server = null;
 export async function startServer({ port = PORT, mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/tracex' } = {}) {
   if (mongoose.connection.readyState === 0) await mongoose.connect(mongoUri);
+  await seedAdminUser();
   await Promise.all([Investigation.init(), Monitor.init(), Alert.init(), ThreatIntelligenceCache.init(), CaseNetworkIndex.init(), AuditEvent.init(), EvidenceItem.init(), InvestigatorNote.init(), InvestigatorFinding.init(), CaseSequence.init(), Investigator.init(), WalletAssignment.init()]);
   const backfilledCaseMetadata = await backfillCaseMetadata();
   if (backfilledCaseMetadata) console.log(`Case workspace metadata backfilled for ${backfilledCaseMetadata} investigation(s)`);

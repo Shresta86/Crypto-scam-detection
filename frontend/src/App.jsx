@@ -14,14 +14,20 @@ import {
   StandaloneCopilot,
   SystemPage
 } from './pages/OperationsPages.jsx';
-import { api } from './api.js';
+import { api, getUser, onAuthChange } from './api.js';
+import LoginPage from './pages/LoginPage.jsx';
 import DeveloperConsole from './components/DeveloperConsole.jsx';
+import InvestigateModule from './components/InvestigateModule.jsx';
 import { caseLabel, formatDate, riskTone, shortAddress } from './utils.js';
 
 export default function App() {
   const route = useRoute();
   const pathname = route.split('?')[0];
 
+  /* ── Auth ──────────────────────────────────────────────────── */
+  const [authUser, setAuthUser] = useState(() => getUser());
+
+  /* ── App state (all hooks must be before any conditional return) ── */
   const [config, setConfig] = useState(null);
   const [cases, setCases] = useState([]);
   const [monitors, setMonitors] = useState([]);
@@ -58,8 +64,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    const unsub = onAuthChange(user => setAuthUser(user));
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (authUser) refresh();
+  }, [refresh, authUser]);
+
+  const handleLogout = () => {
+    api.logout?.();
+    setAuthUser(null);
+    navigate('/login');
+  };
+
 
   const loadNetwork = useCallback(async id => {
     setNetworkLoading(true);
@@ -313,6 +331,19 @@ export default function App() {
     createInvestigator
   };
 
+  // Show login page when unauthenticated or navigating to /login
+  if (!authUser || pathname === '/login') {
+    return (
+      <LoginPage
+        onLoginSuccess={user => {
+          setAuthUser(user);
+          const params = new URLSearchParams(window.location.search);
+          navigate(params.get('redirect') || '/');
+        }}
+      />
+    );
+  }
+
   const content = renderRoute(routeContext);
 
   return (
@@ -324,6 +355,8 @@ export default function App() {
       cases={cases}
       onOpenCase={loadCase}
       onInvestigate={investigate}
+      authUser={authUser}
+      onLogout={handleLogout}
     >
       {content}
       <Toast message={toast?.message} tone={toast?.tone} onClose={() => setToast(null)} />
@@ -365,8 +398,23 @@ function renderRoute(context) {
     );
   }
 
+  // INVESTIGATE / FORENSIC COMMAND MODULE ROUTE
+  if (route.startsWith('/investigate')) {
+    const searchParams = new URLSearchParams(window.location.search);
+    const initialKey = searchParams.get('key') || searchParams.get('dataset');
+    return (
+      <InvestigateModule
+        initialKey={initialKey}
+        cases={cases}
+        currentCase={current}
+        onOpenCase={context.loadCase}
+        onBack={() => navigate('/')}
+      />
+    );
+  }
+
   // NEW TRACE ROUTE
-  if (route === '/trace' || route === '/investigate') {
+  if (route === '/trace') {
     return (
       <HomePage
         cases={cases}

@@ -28,7 +28,9 @@ export default function AppShell({
   alerts = [],
   cases = [],
   onOpenCase,
-  onInvestigate
+  onInvestigate,
+  authUser,
+  onLogout
 }) {
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -90,7 +92,10 @@ export default function AppShell({
     if (pathname === '/' || pathname === '/home') {
       return [{ label: 'Home', path: '/' }];
     }
-    if (pathname === '/trace' || pathname === '/investigate') {
+    if (pathname === '/investigate') {
+      return [{ label: 'Forensic Intelligence', path: '/investigate' }, { label: 'Command Centre' }];
+    }
+    if (pathname === '/trace') {
       return [{ label: 'Trace', path: '/trace' }];
     }
     if (pathname === '/cases') {
@@ -151,6 +156,7 @@ export default function AppShell({
   const allCmds = [
     { label: 'Go to Home', group: 'Navigation', icon: 'home', action: () => navigate('/') },
     { label: 'Start new trace', group: 'Navigation', icon: 'trace', action: () => navigate('/trace') },
+    { label: 'Investigate Command Centre (Forensics)', group: 'Navigation', icon: 'target', action: () => navigate('/investigate') },
     { label: 'View all cases', group: 'Navigation', icon: 'cases', action: () => navigate('/cases') },
     { label: 'Open sample case TX-2026-5C7986', group: 'Actions', icon: 'cases', action: () => onOpenCase?.('6aba9bf3a9851671145c7986') },
     { label: 'Network Intelligence', group: 'Intelligence', icon: 'network', action: () => navigate('/network') },
@@ -244,12 +250,25 @@ export default function AppShell({
               {!collapsed && <span className="nav-item-label">Home</span>}
             </button>
             <button
-              className={`nav-item ${pathname === '/trace' || pathname === '/investigate' ? 'active' : ''}`}
+              className={`nav-item ${pathname === '/trace' ? 'active' : ''}`}
               onClick={() => navigate('/trace')}
               title="New trace"
             >
               <span className="nav-item-icon"><Icon name="plus" size={16} /></span>
               {!collapsed && <span className="nav-item-label">New trace</span>}
+            </button>
+            <button
+              className={`nav-item ${pathname === '/investigate' ? 'active' : ''}`}
+              onClick={() => navigate('/investigate')}
+              title="Investigate Command Centre"
+            >
+              <span className="nav-item-icon"><Icon name="target" size={16} /></span>
+              {!collapsed && (
+                <>
+                  <span className="nav-item-label">Investigate</span>
+                  <span className="nav-item-count" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.35)', fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '4px' }}>LIVE</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -475,9 +494,42 @@ export default function AppShell({
           </button>
 
           {!collapsed && (
-            <div className="user-profile-row" onClick={() => navigate('/settings')}>
-              <div className="user-avatar">JP</div>
-              <span className="user-name">Dr. J. PremaSagar</span>
+            <div className="user-profile-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate('/settings')}>
+                <div className="user-avatar" style={{ minWidth: '26px', width: '26px', height: '26px', fontSize: '11px', fontWeight: 600 }}>
+                  {(authUser?.name || 'Authorized Personnel').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="user-name" style={{ fontSize: '12px', fontWeight: 500, lineHeight: 1.2 }}>
+                    {authUser?.name || 'Special Agent'}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#6B6E6A', lineHeight: 1.2 }}>
+                    {authUser?.role || 'Investigator'}
+                  </div>
+                </div>
+              </div>
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  title="Log out of TraceX"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#8A8F8B',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#E06C75'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#8A8F8B'}
+                >
+                  <Icon name="logout" size={14} />
+                </button>
+              )}
             </div>
           )}
         </div>

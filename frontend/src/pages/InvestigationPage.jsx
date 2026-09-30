@@ -22,6 +22,8 @@ import {
 import { caseLabel, formatDate, formatNumber, isEthereumAddress, riskTone, unique, shortAddress } from '../utils.js';
 import CaseKnowledgeGraph from '../components/CaseKnowledgeGraph.jsx';
 import { CaseEnginePipelinePanel, RuleDetailsModal } from '../components/CaseEnginePanel.jsx';
+import CaseAnalyticsView from '../components/CaseAnalyticsView.jsx';
+import CopilotView from '../components/CopilotView.jsx';
 
 const stages=['Validating wallet','Connecting to blockchain provider','Retrieving blockchain activity','Normalizing ETH / ERC-20 transfers','Tracing multi-hop fund movement','Constructing wallet graph','Detecting suspicious behavior','Checking VASP attribution','Checking external intelligence','Calculating explainable risk','Discovering related investigations','Building investigation evidence'];
 
@@ -315,6 +317,10 @@ export default function InvestigationPage({ investigation, workspace, network, n
             </span>
           </div>
           <div className="case-hero-quick-actions">
+            <button className="btn btn-secondary" onClick={() => navigate('/investigate')} title="Open Sovereign Forensic Command Centre">
+              <Icon name="target" size={14}/>
+              <span>Command Centre</span>
+            </button>
             <button className="btn btn-secondary" onClick={() => setPresentationOpen(true)}>
               <Icon name="overview" size={14}/>
               <span>Presentation Mode</span>
@@ -472,7 +478,9 @@ export default function InvestigationPage({ investigation, workspace, network, n
           <RiskPanel investigation={investigation} onTab={setTab} onCapture={setCapture}/>
         )}
 
-        {tab === 'visual-analytics' && <VisualAnalytics investigation={investigation} onTab={setTab}/>}
+        {(tab === 'visual-analytics' || tab === 'analytics') && (
+          <CaseAnalyticsView investigation={investigation} />
+        )}
         {tab === 'patterns' && <PatternIntelligence investigation={investigation} onTab={setTab} onCapture={setCapture}/>}
         {tab === 'potential-movement' && <PotentialMovement investigation={investigation}/>}
 
@@ -528,7 +536,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
         )}
 
         {tab === 'copilot' && (
-          <CopilotPanel investigation={investigation}/>
+          <CopilotView investigation={investigation} />
         )}
 
         {tab === 'api' && <ApiExplorer investigation={investigation}/>}

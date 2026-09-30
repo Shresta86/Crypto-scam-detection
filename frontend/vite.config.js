@@ -10,5 +10,16 @@ export default defineConfig({
       '/dashboard': 'http://localhost:5001',
       '/graph': 'http://localhost:5001'
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'echarts-vendor': ['echarts'],
+          'markdown-vendor': ['marked']
+        }
+      }
+    }
   }
 });

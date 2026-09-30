@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import { Badge, Button, CopyValue, EmptyState, MetricCard, Panel, SectionHeader } from '../components/Primitives.jsx';
 import { CopilotPanel, EvidenceCenter } from '../components/IntelligencePanels.jsx';
+import CopilotView from '../components/CopilotView.jsx';
 import { caseLabel, formatDate, isEthereumAddress, riskTone, shortAddress } from '../utils.js';
 import { TRACEX_RULES } from '../components/CaseEnginePanel.jsx';
 
@@ -1334,7 +1335,7 @@ export function StandaloneCopilot({ current, onOpenCase, cases = [] }) {
       )}
 
       {/* Copilot Workspace */}
-      <CopilotPanel investigation={current} standalone />
+      <CopilotView investigation={current} standalone />
     </div>
   );
 }

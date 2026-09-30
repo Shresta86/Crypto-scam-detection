@@ -73,3 +73,14 @@ export function timelineBuckets(transactions = [], buckets = 18) {
   }
   return result;
 }
+
+export function formatDataSourceName(provider) {
+  if (!provider) return 'Chain Data';
+  const lower = String(provider).toLowerCase();
+  if (lower.includes('alchemy')) return 'Chain RPC (Primary)';
+  if (lower.includes('etherscan')) return 'Chain RPC (Secondary)';
+  if (lower.includes('chainabuse')) return 'Threat Intel Network';
+  if (lower.includes('groq') || lower.includes('openai')) return 'TraceX Intelligence Engine';
+  if (lower === 'chain_data' || lower === 'blockchain') return 'Chain Data';
+  return provider;
+}
