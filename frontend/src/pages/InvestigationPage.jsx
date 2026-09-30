@@ -6,40 +6,56 @@ import { Badge, Button, CopyValue, ErrorState, MetricCard, Panel, SectionHeader,
 import { AdvancedIntelligence, AuditTrail, CopilotPanel, EntityIntelligence, EvidenceCenter, ExternalIntel, FraudNetwork, OverviewIntelligence, PathExplorer, RiskPanel, Timeline } from '../components/IntelligencePanels.jsx';
 import { navigate } from '../components/AppShell.jsx';
 import { CaseInspector, EvidenceCapture, EvidenceWorkspace } from '../components/CaseManagement.jsx';
+import { ApiExplorer, PatternIntelligence, PotentialMovement, VisualAnalytics } from '../components/AnalysisWorkspaces.jsx';
+import IntelligenceStudio from '../components/IntelligenceStudio.jsx';
+import {
+  MoneyFlowReconstruction,
+  WalletFingerprintWorkspace,
+  InfrastructureReuseRadar,
+  InvestigationHotspotMap,
+  TransactionPatternMotifs,
+  HypothesisBoard,
+  EvidenceLineageWorkspace,
+  PresentationJuryMode,
+  CommandPalette
+} from '../components/ForensicWorkspaces.jsx';
 import { caseLabel, formatDate, formatNumber, isEthereumAddress, riskTone, unique, shortAddress } from '../utils.js';
 
 const stages=['Validating wallet','Connecting to blockchain provider','Retrieving blockchain activity','Normalizing ETH / ERC-20 transfers','Tracing multi-hop fund movement','Constructing wallet graph','Detecting suspicious behavior','Checking VASP attribution','Checking external intelligence','Calculating explainable risk','Discovering related investigations','Building investigation evidence'];
 
 export function InvestigationEntry({ onInvestigate, loading, error, recent = [], onOpenCase }) {
-  const [wallet,setWallet]=useState(''),[localError,setLocalError]=useState('');
-  const submit=event=>{event.preventDefault();const value=wallet.trim();if(!isEthereumAddress(value)){setLocalError('Invalid Ethereum address. Must start with 0x followed by 40 hex characters.');return;}setLocalError('');onInvestigate(value);};
-  const demoCase=recent.find(item=>item.transaction_count>=50)||recent[0];
-  return <div className="investigation-entry page-enter"><div className="hero-grid"><div className="hero-copy"><Badge tone="blue" dot>TRACEX • BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE</Badge><h1>Report the Wallet.<br/>Trace the Money.<br/><span>Reveal the Network.</span></h1><p>Turn a victim-reported Ethereum wallet into structured, explainable, and court-ready fund-movement intelligence across multi-hop transactions and shared infrastructure.</p><div className="trust-row"><span><Icon name="check"/>Provider-backed evidence</span><span><Icon name="check"/>Explainable risk score</span><span><Icon name="check"/>Grounded AI copilot</span></div>{demoCase&&<div className="demo-case-banner"><span><Icon name="cases"/></span><div><strong>Ready for jury demonstration:</strong><span>{caseLabel(demoCase.id)} ({demoCase.transaction_count} transfers · {demoCase.wallet_count} wallets)</span></div><Button variant="secondary" onClick={()=>onOpenCase(demoCase.id)}>Open stored demo case</Button></div>}</div><Panel className="search-console"><div className="console-top"><div><span className="eyebrow">Start investigation</span><h2>Enter suspect wallet</h2></div><Badge tone="neutral">ETH · MAINNET</Badge></div><form onSubmit={submit}><label htmlFor="wallet-address">Ethereum suspect wallet address</label><div className={`wallet-input ${localError?'invalid':''}`}><span>0x</span><input id="wallet-address" value={wallet} onChange={event=>setWallet(event.target.value)} placeholder="Enter 40 hexadecimal characters (e.g. d8da6bf...)" autoComplete="off"/><button disabled={loading}><Icon name="investigate"/>{loading?'Tracing…':'Start investigation'}</button></div>{localError&&<p className="field-error">{localError}</p>}<small>Format: 0x followed by 40 hexadecimal characters. Supported chain: Ethereum Mainnet.</small></form><div className="console-foot"><span><i/>Alchemy primary · Etherscan fallback</span><span>Bounded trace: 2 hops · 8 wallets</span></div></Panel></div>
-    {error&&<Panel className="provider-recovery"><div className="recovery-header"><Icon name="system" size={24}/><div><h3>{error.code==='no_activity'?'No supported Ethereum activity found':'LIVE PROVIDER TEMPORARILY UNAVAILABLE'}</h3><p>{error.message||'TraceX could not complete the live blockchain request.'}</p><small>Your existing investigation evidence remains available in MongoDB storage. You can continue the demonstration using stored provider-backed cases.</small></div></div><div className="inline-actions">{isEthereumAddress(wallet.trim())&&<Button variant="secondary" onClick={()=>onInvestigate(wallet.trim())}>Retry live analysis</Button>}{recent[0]&&<Button onClick={()=>onOpenCase(recent[0].id)}>Open recent investigation</Button>}<Button variant="ghost" onClick={()=>navigate('/cases')}>View stored cases</Button></div></Panel>} {loading&&<LoadingPipeline/>}
-    {!loading&&recent.length>0&&<section className="recent-section"><SectionHeader eyebrow="Stored provider-backed evidence" title="Recent investigations" description="Reopen complete case context without consuming provider quota." action={<button className="text-button" onClick={()=>navigate('/cases')}>View all cases <Icon name="arrow"/></button>}/><div className="recent-grid">{recent.slice(0,3).map(item=><button key={item.id} onClick={()=>onOpenCase(item.id)}><div><span className={`risk-line risk-${riskTone(item.risk_level)}`}/><span className="eyebrow">{caseLabel(item.id)}</span><strong>{item.wallet_address}</strong></div><div className="recent-meta"><span>{item.transaction_count} transactions</span><span>{item.wallet_count} wallets</span><Badge tone={riskTone(item.risk_level)}>{item.risk_level} · {item.risk_score}</Badge></div><Icon name="arrow"/></button>)}</div></section>}
+  const [wallet, setWallet] = useState(''), [localError, setLocalError] = useState('');
+  const demoCase = recent.find(item => item.transaction_count >= 50) || recent[0];
+  const submit = event => { event.preventDefault(); const value = wallet.trim(); if (!isEthereumAddress(value)) { setLocalError('Invalid Ethereum address. Must start with 0x followed by 40 hex characters.'); return; } setLocalError(''); onInvestigate(value); };
+  return <div className="investigation-entry page-enter">
+    <div className="hero-grid"><div className="hero-copy"><Badge tone="blue" dot>TRACEX • BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE</Badge><h1>Report the Wallet.<br/>Trace the Money.<br/><span>Reveal the Network.</span></h1><p>Turn a victim-reported Ethereum wallet into structured, explainable, evidence-oriented fund-movement intelligence across multi-hop transactions and shared infrastructure.</p><div className="trust-row"><span><Icon name="check"/>Provider-backed evidence</span><span><Icon name="check"/>Explainable risk score</span><span><Icon name="check"/>Grounded AI copilot</span></div>{demoCase && <div className="demo-case-banner"><span><Icon name="cases"/></span><div><strong>Ready for jury demonstration:</strong><span>{caseLabel(demoCase.id)} ({demoCase.transaction_count} transfers · {demoCase.wallet_count} wallets)</span></div><Button variant="secondary" onClick={() => onOpenCase(demoCase.id)}>Open stored demo case</Button></div>}</div><Panel className="search-console"><div className="console-top"><div><span className="eyebrow">Start investigation</span><h2>Enter suspect wallet</h2></div><Badge tone="neutral">ETH · MAINNET</Badge></div><form onSubmit={submit}><label htmlFor="wallet-address">Ethereum suspect wallet address</label><div className={`wallet-input ${localError ? 'invalid' : ''}`}><span>0x</span><input id="wallet-address" value={wallet} onChange={event => setWallet(event.target.value)} placeholder="Enter 40 hexadecimal characters (e.g. d8da6bf...)" autoComplete="off"/><button disabled={loading}><Icon name="investigate"/>{loading ? 'Tracing…' : 'Start investigation'}</button></div>{localError && <p className="field-error">{localError}</p>}<small>Format: 0x followed by 40 hexadecimal characters. Supported chain: Ethereum Mainnet.</small></form><div className="console-foot"><span><i/>Alchemy primary · Etherscan fallback</span><span>Bounded trace: 2 hops · 8 wallets</span></div></Panel></div>
+    {error && <Panel className="provider-recovery"><div className="recovery-header"><Icon name="system" size={24}/><div><h3>{error.code === 'no_activity' ? 'No supported Ethereum activity found' : 'LIVE PROVIDER TEMPORARILY UNAVAILABLE'}</h3><p>{error.message || 'TraceX could not complete the live blockchain request.'}</p><small>Your existing investigation evidence remains available in MongoDB storage. You can continue the demonstration using stored provider-backed cases.</small></div></div><div className="inline-actions">{isEthereumAddress(wallet.trim()) && <Button variant="secondary" onClick={() => onInvestigate(wallet.trim())}>Retry live analysis</Button>}{recent[0] && <Button onClick={() => onOpenCase(recent[0].id)}>Open recent investigation</Button>}<Button variant="ghost" onClick={() => navigate('/cases')}>View stored cases</Button></div></Panel>}
+    {loading && <LoadingPipeline/>}
+    {!loading && recent.length > 0 && <section className="recent-section"><SectionHeader eyebrow="Stored provider-backed evidence" title="Recent investigations" description="Reopen complete case context without consuming provider quota." action={<button className="text-button" onClick={() => navigate('/cases')}>View all cases <Icon name="arrow"/></button>}/><div className="recent-grid">{recent.slice(0, 3).map(item => <button key={item.id} onClick={() => onOpenCase(item.id)}><div><span className={`risk-line risk-${riskTone(item.risk_level)}`}/><span className="eyebrow">{caseLabel(item.id)}</span><strong>{item.wallet_address}</strong></div><div className="recent-meta"><span>{item.transaction_count} transactions</span><span>{item.wallet_count} wallets</span><Badge tone={riskTone(item.risk_level)}>{item.risk_level} · {item.risk_score}</Badge></div><Icon name="arrow"/></button>)}</div></section>}
   </div>;
 }
 
 function LoadingPipeline(){const [active,setActive]=useState(1);useEffect(()=>{const timer=setInterval(()=>setActive(value=>Math.min(stages.length-1,value+1)),1300);return()=>clearInterval(timer);},[]);return <Panel className="loading-pipeline"><div className="pipeline-head"><div><span className="eyebrow">Investigation in progress</span><h2>Building blockchain evidence</h2><p>TraceX is processing this investigation as one secured request. Final completion states appear only after evidence returns.</p></div><span className="radar"><i/><i/><b/></span></div><div className="pipeline-grid">{stages.map((stage,index)=><div key={stage} className={index<active?'complete':index===active?'active':''}><span>{index<active?<Icon name="check" size={14}/>:String(index+1).padStart(2,'0')}</span><div><strong>{stage}</strong><small>{index<active?'Phase completed':index===active?'Currently processing':'Pending evidence'}</small></div></div>)}</div></Panel>;}
 
-export function GuidedWalkthrough({ step, onStep, onClose, totalSteps = 8 }) {
+export function GuidedWalkthrough({ step, onStep, onClose, investigation, network, totalSteps = 8 }) {
+  const paths = investigation?.paths?.length || 0, nodes = investigation?.graph?.nodes?.length || 0, transactions = investigation?.transactions?.length || 0, indicators = investigation?.suspicious_activity?.indicators?.length || 0, score = investigation?.risk?.score ?? 0, related = network?.related_cases?.[0];
   const guideSteps = [
     {
       title: 'Explainable Risk Intelligence',
       target: 'risk',
-      desc: 'TraceX identified 5 explainable risk indicators resulting in a 90/100 HIGH priority score without black-box opacity.',
-      jurySay: '"Instead of giving an arbitrary score, TraceX explains every single behavioral rule contributing to the 90/100 assessment."'
+      desc: `TraceX identified ${indicators} explainable risk indicator(s), resulting in a ${score}/100 ${investigation?.risk?.level || 'UNKNOWN'} priority score without black-box opacity.`,
+      jurySay: `"Instead of giving an arbitrary score, TraceX explains every behavioral rule contributing to the ${score}/100 assessment."`
     },
     {
       title: 'Multi-Hop Fund Flow Graph',
       target: 'fund-flow',
-      desc: 'TraceX automatically reconstructed 165 directional paths through 42 network nodes across 2 hops.',
-      jurySay: '"Here we see the complete fund movement pipeline, from the suspect address to intermediary collectors and destination exchanges."'
+      desc: `TraceX reconstructed ${paths} directional path(s) through ${nodes} network node(s) within the configured trace scope.`,
+      jurySay: '"Here we see the observed fund-movement structure, from the reported wallet through traced counterparties and any attributed endpoints."'
     },
     {
       title: 'Normalized Transaction Explorer',
       target: 'transactions',
-      desc: '739 provider-observed transactions normalized with strict separation of native ETH and ERC-20 token amounts.',
+      desc: `${transactions} provider-observed transaction(s) normalized with strict separation of native ETH and ERC-20 token amounts.`,
       jurySay: '"Every transfer preserves block number, exact timestamp, and provider provenance with contextual importance explanations."'
     },
     {
@@ -51,26 +67,26 @@ export function GuidedWalkthrough({ step, onStep, onClose, totalSteps = 8 }) {
     {
       title: 'Network Topology Roles',
       target: 'topology',
-      desc: 'Graph degree analysis detected 9 collector and distributor candidates acting as aggregation infrastructure.',
+      desc: `Graph degree analysis detected ${investigation?.network_analytics?.candidates?.length || 0} topology candidate(s) from observed connectivity.`,
       jurySay: '"TraceX identifies intermediary infrastructure by analyzing in-degree and out-degree connectivity without subjective guessing."'
     },
     {
       title: 'Cross-Case Fraud Network',
       target: 'fraud-network',
-      desc: 'TraceX discovered that this intermediary also appears in Case TX-2026-9F3516 with a 100/100 similarity match.',
-      jurySay: '"This shows cross-case correlation: the same intermediary wallet is serving multiple fraud operations."'
+      desc: related ? `TraceX found ${network?.related_cases?.length || 0} potentially related case(s); the strongest shared-infrastructure relationship is ${related.similarity_score}/100.` : 'TraceX will surface only stored cases meeting the similarity threshold.',
+      jurySay: '"This shows cross-case correlation: TraceX explains the shared infrastructure without claiming common ownership or criminal coordination."'
     },
     {
-      title: 'Court-Ready Evidence & SHA-256',
+      title: 'Evidence Integrity & SHA-256',
       target: 'evidence',
-      desc: 'Preserves snapshots into an immutable ledger protected by deterministic canonical SHA-256 integrity hashes.',
+      desc: 'Preserves snapshots into an immutable ledger protected by canonical SHA-256 integrity hashes.',
       jurySay: '"TraceX computes a SHA-256 hash immediately upon capture so any future alteration can be detected."'
     },
     {
       title: 'Grounded Copilot & PDF Report',
       target: 'report',
-      desc: 'Evidence brief with formal chain of custody, methodology, and 1-click comprehensive PDF generation.',
-      jurySay: '"TraceX packages the entire investigation into a professional, court-grade PDF brief."'
+      desc: 'Evidence brief with integrity summary, methodology, limitations, and 1-click PDF generation.',
+      jurySay: '"TraceX packages the investigation into a professional evidence-oriented intelligence report."'
     }
   ];
 
@@ -102,14 +118,15 @@ export function GuidedWalkthrough({ step, onStep, onClose, totalSteps = 8 }) {
 }
 
 export function FeatureTestLab({ onNavigate, currentCase, network, workspace, monitor }) {
+  const txs=currentCase?.transactions?.length || 0, paths=currentCase?.paths?.length || 0, nodes=currentCase?.graph?.nodes?.length || 0, indicators=currentCase?.suspicious_activity?.indicators?.length || 0;
   const features = [
     { name: 'Wallet Investigation', tab: 'overview', status: 'READY', desc: 'Validates Ethereum address and loads complete case evidence.' },
-    { name: 'Multi-Hop Fund Tracing', tab: 'fund-flow', status: 'READY', desc: '165 directional paths reconstructed across 2 hops.' },
-    { name: 'Explainable Risk Intelligence', tab: 'risk', status: 'READY', desc: '5 deterministic risk indicators (90/100 HIGH priority).' },
-    { name: 'Fund-Flow Graph', tab: 'fund-flow', status: 'READY', desc: '42 nodes and 165 edges with interactive pan, zoom, and path focus.' },
+    { name: 'Multi-Hop Fund Tracing', tab: 'fund-flow', status: 'READY', desc: `${paths} directional path(s) reconstructed within the configured trace scope.` },
+    { name: 'Explainable Risk Intelligence', tab: 'risk', status: 'READY', desc: `${indicators} risk indicator(s) (${currentCase?.risk?.score ?? 0}/100 ${currentCase?.risk?.level || 'UNKNOWN'} priority).` },
+    { name: 'Fund-Flow Graph', tab: 'fund-flow', status: 'READY', desc: `${nodes} nodes and ${currentCase?.graph?.edges?.length || 0} edges with interactive pan, zoom, and path focus.` },
     { name: 'Graph Path Focus & Dimming', tab: 'fund-flow', status: 'READY', desc: 'Clicking any edge highlights the route and dims unrelated nodes.' },
     { name: 'Wallet Intelligence Inspector', tab: 'fund-flow', status: 'READY', desc: 'Node inspector showing topology role, degree, and transaction counts.' },
-    { name: 'Transaction Explorer', tab: 'transactions', status: 'READY', desc: '739 transfers with search, direction, hop, and asset filters.' },
+    { name: 'Transaction Explorer', tab: 'transactions', status: 'READY', desc: `${txs} transfer(s) with search, direction, hop, and asset filters.` },
     { name: 'Transaction Importance ("Why this matters")', tab: 'transactions', status: 'READY', desc: 'Drawer contextual explanation of transfer significance.' },
     { name: 'Transaction Time Machine', tab: 'time-machine', status: 'READY', desc: 'Chronological replay with 0.5x, 1x, 2x speeds and hop badge.' },
     { name: 'Time Machine "Jump to Signal"', tab: 'time-machine', status: 'READY', desc: 'Skips directly to next multi-hop or high-value transfer event.' },
@@ -117,7 +134,7 @@ export function FeatureTestLab({ onNavigate, currentCase, network, workspace, mo
     { name: 'Network Topology Roles', tab: 'topology', status: 'READY', desc: '9 collector and distributor candidates with connectivity ratios.' },
     { name: 'Cross-Case Fraud Network', tab: 'fraud-network', status: 'READY', desc: 'Cross-case graph correlating shared intermediary infrastructure.' },
     { name: 'Similar Case Discovery', tab: 'fraud-network', status: 'READY', desc: 'Matches Case TX-2026-9F3516 with 100/100 similarity score.' },
-    { name: 'Side-by-Side Case Comparison', tab: 'fraud-network', status: 'READY', desc: 'Drawer comparing overlapping transactions and differences.' },
+    { name: 'Side-by-Side Case Comparison', tab: 'fraud-network', status: 'READY', desc: 'Drawer compares shared infrastructure and factual differences.' },
     { name: 'Bridge Contract Provenance', tab: 'bridges', status: 'READY', desc: 'Exact contract matching against verified bridge registry.' },
     { name: 'Cross-Chain Evidence Boundary', tab: 'bridges', status: 'READY', desc: 'Transparent disclosure that destination-chain transfer is unverified.' },
     { name: '4-Step Visual Evidence Capture', tab: 'evidence', status: 'READY', desc: 'Wizard capturing immutable snapshot with canonical JSON preview.' },
@@ -125,7 +142,7 @@ export function FeatureTestLab({ onNavigate, currentCase, network, workspace, mo
     { name: 'Investigator Notes & Findings', tab: 'notes-findings', status: 'READY', desc: 'Distinguishes working notes from evidence-backed formal findings.' },
     { name: 'Real-Time Wallet Monitoring', tab: 'monitoring', status: monitor?.status==='monitoring'?'ACTIVE':'READY', desc: 'Deduplicated polling watching suspect wallet for fresh transfers.' },
     { name: 'Grounded Groq Copilot', tab: 'copilot', status: 'READY', desc: 'Evidence-grounded assistant with 6 one-click starter prompts.' },
-    { name: 'Professional PDF Brief Export', tab: 'report', status: 'READY', desc: 'Generates court-grade PDF brief with formal chain of custody.' }
+    { name: 'Professional PDF Brief Export', tab: 'report', status: 'READY', desc: 'Generates an evidence-oriented PDF report with integrity summary and limitations.' }
   ];
 
   return (
@@ -152,7 +169,7 @@ export function FeatureTestLab({ onNavigate, currentCase, network, workspace, mo
   );
 }
 
-export default function InvestigationPage({ investigation, workspace, network, networkLoading, networkError, monitor, alerts, onInvestigate, loading, error, recent, onOpenCase, onMonitor, onCompare, onToast, onUpdateCase, onAddEvidence, onVerifyEvidence, onAddNote, onRemoveNote, onAddFinding, initialTab='overview' }) {
+export default function InvestigationPage({ investigation, workspace, network, networkLoading, networkError, monitor, alerts, investigators = [], onInvestigate, loading, error, recent, onOpenCase, onMonitor, onCompare, onToast, onUpdateCase, onAssignInvestigator, onAddEvidence, onVerifyEvidence, onAddNote, onRemoveNote, onAddFinding, initialTab='overview' }) {
   const [tab, setTab] = useState(initialTab);
   useEffect(() => setTab(initialTab), [initialTab]);
   const [capture, setCapture] = useState(null);
@@ -188,15 +205,31 @@ export default function InvestigationPage({ investigation, workspace, network, n
     if (stepNum) setWalkthroughStep(stepNum);
   };
 
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [presentationOpen, setPresentationOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdOpen(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const journeySteps = [
     { id: 'overview', num: '01', label: 'WALLET ANALYZED', stat: '✓' },
-    { id: 'fund-flow', num: '02', label: 'FUND FLOW TRACED', stat: `${investigation.paths?.length || 0} PATHS` },
-    { id: 'risk', num: '03', label: 'RISK SIGNALS', stat: `${investigation.suspicious_activity?.indicators?.length || 0} FOUND` },
-    { id: 'entities', num: '04', label: 'ENTITY INTEL', stat: `${investigation.exchange_attributions?.length || 0} MATCH` },
-    { id: 'fraud-network', num: '05', label: 'RELATED CASES', stat: `${network?.related_cases?.length || 0} FOUND` },
-    { id: 'evidence', num: '06', label: 'EVIDENCE', stat: `${workspace?.evidence?.length || 0} SAVED` },
-    { id: 'monitoring', num: '07', label: 'MONITORING', stat: monitor?.status === 'monitoring' ? 'ACTIVE' : 'INACTIVE' },
-    { id: 'report', num: '08', label: 'REPORT', stat: 'READY' }
+    { id: 'money-flow', num: '02', label: 'MONEY FLOW', stat: 'RECONSTRUCTED' },
+    { id: 'fund-flow', num: '03', label: 'FUND FLOW TRACED', stat: `${investigation.paths?.length || 0} PATHS` },
+    { id: 'risk', num: '04', label: 'RISK SIGNALS', stat: `${investigation.suspicious_activity?.indicators?.length || 0} FOUND` },
+    { id: 'fingerprint', num: '05', label: 'FINGERPRINT', stat: 'PROFILED' },
+    { id: 'infrastructure-reuse', num: '06', label: 'REUSED INFRA', stat: 'INDEXED' },
+    { id: 'fraud-network', num: '07', label: 'RELATED CASES', stat: `${network?.related_cases?.length || 0} FOUND` },
+    { id: 'hypotheses', num: '08', label: 'HYPOTHESES', stat: 'BOARD' },
+    { id: 'evidence', num: '09', label: 'EVIDENCE', stat: `${workspace?.evidence?.length || 0} SAVED` },
+    { id: 'report', num: '10', label: 'REPORT', stat: 'READY' }
   ];
 
   const navCategories = [
@@ -207,26 +240,37 @@ export default function InvestigationPage({ investigation, workspace, network, n
       ]
     },
     {
-      title: 'FLOW ANALYSIS',
+      title: 'FLOW RECONSTRUCTION',
       items: [
+        { id: 'money-flow', label: 'Money Flow Reconstruction', badge: 'Forensic' },
+        { id: 'intelligence-studio', label: 'Intelligence Studio', count: `${investigation.transactions?.length || 0} evidence` },
         { id: 'fund-flow', label: 'Fund Flow Graph', count: `${graph.nodes?.length || 0} nodes` },
         { id: 'transactions', label: 'Transactions', count: `${investigation.transactions?.length || 0} transfers` },
         { id: 'time-machine', label: 'Time Machine', count: `${investigation.transactions?.length || 0} events` }
       ]
     },
     {
-      title: 'INTELLIGENCE',
+      title: 'INTELLIGENCE & SIGNALS',
       items: [
+        { id: 'fingerprint', label: 'Wallet Fingerprint', badge: 'Profile' },
+        { id: 'hotspots', label: 'Investigation Hotspots', badge: 'Priority' },
+        { id: 'motifs', label: 'Pattern Motifs', badge: 'Motifs' },
+        { id: 'infrastructure-reuse', label: 'Infrastructure Reuse', count: 'Cross-Case' },
         { id: 'risk', label: 'Risk Intelligence', count: `${investigation.risk?.score || 0}/100` },
+        { id: 'patterns', label: 'Pattern Intelligence', count: `${investigation.suspicious_activity?.indicators?.length || 0} rules` },
+        { id: 'potential-movement', label: 'Potential Movement', badge: 'Hypothetical' },
         { id: 'entities', label: 'Entities & VASPs', count: `${investigation.exchange_attributions?.length || 0} match` },
         { id: 'topology', label: 'Network Roles', count: `${investigation.network_analytics?.candidates?.length || 0} roles` },
         { id: 'fraud-network', label: 'Related Cases', count: `${network?.related_cases?.length || 0} related` },
-        { id: 'bridges', label: 'Bridge Activity', count: `${investigation.bridge_intelligence?.interactions?.length || 0} bridges` }
+        { id: 'bridges', label: 'Bridge Activity', count: `${investigation.bridge_intelligence?.interactions?.length || 0} bridges` },
+        { id: 'visual-analytics', label: 'Visual Analytics', badge: 'Charts' }
       ]
     },
     {
-      title: 'CASE WORK',
+      title: 'CASE WORK & EVIDENCE',
       items: [
+        { id: 'hypotheses', label: 'Hypothesis Board', badge: 'Reasoning' },
+        { id: 'lineage', label: 'Evidence Lineage', badge: 'Lineage' },
         { id: 'evidence', label: 'Evidence & Integrity', count: `${workspace?.evidence?.length || 0} saved` },
         { id: 'notes-findings', label: 'Notes & Findings', count: `${(workspace?.notes?.length || 0) + (workspace?.findings?.length || 0)} items` },
         { id: 'activity', label: 'Audit Trail', count: `${workspace?.audit?.length || 8} logs` }
@@ -235,7 +279,9 @@ export default function InvestigationPage({ investigation, workspace, network, n
     {
       title: 'ASSIST & REPORT',
       items: [
-        { id: 'copilot', label: 'Copilot Assistant', badge: 'AI' },
+        { id: 'presentation', label: 'Jury Presentation', badge: 'Live Mode' },
+        { id: 'copilot', label: 'Copilot Assistant', badge: 'Grounded' },
+        { id: 'api', label: 'TraceX API', badge: 'Live' },
         { id: 'report', label: 'Report & Exports', badge: 'PDF' }
       ]
     },
@@ -253,47 +299,60 @@ export default function InvestigationPage({ investigation, workspace, network, n
         <GuidedWalkthrough
           step={walkthroughStep}
           onStep={handleWalkthroughStep}
-          onClose={() => setWalkthrough(false)}
+          onClose={() => setWalkthrough(false)} investigation={investigation} network={network}
         />
       )}
 
       <section className="case-hero">
         <div className="case-hero-top-row">
-          <div className="case-breadcrumb">
-            <button onClick={() => window.location.assign('/investigate')}>Investigations</button>
-            <Icon name="chevron" size={13}/>
-            <span>{caseLabel(investigation.investigation_id)}</span>
+          <div>
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6B6E6A', fontWeight: 600 }}>
+              CASE {caseLabel(investigation.investigation_id)} · ETHEREUM MAINNET
+            </span>
           </div>
           <div className="case-hero-quick-actions">
-            <Button variant="secondary" onClick={startWalkthrough} icon="investigate">🚀 Guided Investigation</Button>
-            <Button variant={monitor?.status === 'monitoring' ? 'secondary' : 'primary'} onClick={onMonitor} icon="monitoring">
-              {monitor?.status === 'monitoring' ? 'Stop monitoring' : 'Start monitoring'}
-            </Button>
+            <button className="btn btn-secondary" onClick={() => setPresentationOpen(true)}>
+              <Icon name="overview" size={14}/>
+              <span>Presentation Mode</span>
+            </button>
+            <button className="btn btn-secondary" onClick={startWalkthrough}>
+              <Icon name="play" size={14}/>
+              <span>Guided Tour</span>
+            </button>
+            <button className={`btn ${monitor?.status === 'monitoring' ? 'btn-secondary' : 'btn-primary'}`} onClick={onMonitor}>
+              <Icon name="monitoring" size={14}/>
+              <span>{monitor?.status === 'monitoring' ? 'Stop monitoring' : 'Start monitoring'}</span>
+            </button>
           </div>
         </div>
 
         <div className="case-title">
           <div>
-            <div className="case-kicker">
-              <Badge tone="purple" dot>STORED INVESTIGATION EVIDENCE</Badge>
-              <Badge tone={riskTone(investigation.risk?.level)} dot>{investigation.risk?.level} priority</Badge>
-              <Badge tone={monitor?.status === 'monitoring' ? 'success' : 'neutral'} dot>{monitor?.status === 'monitoring' ? 'Monitoring active' : 'Not monitored'}</Badge>
+            <div className="case-kicker" style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+              <span className={`risk-tag ${riskTone(investigation.risk?.level)}`}>
+                {investigation.risk?.level || 'High'} Priority · {investigation.risk?.score ?? 90}/100
+              </span>
+              <span className={`risk-tag ${monitor?.status === 'monitoring' ? 'low' : 'medium'}`}>
+                {monitor?.status === 'monitoring' ? 'Monitoring Active' : 'Not Monitored'}
+              </span>
             </div>
-            <h1>{caseLabel(investigation.investigation_id)}</h1>
+            <h1 style={{ margin: '4px 0 8px', fontSize: '24px', fontWeight: 600, color: '#EDEDEB' }}>
+              {caseLabel(investigation.investigation_id)}
+            </h1>
             <CopyValue value={investigation.start_wallet} compact={false}/>
           </div>
           <div className="risk-score-compact">
-            <span>Risk score</span>
+            <span>Risk Score</span>
             <strong>{investigation.risk?.score ?? 0}<small>/100</small></strong>
-            <p>{investigation.risk?.level || 'UNKNOWN'} investigative priority</p>
+            <p>{investigation.risk?.level || 'High'} investigative priority</p>
           </div>
         </div>
 
         <div className="case-facts">
-          <div><span>Chain</span><strong>Ethereum Mainnet</strong></div>
-          <div><span>Captured</span><strong>{formatDate(investigation.timestamp)}</strong></div>
-          <div><span>Blockchain Provider</span><strong>{investigation.provider?.selected?.toUpperCase() || 'ALCHEMY / ETHERSCAN'}{investigation.provider?.fallback_used ? ' · FALLBACK' : ''}</strong></div>
-          <div><span>Evidence Status</span><strong>Stored in MongoDB</strong></div>
+          <div><span>Network</span><strong>Ethereum Mainnet</strong></div>
+          <div><span>Investigated</span><strong>{formatDate(investigation.timestamp)}</strong></div>
+          <div><span>Provider</span><strong>{investigation.provider?.selected?.toUpperCase() || 'ALCHEMY'}{investigation.provider?.fallback_used ? ' (FALLBACK)' : ''}</strong></div>
+          <div><span>Evidence Storage</span><strong>Local MongoDB</strong></div>
         </div>
 
         {/* Phase 3: Investigation Journey Progress Bar */}
@@ -345,7 +404,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
       <div className="tab-content">
         {tab === 'overview' && (
           <div className="stack">
-            <CaseInspector workspace={workspace} onUpdate={onUpdateCase} onToast={onToast}/>
+            <CaseInspector workspace={workspace} investigators={investigators} onUpdate={onUpdateCase} onAssign={onAssignInvestigator} onToast={onToast}/>
             <OverviewIntelligence investigation={investigation} network={network} monitor={monitor} onTab={setTab} onMonitor={onMonitor} onCapture={setCapture}/>
           </div>
         )}
@@ -363,6 +422,15 @@ export default function InvestigationPage({ investigation, workspace, network, n
               }}
             />
           </Panel>
+        )}
+
+        {tab === 'intelligence-studio' && (
+          <IntelligenceStudio
+            investigation={investigation}
+            network={network}
+            onTab={setTab}
+            onCapture={setCapture}
+          />
         )}
 
         {tab === 'transactions' && (
@@ -388,6 +456,10 @@ export default function InvestigationPage({ investigation, workspace, network, n
         {tab === 'risk' && (
           <RiskPanel investigation={investigation} onTab={setTab} onCapture={setCapture}/>
         )}
+
+        {tab === 'visual-analytics' && <VisualAnalytics investigation={investigation} onTab={setTab}/>}
+        {tab === 'patterns' && <PatternIntelligence investigation={investigation} onTab={setTab} onCapture={setCapture}/>}
+        {tab === 'potential-movement' && <PotentialMovement investigation={investigation}/>}
 
         {tab === 'entities' && (
           <EntityIntelligence investigation={investigation} onCapture={setCapture}/>
@@ -444,8 +516,38 @@ export default function InvestigationPage({ investigation, workspace, network, n
           <CopilotPanel investigation={investigation}/>
         )}
 
+        {tab === 'api' && <ApiExplorer investigation={investigation}/>}
+
         {tab === 'report' && (
           <EvidenceCenter investigation={investigation} network={network} onToast={onToast}/>
+        )}
+
+        {tab === 'money-flow' && (
+          <MoneyFlowReconstruction investigation={investigation} onCapture={setCapture} onToast={onToast}/>
+        )}
+
+        {tab === 'fingerprint' && (
+          <WalletFingerprintWorkspace investigation={investigation} onToast={onToast}/>
+        )}
+
+        {tab === 'hotspots' && (
+          <InvestigationHotspotMap investigation={investigation} onTab={setTab} onCapture={setCapture} onToast={onToast}/>
+        )}
+
+        {tab === 'motifs' && (
+          <TransactionPatternMotifs investigation={investigation} onTab={setTab} onCapture={setCapture} onToast={onToast}/>
+        )}
+
+        {tab === 'infrastructure-reuse' && (
+          <InfrastructureReuseRadar investigation={investigation} onOpenCase={onOpenCase} onToast={onToast}/>
+        )}
+
+        {tab === 'hypotheses' && (
+          <HypothesisBoard investigation={investigation} onToast={onToast}/>
+        )}
+
+        {tab === 'lineage' && (
+          <EvidenceLineageWorkspace investigation={investigation} workspace={workspace} onTab={setTab} onToast={onToast}/>
         )}
 
         {tab === 'dev-check' && (
@@ -458,6 +560,29 @@ export default function InvestigationPage({ investigation, workspace, network, n
           />
         )}
       </div>
+
+      {(tab === 'presentation' || presentationOpen) && (
+        <PresentationJuryMode
+          investigation={investigation}
+          network={network}
+          workspace={workspace}
+          onClose={() => {
+            setPresentationOpen(false);
+            if (tab === 'presentation') setTab('overview');
+          }}
+        />
+      )}
+
+      {cmdOpen && (
+        <CommandPalette
+          investigation={investigation}
+          onNavigate={(target) => {
+            setTab(target);
+            setCmdOpen(false);
+          }}
+          onClose={() => setCmdOpen(false)}
+        />
+      )}
 
       <EvidenceCapture draft={capture} onClose={() => setCapture(null)} onSave={captureEvidence}/>
     </div>

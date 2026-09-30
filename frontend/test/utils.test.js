@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assetSummary, caseLabel, counterpartySummary, formatAmount, isEthereumAddress, shortAddress } from '../src/utils.js';
+import { assetFlowSummary, assetSummary, caseLabel, counterpartySummary, formatAmount, isEthereumAddress, shortAddress, timelineBuckets, visualizationEvents } from '../src/utils.js';
 
 // TEST DATA ONLY. These fixtures never enter the application or MongoDB.
 test('Ethereum address validation and compact identifiers are deterministic', () => {
@@ -25,4 +25,16 @@ test('counterparty intelligence aggregates observed evidence only', () => {
   assert.equal(result[0].count, 2);
   assert.deepEqual(result[0].assets, ['ETH', 'USDC']);
   assert.equal(result[0].exchange, 'Example VASP');
+});
+
+test('visualization adapters retain only observed, ordered, asset-separated evidence', () => {
+  const txs = [
+    { hash: 'late', from: '0xa', to: '0xb', asset: 'ETH', amount: 2, timestamp: '2026-01-02T00:00:00Z', direction: 'OUT' },
+    { hash: 'early', from: '0xa', to: '0xb', asset: 'ETH', amount: 1, timestamp: '2026-01-01T00:00:00Z', direction: 'OUT' },
+    { hash: 'token', from: '0xa', to: '0xb', asset: 'USDT', amount: 100, timestamp: '2026-01-03T00:00:00Z', direction: 'OUT' }
+  ];
+  const events = visualizationEvents(txs, { asset: 'ETH', riskOnly: true, indicators: [{ supporting_transactions: ['early'] }] });
+  assert.deepEqual(events.map(tx => tx.hash), ['early']);
+  assert.deepEqual(assetFlowSummary(txs, 'ETH'), [{ from: '0xa', to: '0xb', asset: 'ETH', count: 2, amount: 3, transactionHashes: ['late', 'early'] }]);
+  assert.equal(timelineBuckets(txs, 2).reduce((sum, bucket) => sum + bucket.count, 0), 3);
 });

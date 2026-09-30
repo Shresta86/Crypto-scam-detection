@@ -22,7 +22,7 @@ export function ExplainView({ title, lookingAt, detected, howToUse, tryThis }) {
               <p>{lookingAt}</p>
             </div>
             <div className="explain-col">
-              <span className="eyebrow">Deterministic analysis</span>
+              <span className="eyebrow">Rule analysis</span>
               <h4>What TraceX detected</h4>
               <p>{detected}</p>
             </div>

@@ -4,6 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import { readFileSync } from 'node:fs';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createBlockchainService, ProviderError } from './services/blockchain.js';
@@ -12,7 +13,10 @@ import { CopilotError, createGroqCopilotService } from './services/copilot.js';
 import { compareCaseIndexes, FraudNetworkService } from './services/fraud-network.js';
 import {
   analyzeNetworkTopology, buildInvestigationStory, createBridgeRegistry,
-  crossChainReadiness, detectBridgeInteractions
+  crossChainReadiness, detectBridgeInteractions,
+  reconstructMoneyFlow, calculateWalletFingerprint, compareWalletFingerprints,
+  detectInfrastructureReuse, computeInvestigationHotspots, detectTransactionMotifs,
+  detectDormancyReactivation, computeInvestigationDiff
 } from './services/advanced-intelligence.js';
 import {
   boundedSnapshot, CASE_PRIORITIES, CASE_STATUSES, caseCompleteness, EVIDENCE_TYPES,
@@ -30,6 +34,9 @@ const POLL_MS = Number(process.env.MONITORING_POLL_SECONDS || 15) * 1000;
 const chain = 'ethereum';
 const addressPattern = /^0x[a-fA-F0-9]{40}$/;
 const monitorCache = new Map();
+const developerRateWindows = new Map();
+const DEVELOPER_RATE_LIMIT = Math.max(1, Number(process.env.TRACEX_API_RATE_LIMIT_PER_MINUTE || 120));
+const ADMIN_TOKEN = String(process.env.TRACEX_ADMIN_TOKEN || '');
 const now = () => new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
 const lower = value => String(value || '').toLowerCase();
 
@@ -39,6 +46,12 @@ class AppError extends Error {
 
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+app.use((req, res, next) => {
+  const requestId = randomBytes(8).toString('hex');
+  req.requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+  next();
+});
 // Canonical API aliases for the React SPA. Legacy routes remain available for
 // the archived-compatible dashboard without colliding with client-side pages.
 app.use((req, _res, next) => {
@@ -55,7 +68,7 @@ const investigationSchema = new mongoose.Schema({
   risk_score: Number, risk_level: String, transaction_count: Number, wallet_count: Number, max_hops: Number,
   indicators: [String], result_json: mongoose.Schema.Types.Mixed,
   case_reference: String, case_title: String, case_status: { type: String, enum: CASE_STATUSES, default: 'NEW' },
-  priority: { type: String, enum: CASE_PRIORITIES, default: 'MEDIUM' }, assigned_investigator: String,
+  priority: { type: String, enum: CASE_PRIORITIES, default: 'MEDIUM' }, assigned_investigator: String, assigned_investigator_id: String, assigned_at: String,
   tags: [String], case_summary: String, created_at: String, updated_at: String, closed_at: String,
   evidence_count: { type: Number, default: 0 }, note_count: { type: Number, default: 0 }, finding_count: { type: Number, default: 0 }
 }, { versionKey: false });
@@ -66,13 +79,13 @@ investigationSchema.index({ case_reference: 1 }, { unique: true, sparse: true })
 const monitorSchema = new mongoose.Schema({
   investigation_id: String, wallet_address: String, blockchain: String, status: { type: String, default: 'monitoring' },
   last_checked_at: String, last_transaction_timestamp: String, last_transaction_hash: String, created_at: String, updated_at: String,
-  max_hops: Number, max_wallets: Number
+  max_hops: Number, max_wallets: Number, investigator_id: String
 }, { versionKey: false });
 monitorSchema.index({ wallet_address: 1, blockchain: 1 });
 const alertSchema = new mongoose.Schema({
   investigation_id: String, wallet_address: String, blockchain: String, transaction_hash: String, alert_type: String,
   severity: String, title: String, description: String, risk_contribution: Number, timestamp: String, created_at: String,
-  status: { type: String, default: 'NEW' }, evidence: mongoose.Schema.Types.Mixed
+  status: { type: String, default: 'NEW' }, evidence: mongoose.Schema.Types.Mixed, recipient_investigator_ids: [String], recipient_snapshot: [mongoose.Schema.Types.Mixed]
 }, { versionKey: false });
 alertSchema.index({ wallet_address: 1, blockchain: 1, transaction_hash: 1, alert_type: 1 }, { unique: true });
 const threatIntelligenceCacheSchema = new mongoose.Schema({
@@ -117,7 +130,29 @@ const findingSchema = new mongoose.Schema({
 }, { versionKey: false });
 findingSchema.index({ case_id: 1, created_at: -1 });
 const sequenceSchema = new mongoose.Schema({ key: { type: String, unique: true }, value: { type: Number, default: 0 } }, { versionKey: false });
+const investigatorSchema = new mongoose.Schema({ investigator_id: { type: String, unique: true }, display_name: { type: String, required: true }, email: String, role: String, team: String, status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' }, created_at: String, updated_at: String }, { versionKey: false });
+const walletAssignmentSchema = new mongoose.Schema({ wallet_address: String, blockchain: { type: String, default: 'ethereum' }, case_id: String, investigator_id: String, assignment_role: { type: String, enum: ['PRIMARY', 'SECONDARY', 'REVIEWER'], default: 'PRIMARY' }, monitoring_enabled: { type: Boolean, default: false }, notification_enabled: { type: Boolean, default: true }, assigned_at: String, updated_at: String }, { versionKey: false });
+const apiKeySchema = new mongoose.Schema({ key_id: { type: String, unique: true }, name: { type: String, required: true }, key_prefix: String, secret_hash: { type: String, required: true, unique: true }, scopes: [String], status: { type: String, enum: ['ACTIVE', 'EXPIRED', 'REVOKED'], default: 'ACTIVE' }, created_at: String, expires_at: String, last_used_at: String, revoked_at: String, request_count: { type: Number, default: 0 } }, { versionKey: false });
+walletAssignmentSchema.index({ wallet_address: 1, blockchain: 1, investigator_id: 1 }, { unique: true });
+apiKeySchema.index({ status: 1, created_at: -1 });
 for (const field of ['wallet_addresses', 'intermediary_wallets', 'destination_wallets', 'counterparty_wallets', 'exchange_names', 'path_signatures']) caseNetworkIndexSchema.index({ [field]: 1 });
+
+const hypothesisSchema = new mongoose.Schema({
+  hypothesis_id: { type: String, required: true },
+  case_id: { type: String, required: true, index: true },
+  title: { type: String, required: true },
+  category: { type: String, default: 'INTERMEDIARY' },
+  status: { type: String, enum: ['OPEN', 'SUPPORTED', 'CONTRADICTED', 'INCONCLUSIVE', 'CLOSED'], default: 'OPEN' },
+  supporting_evidence_ids: [String],
+  contradicting_evidence_ids: [String],
+  supporting_transactions: [String],
+  unresolved_questions: [String],
+  notes: String,
+  author: String,
+  created_at: String,
+  updated_at: String
+}, { versionKey: false });
+hypothesisSchema.index({ case_id: 1, created_at: -1 });
 
 export const Investigation = mongoose.model('Investigation', investigationSchema);
 export const Monitor = mongoose.model('Monitor', monitorSchema);
@@ -128,7 +163,11 @@ export const AuditEvent = mongoose.model('AuditEvent', auditEventSchema);
 export const EvidenceItem = mongoose.model('EvidenceItem', evidenceSchema);
 export const InvestigatorNote = mongoose.model('InvestigatorNote', noteSchema);
 export const InvestigatorFinding = mongoose.model('InvestigatorFinding', findingSchema);
+export const InvestigatorHypothesis = mongoose.model('InvestigatorHypothesis', hypothesisSchema);
 export const CaseSequence = mongoose.model('CaseSequence', sequenceSchema);
+export const Investigator = mongoose.model('Investigator', investigatorSchema);
+export const WalletAssignment = mongoose.model('WalletAssignment', walletAssignmentSchema);
+export const DeveloperApiKey = mongoose.model('DeveloperApiKey', apiKeySchema);
 
 const exchangeData = JSON.parse(readFileSync(join(root, 'data', 'exchange_addresses.json'), 'utf8'));
 const bridgeData = JSON.parse(readFileSync(join(root, 'data', 'bridge_registry.json'), 'utf8'));
@@ -136,10 +175,28 @@ export const bridgeRegistry = createBridgeRegistry(bridgeData);
 const exchanges = new Map(exchangeData.map(item => [lower(item.address), item.exchange]));
 const identifyExchange = address => exchanges.get(lower(address)) || null;
 const validChain = value => (String(value || chain).toLowerCase() === 'ethereum' ? 'ethereum' : null);
+const keyHash = value => createHash('sha256').update(String(value)).digest('hex');
+const publicApiKey = item => ({ key_id: item.key_id, name: item.name, key_prefix: item.key_prefix, masked_key: `${item.key_prefix}••••••••`, scopes: item.scopes || [], status: item.status, created_at: item.created_at, expires_at: item.expires_at || null, last_used_at: item.last_used_at || null, request_count: item.request_count || 0, revoked_at: item.revoked_at || null });
 const assertWallet = (wallet, blockchain) => {
   if (!validChain(blockchain)) throw new AppError(400, 'unsupported_blockchain', `Unsupported blockchain: ${blockchain}`);
   if (!addressPattern.test(String(wallet || '').trim())) throw new AppError(400, 'invalid_wallet', 'Invalid Ethereum wallet address');
 };
+export const safeTokenMatch = (received, expected) => {
+  const left = Buffer.from(String(received || '')), right = Buffer.from(String(expected || ''));
+  return left.length === right.length && left.length > 0 && timingSafeEqual(left, right);
+};
+function requireAdmin(req, _res, next) {
+  if (!ADMIN_TOKEN) {
+    if (process.env.NODE_ENV === 'production') return next(new AppError(503, 'admin_token_not_configured', 'Developer-key administration is disabled until TRACEX_ADMIN_TOKEN is configured.'));
+    return next();
+  }
+  return safeTokenMatch(req.get('X-TraceX-Admin'), ADMIN_TOKEN) ? next() : next(new AppError(401, 'admin_authorization_required', 'A valid TraceX administrator token is required.'));
+}
+export function enforceDeveloperRateLimit(keyId) {
+  const start = Date.now() - 60_000, current = (developerRateWindows.get(keyId) || []).filter(time => time > start);
+  if (current.length >= DEVELOPER_RATE_LIMIT) throw new AppError(429, 'api_rate_limited', `This API key is limited to ${DEVELOPER_RATE_LIMIT} requests per minute.`);
+  current.push(Date.now()); developerRateWindows.set(keyId, current);
+}
 
 const chainabuse = createChainabuseService({ CacheModel: ThreatIntelligenceCache });
 const copilot = createGroqCopilotService();
@@ -160,15 +217,41 @@ async function nextIdentifier(caseId, prefix) {
   const sequence = await CaseSequence.findOneAndUpdate({ key: `${prefix}:${caseId}` }, { $inc: { value: 1 } }, { upsert: true, new: true, setDefaultsOnInsert: true });
   return `${prefix}-${String(sequence.value).padStart(4, '0')}`;
 }
-function assertCaseId(caseId) { if (!mongoose.isValidObjectId(caseId)) throw new AppError(400, 'invalid_case', 'Invalid case ID'); }
-async function requireCase(caseId) { assertCaseId(caseId); const doc = await Investigation.findById(caseId); if (!doc) throw new AppError(404, 'case_not_found', 'Investigation not found'); return doc; }
+function assertCaseId(caseId) { if (!caseId || typeof caseId !== 'string') throw new AppError(400, 'invalid_case', 'Invalid case identifier'); }
+async function requireCase(identifier) {
+  const query = String(identifier || '').trim();
+  if (!query) throw new AppError(400, 'case_required', 'Case ID or reference is required');
+  let doc = null;
+  if (mongoose.isValidObjectId(query)) {
+    doc = await Investigation.findById(query);
+  }
+  if (!doc) {
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    doc = await Investigation.findOne({ case_reference: new RegExp(`^${escaped}$`, 'i') });
+  }
+  if (!doc && query.length >= 6) {
+    const cleanHex = query.replace(/^TX-\d{4}-/i, '').replace(/^CASE-/i, '').toLowerCase();
+    if (/^[0-9a-f]{6,}$/i.test(cleanHex)) {
+      doc = await Investigation.findOne({ _id: new RegExp(`${cleanHex}$`, 'i') });
+    }
+  }
+  if (!doc && query.startsWith('0x')) {
+    doc = await Investigation.findOne({ wallet_address: new RegExp(`^${query}$`, 'i') }).sort({ updated_at: -1 });
+  }
+  if (!doc) {
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    doc = await Investigation.findOne({ case_reference: new RegExp(escaped, 'i') });
+  }
+  if (!doc) throw new AppError(404, 'case_not_found', `Investigation not found for identifier "${query}"`);
+  return doc;
+}
 const caseReference = (id, timestamp = now()) => `TX-${new Date(String(timestamp).replace(' UTC', 'Z')).getUTCFullYear() || new Date().getUTCFullYear()}-${String(id).slice(-6).toUpperCase()}`;
 function caseView(doc) {
   const item = doc?.toObject ? doc.toObject() : { ...(doc || {}) }, id = String(item._id || item.id || '');
   return {
     id, case_id: id, case_reference: item.case_reference || caseReference(id, item.timestamp),
     case_title: item.case_title || 'Blockchain Fund Movement Investigation', case_status: item.case_status || 'NEW',
-    priority: item.priority || 'MEDIUM', assigned_investigator: item.assigned_investigator || '', tags: item.tags || [],
+    priority: item.priority || 'MEDIUM', assigned_investigator: item.assigned_investigator || '', assigned_investigator_id: item.assigned_investigator_id || null, assigned_at: item.assigned_at || null, tags: item.tags || [],
     case_summary: item.case_summary || '', created_at: item.created_at || item.timestamp, updated_at: item.updated_at || item.timestamp,
     closed_at: item.closed_at || null, evidence_count: item.evidence_count || 0, note_count: item.note_count || 0, finding_count: item.finding_count || 0
   };
@@ -179,6 +262,30 @@ async function backfillCaseMetadata() {
     $set: { case_reference: caseReference(String(item._id), item.timestamp), case_title: 'Blockchain Fund Movement Investigation', case_status: 'NEW', priority: 'MEDIUM', tags: [], created_at: item.timestamp || now(), updated_at: item.timestamp || now(), evidence_count: 0, note_count: 0, finding_count: 0 }
   })));
   return missing.length;
+}
+function reportAddress(value) { const text = String(value || 'Unknown'); return text.length > 18 ? `${text.slice(0, 8)}…${text.slice(-6)}` : text; }
+function reportNodeTone(node) {
+  if (node?.type === 'suspect') return '#b42318';
+  if (node?.type === 'exchange') return '#176b87';
+  if (node?.type === 'bridge') return '#7a4f01';
+  if (node?.analytics?.role === 'collector_candidate') return '#4f46a5';
+  return '#1d4f78';
+}
+function drawReportGraph(pdf, result) {
+  const pageWidth = pdf.page.width, left = 58, top = 138, width = pageWidth - 116, height = 290;
+  const nodes = (result.graph?.nodes || []).slice(0, 18), edgeSet = new Set(nodes.map(node => lower(node.id)));
+  const edges = (result.graph?.edges || []).filter(edge => edgeSet.has(lower(edge.source)) && edgeSet.has(lower(edge.target))).slice(0, 26);
+  const byNode = new Map(nodes.map(node => [lower(node.id), node]));
+  const positions = new Map();
+  const columns = { suspect: 0, wallet: 1, hub: 2, bridge: 2, exchange: 3 };
+  const groups = new Map();
+  for (const node of nodes) { const column = columns[node.type] ?? 1; const group = groups.get(column) || []; group.push(node); groups.set(column, group); }
+  for (const [column, group] of groups) group.forEach((node, index) => positions.set(lower(node.id), { x: left + 32 + column * ((width - 64) / 3), y: top + 42 + (index + 1) * ((height - 80) / (group.length + 1)) }));
+  pdf.save().roundedRect(left, top, width, height, 10).fill('#f4f7fb').restore();
+  pdf.font('Helvetica').fontSize(7).fillColor('#486076').text('REPORTED WALLET', left + 8, top + 10).text('TRACED COUNTERPARTIES', left + width * .28, top + 10).text('TOPOLOGY / BRIDGE', left + width * .55, top + 10).text('ATTRIBUTED ENDPOINT', left + width * .80, top + 10);
+  for (const edge of edges) { const from = positions.get(lower(edge.source)), to = positions.get(lower(edge.target)); if (!from || !to) continue; const angle = Math.atan2(to.y - from.y, to.x - from.x), endX = to.x - Math.cos(angle) * 14, endY = to.y - Math.sin(angle) * 14; pdf.save().strokeColor('#8ba3b8').lineWidth(1).moveTo(from.x + Math.cos(angle) * 14, from.y + Math.sin(angle) * 14).lineTo(endX, endY).stroke().fillColor('#6d8192').moveTo(endX, endY).lineTo(endX - 5 * Math.cos(angle - .45), endY - 5 * Math.sin(angle - .45)).lineTo(endX - 5 * Math.cos(angle + .45), endY - 5 * Math.sin(angle + .45)).fill().restore(); }
+  for (const node of nodes) { const pos = positions.get(lower(node.id)); if (!pos) continue; pdf.save().circle(pos.x, pos.y, 13).fill(reportNodeTone(node)).restore(); pdf.font('Helvetica-Bold').fontSize(6).fillColor('#ffffff').text(node.type === 'exchange' ? 'VASP' : node.type === 'suspect' ? 'SUB' : node.type === 'bridge' ? 'BR' : node.analytics?.role === 'collector_candidate' ? 'COL' : 'W', pos.x - 10, pos.y - 3, { width: 20, align: 'center' }); pdf.font('Helvetica').fontSize(6.5).fillColor('#172b3d').text(node.label && node.label !== 'Wallet' ? node.label : reportAddress(node.address || node.id), pos.x - 32, pos.y + 17, { width: 64, align: 'center', lineBreak: false }); }
+  pdf.font('Helvetica').fontSize(7).fillColor('#405166').text('Figure 1 — Observed fund-flow network. Solid arrows show provider-observed transfers within the bounded case trace; node roles are TraceX analysis labels.', left, top + height + 8, { width });
 }
 
 export async function traceWallet(startWallet, maxHops = 2, maxWallets = 8, service = blockchainService()) {
@@ -302,6 +409,11 @@ async function save(result) {
 }
 function publicDoc(doc) { const item = doc.toObject ? doc.toObject() : doc; item.id = String(item._id); Object.assign(item, caseView(item)); delete item._id; delete item.result_json; return item; }
 
+app.get('/health', (_req, res) => res.status(mongoose.connection.readyState === 1 ? 200 : 503).json({
+  status: mongoose.connection.readyState === 1 ? 'ready' : 'degraded',
+  database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  request_id: _req.requestId
+}));
 app.get('/api/config', (_req, res) => res.json({
   apiConfigured: Boolean(process.env.ALCHEMY_RPC_URL || process.env.ETHERSCAN_API_KEY), blockchain: chain,
   providers: { alchemy: process.env.ALCHEMY_RPC_URL ? 'CONFIGURED' : 'UNAVAILABLE', etherscan: process.env.ETHERSCAN_API_KEY ? 'CONFIGURED' : 'UNAVAILABLE' },
@@ -310,6 +422,51 @@ app.get('/api/config', (_req, res) => res.json({
   bridgeIntelligence: { configured: true, verifiedContracts: bridgeRegistry.size, registrySource: 'official_protocol_documentation' },
   crossChain: crossChainReadiness({ supported_chains: ['ethereum'] })
 }));
+app.get('/api/docs/openapi.json', (_req, res) => res.json({
+  openapi: '3.0.3', info: { title: 'TraceX Investigation Intelligence API', version: '1.0.0', description: 'Stable local endpoints for evidence-oriented Ethereum investigations. No authentication or SDK is implemented in this demo deployment.' },
+  paths: {
+    '/api/trace': { post: { summary: 'Create a bounded live Ethereum wallet investigation', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['wallet_address'], properties: { wallet_address: { type: 'string' }, blockchain: { type: 'string', enum: ['ethereum'] } } } } } }, responses: { 200: { description: 'Investigation evidence' }, 400: { description: 'Invalid wallet' }, 503: { description: 'Provider unavailable' } } } },
+    '/api/history/{caseId}': { get: { summary: 'Read stored provider-backed investigation', parameters: [{ name: 'caseId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Stored case' }, 404: { description: 'Case not found' } } } },
+    '/api/fraud-network/{caseId}': { get: { summary: 'Read deterministic related-case network', parameters: [{ name: 'caseId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Network relationship evidence' } } } },
+    '/api/cases/{caseId}/workspace': { get: { summary: 'Read case lifecycle, evidence, notes, findings and audit data', parameters: [{ name: 'caseId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Case workspace' } } } },
+    '/api/investigators': { get: { summary: 'List local investigators and workload metrics', responses: { 200: { description: 'Investigator list' } } }, post: { summary: 'Create a local investigator record', responses: { 201: { description: 'Investigator created' } } } },
+    '/api/developer/keys': { get: { summary: 'List masked developer API keys', responses: { 200: { description: 'Key inventory' } } }, post: { summary: 'Create an API key; secret is returned once only', responses: { 201: { description: 'Created key and one-time secret' } } } },
+    '/v1/cases/{caseId}': { get: { summary: 'Read a stored investigation using X-TraceX-Key', parameters: [{ name: 'X-TraceX-Key', in: 'header', required: true, schema: { type: 'string' } }, { name: 'caseId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Investigation evidence' }, 401: { description: 'Missing or invalid API key' } } } },
+    '/v1/cases/{caseId}/network': { get: { summary: 'Read related-case network using X-TraceX-Key', parameters: [{ name: 'X-TraceX-Key', in: 'header', required: true, schema: { type: 'string' } }, { name: 'caseId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Network evidence' } } } },
+    '/api/alerts': { get: { summary: 'List alerts; optional investigator_id applies server-side recipient scoping', responses: { 200: { description: 'Alerts' } } } },
+    '/api/report': { post: { summary: 'Generate investigation intelligence PDF', responses: { 200: { description: 'PDF report', content: { 'application/pdf': {} } } } } }
+  }
+}));
+
+app.get('/api/developer/keys', requireAdmin, async (_req, res, next) => {
+  try { res.json((await DeveloperApiKey.find().sort({ created_at: -1 }).lean()).map(publicApiKey)); } catch (error) { next(error); }
+});
+app.post('/api/developer/keys', requireAdmin, async (req, res, next) => {
+  try {
+    const name = sanitizeText(req.body.name, 80); if (!name) throw new AppError(400, 'key_name_required', 'A key name is required');
+    const scopes = [...new Set((Array.isArray(req.body.scopes) ? req.body.scopes : ['cases:read', 'network:read', 'workspace:read']).filter(scope => ['cases:read', 'network:read', 'workspace:read'].includes(scope)))];
+    const expiryDays = Number(req.body.expiry_days || 90); if (!Number.isInteger(expiryDays) || expiryDays < 1 || expiryDays > 365) throw new AppError(400, 'invalid_expiry', 'expiry_days must be a whole number from 1 to 365');
+    const secret = `trx_live_${randomBytes(24).toString('hex')}`, stamp = now(), key_id = new mongoose.Types.ObjectId().toString(), expires_at = new Date(Date.now() + expiryDays * 86400000).toISOString();
+    const doc = await DeveloperApiKey.create({ key_id, name, key_prefix: secret.slice(0, 17), secret_hash: keyHash(secret), scopes: scopes.length ? scopes : ['cases:read'], status: 'ACTIVE', created_at: stamp, expires_at, request_count: 0 });
+    res.status(201).json({ key: publicApiKey(doc), secret, warning: 'Copy this API key now. For security, TraceX stores only a hash and cannot show it again.' });
+  } catch (error) { next(error); }
+});
+app.post('/api/developer/keys/:keyId/revoke', requireAdmin, async (req, res, next) => {
+  try { const doc = await DeveloperApiKey.findOneAndUpdate({ key_id: req.params.keyId, status: 'ACTIVE' }, { status: 'REVOKED', revoked_at: now() }, { new: true }); if (!doc) throw new AppError(404, 'key_not_found', 'An active API key was not found'); res.json({ key: publicApiKey(doc) }); } catch (error) { next(error); }
+});
+async function requireDeveloperKey(req, _res, next) {
+  try {
+    const secret = String(req.get('X-TraceX-Key') || '').trim(); if (!secret) throw new AppError(401, 'api_key_required', 'Send an active API key in the X-TraceX-Key header');
+    const key = await DeveloperApiKey.findOne({ secret_hash: keyHash(secret), status: 'ACTIVE' }); if (!key) throw new AppError(401, 'invalid_api_key', 'The supplied API key is invalid or revoked');
+    if (key.expires_at && new Date(key.expires_at).getTime() <= Date.now()) { key.status = 'EXPIRED'; await key.save(); throw new AppError(401, 'expired_api_key', 'The supplied API key has expired'); }
+    enforceDeveloperRateLimit(key.key_id);
+    key.last_used_at = now(); key.request_count = (key.request_count || 0) + 1; await key.save(); req.developerKey = key; next();
+  } catch (error) { next(error); }
+}
+function requireScope(scope) { return (req, _res, next) => (req.developerKey?.scopes || []).includes(scope) ? next() : next(new AppError(403, 'insufficient_scope', `This API key does not grant ${scope}`)); }
+app.get('/v1/cases/:caseId', requireDeveloperKey, requireScope('cases:read'), async (req, res, next) => { try { const doc = await requireCase(req.params.caseId); res.json({ data: { ...(doc.result_json || {}), case: caseView(doc) }, meta: { api_version: 'v1', key_id: req.developerKey.key_id } }); } catch (error) { next(error); } });
+app.get('/v1/cases/:caseId/network', requireDeveloperKey, requireScope('network:read'), async (req, res, next) => { try { const doc = await requireCase(req.params.caseId); res.json({ data: await fraudNetwork.fraudNetwork(String(doc._id)), meta: { api_version: 'v1', key_id: req.developerKey.key_id } }); } catch (error) { next(error); } });
+app.get('/v1/cases/:caseId/workspace', requireDeveloperKey, requireScope('workspace:read'), async (req, res, next) => { try { const doc = await requireCase(req.params.caseId), caseId = String(doc._id); const [evidence, notes, findings] = await Promise.all([EvidenceItem.find({ case_id: caseId }).sort({ created_at: -1 }).limit(100).lean(), InvestigatorNote.find({ case_id: caseId }).sort({ created_at: -1 }).limit(100).lean(), InvestigatorFinding.find({ case_id: caseId }).sort({ created_at: -1 }).limit(100).lean()]); res.json({ data: { case: caseView(doc), evidence, notes, findings }, meta: { api_version: 'v1', key_id: req.developerKey.key_id } }); } catch (error) { next(error); } });
 
 app.post('/trace', async (req, res, next) => {
   try {
@@ -341,24 +498,23 @@ app.post('/api/copilot', async (req, res, next) => {
   try {
     const caseId = String(req.body.case_id || '').trim(), question = String(req.body.question || '').trim();
     if (!caseId) throw new AppError(400, 'case_required', 'case_id is required');
-    if (!mongoose.isValidObjectId(caseId)) throw new AppError(400, 'invalid_case', 'Invalid case_id');
     if (!question) throw new AppError(400, 'question_required', 'A Copilot question is required');
     if (question.length > 2000) throw new AppError(400, 'question_too_long', 'Copilot questions must be 2000 characters or fewer');
-    const doc = await Investigation.findById(caseId).lean();
-    if (!doc) throw new AppError(404, 'case_not_found', 'Investigation not found');
+    const doc = await requireCase(caseId);
+    const resolvedCaseId = String(doc._id);
     const [networkEvidence, evidence, findings, notes, audit] = await Promise.all([
-      fraudNetwork.fraudNetwork(caseId),
-      EvidenceItem.find({ case_id: caseId }).sort({ created_at: -1 }).limit(40).lean(),
-      InvestigatorFinding.find({ case_id: caseId }).sort({ created_at: -1 }).limit(30).lean(),
-      InvestigatorNote.find({ case_id: caseId }).sort({ created_at: -1 }).limit(20).lean(),
-      AuditEvent.find({ case_id: caseId }).sort({ timestamp: -1 }).limit(30).lean()
+      fraudNetwork.fraudNetwork(resolvedCaseId),
+      EvidenceItem.find({ case_id: resolvedCaseId }).sort({ created_at: -1 }).limit(40).lean(),
+      InvestigatorFinding.find({ case_id: resolvedCaseId }).sort({ created_at: -1 }).limit(30).lean(),
+      InvestigatorNote.find({ case_id: resolvedCaseId }).sort({ created_at: -1 }).limit(20).lean(),
+      AuditEvent.find({ case_id: resolvedCaseId }).sort({ timestamp: -1 }).limit(30).lean()
     ]);
     const result = await copilot.answer(question, {
-      ...(doc.result_json || {}), investigation_id: caseId, case: caseView(doc), fraud_network: networkEvidence,
+      ...(doc.result_json || {}), investigation_id: resolvedCaseId, case: caseView(doc), fraud_network: networkEvidence,
       case_workspace: { evidence, findings, notes, audit }
     });
-    await recordAudit(caseId, 'COPILOT_QUERY', { question_length: question.length, model: result.model, grounding_guard_applied: Boolean(result.grounding_guard_applied) }, doc.wallet_address, 'groq');
-    res.json({ case_id: caseId, ...result });
+    await recordAudit(resolvedCaseId, 'COPILOT_QUERY', { question_length: question.length, model: result.model, grounding_guard_applied: Boolean(result.grounding_guard_applied) }, doc.wallet_address, 'groq');
+    res.json({ case_id: resolvedCaseId, ...result });
   } catch (error) { next(error); }
 });
 
@@ -407,6 +563,39 @@ app.get('/api/cases/:caseId/workspace', async (req, res, next) => {
       AuditEvent.countDocuments({ case_id: caseId, event_type: 'REPORT_GENERATED' })
     ]);
     res.json({ case: caseView(doc), evidence, notes, findings, audit, completeness: caseCompleteness({ investigation: result, evidenceCount: evidence.length, noteCount: notes.length, findingCount: findings.length, monitoring: Boolean(monitor), reportGenerated: reportEvents > 0 }) });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/investigators', async (_req, res, next) => {
+  try {
+    const people = await Investigator.find().sort({ display_name: 1 }).lean();
+    const items = await Promise.all(people.map(async person => ({ ...person, active_cases: await Investigation.countDocuments({ assigned_investigator_id: person.investigator_id, case_status: { $ne: 'CLOSED' } }), assigned_wallets: await WalletAssignment.countDocuments({ investigator_id: person.investigator_id }), active_monitors: await Monitor.countDocuments({ investigator_id: person.investigator_id, status: 'monitoring' }), unreviewed_alerts: await Alert.countDocuments({ recipient_investigator_ids: person.investigator_id, status: 'NEW' }) })));
+    res.json(items);
+  } catch (error) { next(error); }
+});
+app.post('/api/investigators', async (req, res, next) => {
+  try {
+    const display_name = sanitizeText(req.body.display_name, 120); if (!display_name) throw new AppError(400, 'investigator_name_required', 'Investigator display name is required');
+    const stamp = now(), doc = await Investigator.create({ investigator_id: new mongoose.Types.ObjectId().toString(), display_name, email: sanitizeText(req.body.email, 180), role: sanitizeText(req.body.role, 80), team: sanitizeText(req.body.team, 80), status: 'ACTIVE', created_at: stamp, updated_at: stamp });
+    res.status(201).json(doc);
+  } catch (error) { next(error); }
+});
+app.get('/api/investigators/:investigatorId/workspace', async (req, res, next) => {
+  try {
+    const investigator = await Investigator.findOne({ investigator_id: req.params.investigatorId }).lean(); if (!investigator) throw new AppError(404, 'investigator_not_found', 'Investigator not found');
+    const [cases, wallets, monitors, alerts] = await Promise.all([Investigation.find({ assigned_investigator_id: investigator.investigator_id }).sort({ updated_at: -1 }).lean(), WalletAssignment.find({ investigator_id: investigator.investigator_id }).lean(), Monitor.find({ investigator_id: investigator.investigator_id }).sort({ updated_at: -1 }).lean(), Alert.find({ recipient_investigator_ids: investigator.investigator_id }).sort({ created_at: -1 }).lean()]);
+    res.json({ investigator, cases: cases.map(publicDoc), wallets, monitors: monitors.map(publicDoc), alerts: alerts.map(publicDoc) });
+  } catch (error) { next(error); }
+});
+app.post('/api/cases/:caseId/assignment', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId), investigatorId = String(req.body.investigator_id || '').trim(), stamp = now(), previous = doc.assigned_investigator_id || null;
+    if (!investigatorId) { doc.assigned_investigator_id = null; doc.assigned_investigator = ''; doc.assigned_at = null; await doc.save(); await recordAudit(String(doc._id), 'INVESTIGATOR_UNASSIGNED', { previous_investigator_id: previous }, doc.wallet_address, 'investigator_assignment'); return res.json({ case: caseView(doc) }); }
+    const investigator = await Investigator.findOne({ investigator_id: investigatorId, status: 'ACTIVE' }); if (!investigator) throw new AppError(400, 'invalid_investigator', 'A matching active investigator is required');
+    doc.assigned_investigator_id = investigator.investigator_id; doc.assigned_investigator = investigator.display_name; doc.assigned_at = stamp; await doc.save();
+    await WalletAssignment.findOneAndUpdate({ wallet_address: doc.wallet_address, blockchain: doc.blockchain || chain, investigator_id: investigator.investigator_id }, { case_id: String(doc._id), assignment_role: 'PRIMARY', monitoring_enabled: true, notification_enabled: true, assigned_at: stamp, updated_at: stamp }, { upsert: true, new: true, setDefaultsOnInsert: true });
+    await recordAudit(String(doc._id), previous ? 'INVESTIGATOR_REASSIGNED' : 'INVESTIGATOR_ASSIGNED', { previous_investigator_id: previous, investigator_id: investigator.investigator_id, investigator: investigator.display_name }, doc.wallet_address, 'investigator_assignment');
+    res.json({ case: caseView(doc) });
   } catch (error) { next(error); }
 });
 
@@ -469,6 +658,149 @@ app.delete('/api/cases/:caseId/notes/:noteId', async (req, res, next) => { try {
 app.get('/api/cases/:caseId/findings', async (req, res, next) => { try { await requireCase(req.params.caseId); res.json(await InvestigatorFinding.find({ case_id: req.params.caseId }).sort({ created_at: -1 }).limit(200).lean()); } catch (error) { next(error); } });
 app.post('/api/cases/:caseId/findings', async (req, res, next) => { try { const doc = await requireCase(req.params.caseId), evidenceIds = [...new Set((req.body.evidence_ids || []).map(value => sanitizeText(value, 40)).filter(Boolean))], classification = String(req.body.classification || 'PRELIMINARY').toUpperCase(); if (!FINDING_STATUSES.includes(classification)) throw new AppError(400, 'invalid_finding_classification', `Classification must be one of: ${FINDING_STATUSES.join(', ')}`); if (!evidenceIds.length) throw new AppError(400, 'evidence_required', 'A finding must reference at least one saved evidence item'); const count = await EvidenceItem.countDocuments({ case_id: req.params.caseId, evidence_id: { $in: evidenceIds } }); if (count !== evidenceIds.length) throw new AppError(400, 'invalid_evidence_reference', 'One or more evidence IDs do not belong to this case'); const title = sanitizeText(req.body.title, 180), description = sanitizeText(req.body.description, 5000); if (!title || !description) throw new AppError(400, 'finding_required', 'Finding title and description are required'); const stamp = now(), finding = await InvestigatorFinding.create({ finding_id: await nextIdentifier(req.params.caseId, 'FN'), case_id: req.params.caseId, title, description, classification, evidence_ids: evidenceIds, author: sanitizeText(req.body.author || doc.assigned_investigator || 'Local investigator', 120), created_at: stamp, updated_at: stamp }); await Investigation.findByIdAndUpdate(doc._id, { $inc: { finding_count: 1 }, updated_at: stamp }); await recordAudit(req.params.caseId, 'FINDING_CREATED', { finding_id: finding.finding_id, classification, evidence_ids: evidenceIds }, doc.wallet_address, 'investigator'); res.status(201).json(finding); } catch (error) { next(error); } });
 
+// Hypotheses Board endpoints
+app.get('/api/cases/:caseId/hypotheses', async (req, res, next) => {
+  try {
+    await requireCase(req.params.caseId);
+    res.json(await InvestigatorHypothesis.find({ case_id: req.params.caseId }).sort({ created_at: -1 }).limit(100).lean());
+  } catch (error) { next(error); }
+});
+
+app.post('/api/cases/:caseId/hypotheses', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const title = sanitizeText(req.body.title, 240);
+    if (!title) throw new AppError(400, 'hypothesis_title_required', 'Hypothesis title is required');
+    const status = String(req.body.status || 'OPEN').toUpperCase();
+    const allowedStatuses = ['OPEN', 'SUPPORTED', 'CONTRADICTED', 'INCONCLUSIVE', 'CLOSED'];
+    if (!allowedStatuses.includes(status)) throw new AppError(400, 'invalid_status', `Status must be one of: ${allowedStatuses.join(', ')}`);
+    const stamp = now();
+    const item = await InvestigatorHypothesis.create({
+      hypothesis_id: await nextIdentifier(req.params.caseId, 'HYP'),
+      case_id: req.params.caseId,
+      title,
+      category: sanitizeText(req.body.category || 'INTERMEDIARY', 80),
+      status,
+      supporting_evidence_ids: Array.isArray(req.body.supporting_evidence_ids) ? req.body.supporting_evidence_ids : [],
+      contradicting_evidence_ids: Array.isArray(req.body.contradicting_evidence_ids) ? req.body.contradicting_evidence_ids : [],
+      supporting_transactions: Array.isArray(req.body.supporting_transactions) ? req.body.supporting_transactions : [],
+      unresolved_questions: Array.isArray(req.body.unresolved_questions) ? req.body.unresolved_questions.map(q => sanitizeText(q, 300)) : [],
+      notes: sanitizeText(req.body.notes, 3000),
+      author: sanitizeText(req.body.author || doc.assigned_investigator || 'Local investigator', 120),
+      created_at: stamp,
+      updated_at: stamp
+    });
+    await recordAudit(req.params.caseId, 'HYPOTHESIS_CREATED', { hypothesis_id: item.hypothesis_id, title }, doc.wallet_address, 'hypothesis_board');
+    res.status(201).json(item);
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/cases/:caseId/hypotheses/:hypothesisId', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const update = { updated_at: now() };
+    if (req.body.title !== undefined) update.title = sanitizeText(req.body.title, 240);
+    if (req.body.status !== undefined) {
+      const status = String(req.body.status).toUpperCase();
+      if (!['OPEN', 'SUPPORTED', 'CONTRADICTED', 'INCONCLUSIVE', 'CLOSED'].includes(status)) throw new AppError(400, 'invalid_status', 'Invalid status');
+      update.status = status;
+    }
+    if (req.body.category !== undefined) update.category = sanitizeText(req.body.category, 80);
+    if (req.body.notes !== undefined) update.notes = sanitizeText(req.body.notes, 3000);
+    if (Array.isArray(req.body.supporting_evidence_ids)) update.supporting_evidence_ids = req.body.supporting_evidence_ids;
+    if (Array.isArray(req.body.contradicting_evidence_ids)) update.contradicting_evidence_ids = req.body.contradicting_evidence_ids;
+    if (Array.isArray(req.body.supporting_transactions)) update.supporting_transactions = req.body.supporting_transactions;
+    if (Array.isArray(req.body.unresolved_questions)) update.unresolved_questions = req.body.unresolved_questions.map(q => sanitizeText(q, 300));
+
+    const item = await InvestigatorHypothesis.findOneAndUpdate({ case_id: req.params.caseId, hypothesis_id: req.params.hypothesisId }, update, { new: true });
+    if (!item) throw new AppError(404, 'hypothesis_not_found', 'Hypothesis not found');
+    await recordAudit(req.params.caseId, 'HYPOTHESIS_UPDATED', { hypothesis_id: item.hypothesis_id, status: item.status }, doc.wallet_address, 'hypothesis_board');
+    res.json(item);
+  } catch (error) { next(error); }
+});
+
+app.delete('/api/cases/:caseId/hypotheses/:hypothesisId', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const item = await InvestigatorHypothesis.findOneAndDelete({ case_id: req.params.caseId, hypothesis_id: req.params.hypothesisId });
+    if (!item) throw new AppError(404, 'hypothesis_not_found', 'Hypothesis not found');
+    await recordAudit(req.params.caseId, 'HYPOTHESIS_DELETED', { hypothesis_id: req.params.hypothesisId }, doc.wallet_address, 'hypothesis_board');
+    res.json({ deleted: true });
+  } catch (error) { next(error); }
+});
+
+// Forensic Intelligence endpoints
+app.get('/api/cases/:caseId/money-flow', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    res.json(reconstructMoneyFlow(result.transactions, result.paths, req.query.txHash, result.start_wallet));
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/fingerprint', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    const target = req.query.wallet || result.start_wallet;
+    res.json(calculateWalletFingerprint(target, result.transactions, result.paths));
+  } catch (error) { next(error); }
+});
+
+app.post('/api/cases/:caseId/fingerprint/compare', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    const { wallet_a, wallet_b } = req.body;
+    if (!wallet_a || !wallet_b) throw new AppError(400, 'wallets_required', 'Both wallet_a and wallet_b are required');
+    const fpA = calculateWalletFingerprint(wallet_a, result.transactions, result.paths);
+    const fpB = calculateWalletFingerprint(wallet_b, result.transactions, result.paths);
+    res.json({ ...compareWalletFingerprints(fpA, fpB), fingerprint_a: fpA, fingerprint_b: fpB });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/infrastructure-reuse', async (req, res, next) => {
+  try {
+    const caseId = req.params.caseId;
+    await requireCase(caseId);
+    const myIndex = await fraudNetwork.ensureIndex(caseId);
+    const allIndexes = await CaseNetworkIndex.find().lean();
+    res.json(detectInfrastructureReuse(caseId, myIndex, allIndexes));
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/hotspots', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    res.json(computeInvestigationHotspots(result.transactions, result.paths, result.network_analytics, result.suspicious_activity?.indicators));
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/motifs', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    res.json(detectTransactionMotifs(result.transactions, result.paths));
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/dormancy', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const result = doc.result_json || {};
+    res.json(detectDormancyReactivation(result.transactions, Number(req.query.thresholdDays || 14)));
+  } catch (error) { next(error); }
+});
+
+app.post('/api/cases/:caseId/diff', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const previous = req.body.previous_snapshot || {};
+    res.json(computeInvestigationDiff(previous, doc.result_json || {}));
+  } catch (error) { next(error); }
+});
+
 app.get('/api/search', async (req, res, next) => {
   try { const q = sanitizeText(req.query.q, 120); if (q.length < 3) return res.json({ cases: [], evidence: [] }); const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), pattern = new RegExp(escaped, 'i'); const [cases, evidence] = await Promise.all([Investigation.find({ $or: [{ case_reference: pattern }, { wallet_address: pattern }, { case_title: pattern }, { assigned_investigator: pattern }, { tags: pattern }] }).sort({ updated_at: -1 }).limit(10).lean(), EvidenceItem.find({ $or: [{ evidence_id: pattern }, { source_reference: pattern }, { transaction_hash: pattern }, { wallet_address: pattern }] }).sort({ created_at: -1 }).limit(10).lean()]); res.json({ cases: cases.map(publicDoc), evidence }); } catch (error) { next(error); }
 });
@@ -505,8 +837,7 @@ app.get('/history/:id', async (req, res, next) => { try { const doc = await requ
 app.delete('/history/:id', async (req, res, next) => { try { const doc = await requireCase(req.params.id), caseId = String(doc._id); await Promise.all([Investigation.deleteOne({ _id: doc._id }), CaseNetworkIndex.deleteOne({ case_id: caseId }), AuditEvent.deleteMany({ case_id: caseId }), EvidenceItem.deleteMany({ case_id: caseId }), InvestigatorNote.deleteMany({ case_id: caseId }), InvestigatorFinding.deleteMany({ case_id: caseId }), CaseSequence.deleteMany({ key: new RegExp(`:${caseId}$`) }), Monitor.deleteMany({ investigation_id: caseId }), Alert.deleteMany({ investigation_id: caseId })]); res.json({ deleted: true }); } catch (error) { next(error); } });
 app.get('/export/:id.:format', async (req, res, next) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) throw new AppError(400, 'invalid_case', 'Invalid investigation ID');
-    const doc = await Investigation.findById(req.params.id); if (!doc) throw new AppError(404, 'case_not_found', 'Investigation not found');
+    const doc = await requireCase(req.params.id);
     const data = doc.result_json;
     if (req.params.format === 'json') return res.attachment(`TraceX_${req.params.id}.json`).type('application/json').send(JSON.stringify(data, null, 2));
     if (req.params.format === 'csv') {
@@ -518,9 +849,9 @@ app.get('/export/:id.:format', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-async function createAlert(wallet, transaction, type, severity, title, description, blockchain = 'ethereum', investigationId = null) {
+async function createAlert(wallet, transaction, type, severity, title, description, blockchain = 'ethereum', investigationId = null, recipientInvestigatorIds = []) {
   const hash = transaction.transaction_hash || transaction.hash; if (!hash) return null;
-  try { const alert = await Alert.create({ investigation_id: investigationId, wallet_address: wallet, blockchain, transaction_hash: hash, alert_type: type, severity, title, description, timestamp: transaction.timestamp || now(), created_at: now(), status: 'NEW', evidence: { source: 'monitoring_poll', asset: transaction.asset || transaction.token_symbol || 'ETH', provider: transaction.provider } }); await recordAudit(investigationId, 'ALERT_CREATED', { alert_id: String(alert._id), alert_type: type, severity, transaction_hash: hash }, wallet, 'monitoring'); return alert; }
+  try { const ids = [...new Set(recipientInvestigatorIds.filter(Boolean))]; const recipients = ids.length ? await Investigator.find({ investigator_id: { $in: ids } }).lean() : []; const alert = await Alert.create({ investigation_id: investigationId, wallet_address: wallet, blockchain, transaction_hash: hash, alert_type: type, severity, title, description, timestamp: transaction.timestamp || now(), created_at: now(), status: 'NEW', recipient_investigator_ids: ids, recipient_snapshot: recipients.map(item => ({ investigator_id: item.investigator_id, display_name: item.display_name })), evidence: { source: 'monitoring_poll', asset: transaction.asset || transaction.token_symbol || 'ETH', provider: transaction.provider } }); await recordAudit(investigationId, 'ALERT_CREATED', { alert_id: String(alert._id), alert_type: type, severity, transaction_hash: hash, recipient_investigator_ids: ids }, wallet, 'monitoring'); return alert; }
   catch (error) { if (error?.code === 11000) return null; throw error; }
 }
 async function pollMonitor(monitor) {
@@ -530,18 +861,18 @@ async function pollMonitor(monitor) {
   const fresh = current.filter(tx => !known.has(identity(tx))); monitorCache.set(cacheKey, new Set(current.map(identity)));
   if (hadBaseline) for (const tx of fresh) {
     const other = current.filter(item => item.hash !== tx.hash);
-    if (other.length >= 20) await createAlert(monitor.wallet_address, tx, 'high_activity', 'MEDIUM', 'High transaction activity', 'High transaction activity detected within the monitored wallet', monitor.blockchain, monitor.investigation_id);
-    if (tx.asset_type === 'token') await createAlert(monitor.wallet_address, tx, 'erc20_activity', 'MEDIUM', 'Token activity detected', `${tx.asset || 'Token'} movement observed`, monitor.blockchain, monitor.investigation_id);
-    if (tx.direction === 'IN' && other.some(item => item.direction === 'OUT' && Math.abs(new Date(tx.timestamp) - new Date(item.timestamp)) <= 600000)) await createAlert(monitor.wallet_address, tx, 'rapid_movement', 'HIGH', 'Rapid movement of funds', 'Funds moved quickly after receipt', monitor.blockchain, monitor.investigation_id);
+    if (other.length >= 20) await createAlert(monitor.wallet_address, tx, 'high_activity', 'MEDIUM', 'High transaction activity', 'High transaction activity detected within the monitored wallet', monitor.blockchain, monitor.investigation_id, [monitor.investigator_id]);
+    if (tx.asset_type === 'token') await createAlert(monitor.wallet_address, tx, 'erc20_activity', 'MEDIUM', 'Token activity detected', `${tx.asset || 'Token'} movement observed`, monitor.blockchain, monitor.investigation_id, [monitor.investigator_id]);
+    if (tx.direction === 'IN' && other.some(item => item.direction === 'OUT' && Math.abs(new Date(tx.timestamp) - new Date(item.timestamp)) <= 600000)) await createAlert(monitor.wallet_address, tx, 'rapid_movement', 'HIGH', 'Rapid movement of funds', 'Funds moved quickly after receipt', monitor.blockchain, monitor.investigation_id, [monitor.investigator_id]);
   }
   const latest = [...current].filter(item => item.timestamp).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
   await Monitor.findByIdAndUpdate(monitor._id, { last_checked_at: now(), last_transaction_timestamp: latest?.timestamp || null, last_transaction_hash: latest?.hash || null, updated_at: now() });
 }
 async function monitorTick() { try { for (const item of await Monitor.find({ status: 'monitoring' })) await pollMonitor(item); } catch (error) { console.error('Monitoring poll failed:', error.message); } }
-app.post('/monitor/start', async (req, res, next) => { try { const wallet = String(req.body.wallet_address || req.body.wallet || '').trim(); if (!wallet) throw new AppError(400, 'wallet_required', 'Wallet address is required'); assertWallet(wallet, req.body.blockchain || chain); const update = { investigation_id: req.body.investigation_id || null, status: 'monitoring', updated_at: now(), max_hops: 2, max_wallets: 8 }; let item = await Monitor.findOneAndUpdate({ wallet_address: wallet, blockchain: 'ethereum' }, update, { new: true, sort: { created_at: -1 } }); if (!item) item = await Monitor.create({ ...update, wallet_address: wallet, blockchain: 'ethereum', last_checked_at: now(), created_at: now() }); await recordAudit(update.investigation_id, 'MONITORING_STARTED', { status: 'monitoring' }, wallet, 'monitoring'); res.json(publicDoc(item)); } catch (error) { next(error); } });
+app.post('/monitor/start', async (req, res, next) => { try { const wallet = String(req.body.wallet_address || req.body.wallet || '').trim(); if (!wallet) throw new AppError(400, 'wallet_required', 'Wallet address is required'); assertWallet(wallet, req.body.blockchain || chain); const caseDoc = req.body.investigation_id ? await requireCase(req.body.investigation_id) : null; const update = { investigation_id: req.body.investigation_id || null, investigator_id: caseDoc?.assigned_investigator_id || null, status: 'monitoring', updated_at: now(), max_hops: 2, max_wallets: 8 }; let item = await Monitor.findOneAndUpdate({ wallet_address: wallet, blockchain: 'ethereum' }, update, { new: true, sort: { created_at: -1 } }); if (!item) item = await Monitor.create({ ...update, wallet_address: wallet, blockchain: 'ethereum', last_checked_at: now(), created_at: now() }); await recordAudit(update.investigation_id, 'MONITORING_STARTED', { status: 'monitoring', investigator_id: update.investigator_id }, wallet, 'monitoring'); res.json(publicDoc(item)); } catch (error) { next(error); } });
 app.post('/monitor/stop', async (req, res, next) => { try { const wallet = String(req.body.wallet_address || req.body.wallet || '').trim(); if (!wallet) throw new AppError(400, 'wallet_required', 'Wallet address is required'); const item = await Monitor.findOneAndUpdate({ wallet_address: wallet, blockchain: validChain(req.body.blockchain) || chain }, { status: 'stopped', updated_at: now() }, { new: true, sort: { created_at: -1 } }); if (item?.investigation_id) await recordAudit(item.investigation_id, 'MONITORING_STOPPED', { status: 'stopped' }, wallet, 'monitoring'); res.json(item ? publicDoc(item) : { wallet_address: wallet, blockchain: 'ethereum', status: 'stopped' }); } catch (error) { next(error); } });
 app.get('/monitor/status', async (req, res, next) => { try { const wallet = req.query.wallet || req.query.wallet_address; if (!wallet) return res.json({ wallets: (await Monitor.find({ blockchain: validChain(req.query.blockchain) || chain }).sort({ updated_at: -1 })).map(publicDoc) }); const item = await Monitor.findOne({ wallet_address: String(wallet).trim(), blockchain: validChain(req.query.blockchain) || chain }).sort({ created_at: -1 }); res.json(item ? publicDoc(item) : { wallet_address: String(wallet).trim(), blockchain: 'ethereum', status: 'not_monitoring' }); } catch (error) { next(error); } });
-app.get('/alerts', async (req, res, next) => { try { const query = { blockchain: validChain(req.query.blockchain) || chain }; if (req.query.wallet || req.query.wallet_address) query.wallet_address = String(req.query.wallet || req.query.wallet_address).trim(); res.json((await Alert.find(query).sort({ created_at: -1 })).map(publicDoc)); } catch (error) { next(error); } });
+app.get('/alerts', async (req, res, next) => { try { const query = { blockchain: validChain(req.query.blockchain) || chain }; if (req.query.wallet || req.query.wallet_address) query.wallet_address = String(req.query.wallet || req.query.wallet_address).trim(); if (req.query.investigator_id) query.recipient_investigator_ids = String(req.query.investigator_id); res.json((await Alert.find(query).sort({ created_at: -1 })).map(publicDoc)); } catch (error) { next(error); } });
 for (const [suffix, status] of [['acknowledge', 'ACKNOWLEDGED'], ['resolve', 'RESOLVED']]) app.post(`/alerts/:id/${suffix}`, async (req, res, next) => { try { if (!mongoose.isValidObjectId(req.params.id)) throw new AppError(400, 'invalid_alert', 'Invalid alert ID'); const item = await Alert.findByIdAndUpdate(req.params.id, { status }, { new: true }); if (!item) throw new AppError(404, 'alert_not_found', 'Alert not found'); res.json({ id: String(item._id), status }); } catch (error) { next(error); } });
 
 app.post('/report', async (req, res, next) => {
@@ -562,14 +893,23 @@ app.post('/report', async (req, res, next) => {
     const bullet = text => pdf.text(`• ${String(text || '').replace(/[\r\n]+/g, ' ')}`);
     pdf.on('data', part => chunks.push(part));
     pdf.on('end', () => res.attachment(`TraceX_Case_${data.case?.case_reference || caseId || data.start_wallet.slice(2, 10)}.pdf`).type('application/pdf').send(Buffer.concat(chunks)));
-    pdf.font('Helvetica-Bold').fontSize(21).fillColor('#10263f').text('TraceX Case Intelligence Report', { align: 'center' });
-    pdf.font('Helvetica').fontSize(9).fillColor('#405166').text('Evidence-aware blockchain investigation brief', { align: 'center' }).moveDown();
-    pdf.fillColor('#202c38').text(`Case reference: ${data.case?.case_reference || 'Unpersisted analysis'}\nCase ID: ${caseId || 'N/A'}\nStatus: ${data.case?.case_status || 'N/A'}   Priority: ${data.case?.priority || 'N/A'}\nSubject wallet: ${data.start_wallet}\nGenerated: ${now()}`);
+    pdf.moveDown(4).font('Helvetica-Bold').fontSize(28).fillColor('#10263f').text('TRACEX', { align: 'center' });
+    pdf.font('Helvetica').fontSize(10).fillColor('#405166').text('BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE', { align: 'center' }).moveDown(4);
+    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('INVESTIGATION INTELLIGENCE REPORT', { align: 'center' }).moveDown(3);
+    pdf.font('Helvetica').fontSize(11).fillColor('#202c38').text(`CASE\n${data.case?.case_reference || 'Unpersisted analysis'}\n\nSUBJECT WALLET\n${data.start_wallet}\n\nNETWORK\nEthereum Mainnet\n\nCASE STATUS\n${data.case?.case_status || 'N/A'}\n\nPRIORITY\n${data.case?.priority || 'N/A'}\n\nBLOCKCHAIN RISK\n${data.risk?.score ?? 0} / 100 (${data.risk?.level || 'UNKNOWN'})\n\nASSIGNED INVESTIGATOR\n${data.case?.assigned_investigator || 'UNASSIGNED'}\n\nGENERATED\n${now()}`, { align: 'center' });
+    pdf.moveDown(4).font('Helvetica-Oblique').fontSize(10).fillColor('#405166').text('Report the Wallet. Trace the Money. Reveal the Network.', { align: 'center' });
+    pdf.addPage();
+    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('Executive Brief');
+    pdf.font('Helvetica').fontSize(9).fillColor('#202c38').text(`Evidence snapshot timestamp: ${data.timestamp || 'not recorded'}\nBlockchain provider: ${data.provider?.selected || 'not recorded'}${data.provider?.fallback_used ? ' (fallback active)' : ''}`).moveDown();
     title('Executive Summary');
     pdf.text(data.case?.case_summary || `TraceX analyzed ${(data.transactions || []).length} observed transaction(s) across ${data.wallets_traced || 0} traced wallet(s). This report is an investigative aid and not a determination of wrongdoing.`);
     title('Risk Assessment');
     pdf.text(`Risk score: ${data.risk?.score ?? 0}/100 (${data.risk?.level || 'UNKNOWN'}). Evidence completeness: ${data.evidence_completeness || 'not recorded'}.`);
     (data.suspicious_activity?.indicators || []).slice(0, 10).forEach(item => bullet(item.message || item));
+    pdf.addPage();
+    pdf.font('Helvetica-Bold').fontSize(19).fillColor('#10263f').text('Observed Fund-Flow Network').moveDown(.5);
+    drawReportGraph(pdf, data);
+    pdf.moveDown(24);
     title('Fund Flow and Transaction Summary');
     pdf.text(`Maximum trace depth: ${data.max_hops ?? 'N/A'} • Paths: ${(data.paths || []).length} • Transactions: ${(data.transactions || []).length}`);
     (data.paths || []).slice(0, 12).forEach(path => bullet(`${path.from || '?'} → ${path.to || '?'} | ${path.amount ?? '?'} ${path.asset || 'ETH'} | ${path.hash || ''}`));
@@ -585,9 +925,9 @@ app.post('/report', async (req, res, next) => {
     title('Notes and Audit Timeline');
     notes.slice(0, 10).forEach(item => bullet(`Note ${item.note_id} (${item.note_type}): ${item.content}`));
     audit.slice(-20).forEach(item => bullet(`${item.timestamp} — ${item.event_type}`));
-    title('Recommendations and Limitations');
+    title('Methodology and Limitations');
     (data.investigator_recommendations || []).slice(0, 12).forEach(bullet);
-    pdf.text('Automated signals, labels, and third-party intelligence require independent review. The absence of a signal is not evidence of absence; provider coverage may be partial.');
+    pdf.text('Observed blockchain evidence is provider-retrieved within the configured trace scope. Risk and topology labels are deterministic TraceX analysis. Chainabuse material is external supporting intelligence. Investigator notes and findings are separately authored work product. Automated signals, labels, and third-party intelligence require independent review; provider coverage may be partial. No cross-chain destination movement is inferred without destination-chain evidence.');
     const pageRange = pdf.bufferedPageRange();
     for (let page = 0; page < pageRange.count; page += 1) { pdf.switchToPage(page); pdf.fontSize(7).fillColor('#687787').text(`TraceX • Confidential investigative working paper • Page ${page + 1} of ${pageRange.count}`, 44, pdf.page.height - 32, { align: 'center', width: pdf.page.width - 88 }); }
     await recordAudit(caseId, 'REPORT_GENERATED', { format: 'pdf', evidence_count: evidence.length, verified_evidence: verified }, data.start_wallet, 'reporting');
@@ -609,7 +949,7 @@ app.use((error, _req, res, _next) => {
 let server = null;
 export async function startServer({ port = PORT, mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/tracex' } = {}) {
   if (mongoose.connection.readyState === 0) await mongoose.connect(mongoUri);
-  await Promise.all([Investigation.init(), Monitor.init(), Alert.init(), ThreatIntelligenceCache.init(), CaseNetworkIndex.init(), AuditEvent.init(), EvidenceItem.init(), InvestigatorNote.init(), InvestigatorFinding.init(), CaseSequence.init()]);
+  await Promise.all([Investigation.init(), Monitor.init(), Alert.init(), ThreatIntelligenceCache.init(), CaseNetworkIndex.init(), AuditEvent.init(), EvidenceItem.init(), InvestigatorNote.init(), InvestigatorFinding.init(), CaseSequence.init(), Investigator.init(), WalletAssignment.init()]);
   const backfilledCaseMetadata = await backfillCaseMetadata();
   if (backfilledCaseMetadata) console.log(`Case workspace metadata backfilled for ${backfilledCaseMetadata} investigation(s)`);
   const indexedCases = await fraudNetwork.backfillMissingIndexes();

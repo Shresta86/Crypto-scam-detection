@@ -4,11 +4,11 @@ import { formatDate } from '../utils.js';
 
 const evidenceTypes=['TRANSACTION','WALLET','TRACED_PATH','RISK_INDICATOR','VASP_ATTRIBUTION','EXTERNAL_INTELLIGENCE','RELATED_CASE_RELATIONSHIP','NETWORK_NODE','BRIDGE_INTERACTION','ALERT','TIMELINE_EVENT','REPORT_SNAPSHOT'];
 
-export function CaseInspector({ workspace, onUpdate, onToast }) {
+export function CaseInspector({ workspace, investigators = [], onUpdate, onAssign, onToast }) {
   const item=workspace?.case; const [editing,setEditing]=useState(false); const [form,setForm]=useState({});
   if(!item)return null;
   const open=()=>{setForm({case_title:item.case_title||'',case_summary:item.case_summary||'',assigned_investigator:item.assigned_investigator||'',priority:item.priority||'MEDIUM',tags:(item.tags||[]).join(', '),case_status:item.case_status||'NEW'});setEditing(true);};
-  const save=async()=>{try{await onUpdate({...form,tags:form.tags.split(',').map(x=>x.trim()).filter(Boolean)});setEditing(false);onToast('Case details updated.');}catch(error){onToast(error.message,'error');}};
+  const save=async()=>{try{await onUpdate({case_title:form.case_title,case_summary:form.case_summary,priority:form.priority,tags:form.tags.split(',').map(x=>x.trim()).filter(Boolean),case_status:form.case_status});const selected=investigators.find(person=>person.display_name.toLowerCase()===form.assigned_investigator.trim().toLowerCase());if(onAssign&&String(selected?.investigator_id||'')!==String(item.assigned_investigator_id||''))await onAssign(selected?.investigator_id||'');setEditing(false);onToast('Case details and investigator assignment updated.');}catch(error){onToast(error.message,'error');}};
   return <Panel className="case-management"><SectionHeader eyebrow="Case management" title={item.case_title} description={`${item.case_reference} · Last updated ${formatDate(item.updated_at)}`} action={<Button variant="secondary" onClick={open}>Edit case</Button>}/><div className="case-management-grid"><div><span>Status</span><Badge tone={item.case_status==='CLOSED'?'neutral':'blue'}>{item.case_status.replaceAll('_',' ')}</Badge></div><div><span>Priority</span><Badge tone={item.priority==='CRITICAL'?'red':item.priority==='HIGH'?'amber':'neutral'}>{item.priority}</Badge></div><div><span>Assigned investigator</span><strong>{item.assigned_investigator||'Unassigned'}</strong></div><div><span>Tags</span><strong>{(item.tags||[]).join(', ')||'None'}</strong></div></div>{editing&&<div className="case-editor"><label>Case title<input value={form.case_title} onChange={e=>setForm({...form,case_title:e.target.value})}/></label><label>Summary<textarea value={form.case_summary} onChange={e=>setForm({...form,case_summary:e.target.value})}/></label><div className="form-grid"><label>Investigator<input value={form.assigned_investigator} onChange={e=>setForm({...form,assigned_investigator:e.target.value})}/></label><label>Tags (comma-separated)<input value={form.tags} onChange={e=>setForm({...form,tags:e.target.value})}/></label><label>Priority<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})}>{['LOW','MEDIUM','HIGH','CRITICAL'].map(x=><option key={x}>{x}</option>)}</select></label><label>Status<select value={form.case_status} onChange={e=>setForm({...form,case_status:e.target.value})}>{['NEW','ACTIVE','UNDER_REVIEW','ESCALATED','CLOSED'].map(x=><option key={x}>{x}</option>)}</select></label></div><div className="inline-actions"><Button onClick={save}>Save case</Button><Button variant="secondary" onClick={()=>setEditing(false)}>Cancel</Button></div></div>}</Panel>;
 }
 
@@ -32,7 +32,7 @@ export function EvidenceWorkspace({ workspace, onVerify, onAddNote, onRemoveNote
       <div className="integrity-pipeline">
         <div className="pipeline-step"><span>1</span><strong>Snapshot Captured</strong><small>Raw transaction / wallet / path frozen in time</small></div>
         <div className="pipeline-arrow"><Icon name="arrow"/></div>
-        <div className="pipeline-step"><span>2</span><strong>Canonical JSON</strong><small>Deterministic key sorting</small></div>
+        <div className="pipeline-step"><span>2</span><strong>Canonical JSON</strong><small>Canonical RFC-8785 key sorting</small></div>
         <div className="pipeline-arrow"><Icon name="arrow"/></div>
         <div className="pipeline-step"><span>3</span><strong>SHA-256 Hash</strong><small>Cryptographic fingerprint</small></div>
         <div className="pipeline-arrow"><Icon name="arrow"/></div>
@@ -88,7 +88,7 @@ export function EvidenceCapture({ draft, onSave, onClose }) {
           <div>
             <span className="eyebrow">Evidence preservation wizard</span>
             <h2>Capture Investigation Evidence</h2>
-            <p>Court-ready evidence snapshotting with cryptographic SHA-256 integrity verification.</p>
+            <p>Evidence snapshotting with cryptographic SHA-256 integrity verification.</p>
           </div>
           <button className="icon-button" onClick={onClose} aria-label="Close dialog"><Icon name="close"/></button>
         </header>
@@ -160,7 +160,7 @@ export function EvidenceCapture({ draft, onSave, onClose }) {
                 </div>
                 <div className="integrity-detail-list">
                   <div><span>Digest Algorithm:</span><strong>SHA-256</strong></div>
-                  <div><span>Key Ordering:</span><strong>Canonical Deterministic</strong></div>
+                  <div><span>Key Ordering:</span><strong>Canonical RFC-8785</strong></div>
                   <div><span>Tamper Evidence:</span><strong>Any post-capture edit causes verification failure</strong></div>
                   <div><span>Storage:</span><strong>Encapsulated in MongoDB investigation workspace</strong></div>
                 </div>
@@ -180,4 +180,3 @@ export function EvidenceCapture({ draft, onSave, onClose }) {
     </div>
   );
 }
-

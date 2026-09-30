@@ -13,7 +13,7 @@ export function RiskPanel({ investigation, onTab, onCapture }) {
     <ExplainView
       title="Explainable Risk Intelligence"
       lookingAt="A transparent breakdown of suspicious behavioral signals detected from normalized transaction patterns."
-      detected={`${indicators.length} deterministic rules matched, resulting in an investigative priority score of ${risk.score ?? 0}/100 (${risk.level || 'UNKNOWN'}).`}
+      detected={`${indicators.length} rule indicators matched, resulting in an investigative priority score of ${risk.score ?? 0}/100 (${risk.level || 'UNKNOWN'}).`}
       howToUse="Inspect each triggered rule to understand why TraceX elevated the case priority. Click 'Review transaction evidence' to see supporting transfers or 'Capture signal as evidence' to add it to your audit ledger."
       tryThis={[
         'Expand the "Rapid Movement" or "High transaction activity" indicator.',
@@ -22,7 +22,7 @@ export function RiskPanel({ investigation, onTab, onCapture }) {
         'Click "Capture signal as evidence" to preserve the rule evaluation into your evidence workspace.'
       ]}
     />
-    <SectionHeader eyebrow="Explainable intelligence" title="Risk intelligence" description="Deterministic indicators derived from observed evidence."/>
+    <SectionHeader eyebrow="Explainable intelligence" title="Risk intelligence" description="Rule-based indicators derived from observed evidence."/>
     <div className="risk-layout">
       <div className={`risk-gauge risk-${riskTone(risk.level)}`} style={{ '--score': `${Number(risk.score) || 0}%` }}>
         <div>
@@ -49,7 +49,7 @@ export function RiskPanel({ investigation, onTab, onCapture }) {
               {onCapture && <Button variant="ghost" onClick={() => onCapture({ evidence_type: 'RISK_INDICATOR', title: `Risk Signal: ${indicator.message} (+${indicator.points || 0} pts)`, source_type: 'tracex_analytics', source_provider: 'TraceX Rules', snapshot: { rule: indicator.type, message: indicator.message, points: indicator.points, severity: indicator.severity, score: risk.score, level: risk.level } })}>Capture signal as evidence</Button>}
             </div>
           </details>
-        )) : <EmptyState title="No deterministic indicators" description="No configured behavioral rule was triggered. Absence of an indicator is not proof of safety."/>}
+        )) : <EmptyState title="No risk indicators" description="No configured behavioral rule was triggered. Absence of an indicator is not proof of safety."/>}
       </div>
     </div>
     <p className="disclaimer">Risk indicators support investigation prioritization and are not proof of criminal activity.</p>
@@ -66,11 +66,11 @@ export function OverviewIntelligence({ investigation, network, monitor, onTab, o
       <div className="overview-main">
         <RiskPanel investigation={investigation} onTab={onTab} onCapture={onCapture}/>
         <Panel className="story-panel">
-          <SectionHeader eyebrow="Deterministic narrative" title="Investigation story" description="A chronological explanation built only from stored TraceX evidence."/>
+          <SectionHeader eyebrow="Case narrative" title="Investigation story" description="A chronological explanation built from stored TraceX evidence."/>
           <div className="story-rail">{story.map((item,index)=><article key={`${item.type}-${index}`}><span>{String(index+1).padStart(2,'0')}</span><div><strong>{item.title}</strong><p>{item.detail}</p><small>Source · {item.source}</small></div></article>)}</div>
         </Panel>
         <Panel>
-          <SectionHeader eyebrow="TraceX derived" title="Recommended next actions" description="Actions generated from the current deterministic findings."/>
+          <SectionHeader eyebrow="TraceX derived" title="Recommended next actions" description="Actions generated from the current investigation findings."/>
           <div className="action-list">
             <button onClick={() => onTab('risk')}>
               <span>01</span>
@@ -140,7 +140,7 @@ export function WhatTraceXFoundHero({ investigation, network, onTab }) {
             <span className="found-score">{risk.score ?? 0}<b>/100</b></span>
           </div>
           <h4>High-Risk Behavioral Patterns</h4>
-          <p>{investigation.suspicious_activity?.indicators?.length || 0} deterministic indicators contributed to this assessment, including rapid movement and fund splitting.</p>
+          <p>{investigation.suspicious_activity?.indicators?.length || 0} risk indicators contributed to this assessment, including rapid movement and fund splitting.</p>
           <button className="text-button">Explore Risk Intelligence <Icon name="arrow"/></button>
         </div>
 
@@ -200,7 +200,7 @@ function InvestigationOverviewMap({ investigation, network, onTab }) {
       <SectionHeader
         eyebrow="Interactive intelligence pipeline"
         title="Investigation Map"
-        description="Visual map of how TraceX transforms a suspect wallet into court-ready intelligence. Click any node to navigate."
+        description="Visual map of how TraceX transforms a suspect wallet into evidence-oriented investigation intelligence. Click any node to navigate."
       />
       <div className="pipeline-flow-diagram">
         <button className="pipeline-node node-suspect" onClick={() => onTab('overview')}>
@@ -292,7 +292,7 @@ export function AdvancedIntelligence({ investigation, onTab, onCapture }) {
       </div>
     </Panel>
     <Panel>
-      <SectionHeader eyebrow="Topology intelligence" title="Network hubs, collectors & distributors" description="Deterministic roles derived from bounded graph connectivity and observed transfers."/>
+      <SectionHeader eyebrow="Topology intelligence" title="Network hubs, collectors & distributors" description="Network roles derived from bounded graph connectivity and observed transfers."/>
       {analytics.candidates?.length?<div className="topology-grid">{analytics.candidates.slice(0,12).map(item=><article key={item.address}><header><Badge tone={item.role==='COLLECTOR_CANDIDATE'?'warning':item.role==='DISTRIBUTOR_CANDIDATE'?'purple':'blue'}>{item.role.replaceAll('_',' ')}</Badge><strong>{item.degree} connections</strong></header><CopyValue value={item.address} compact={false}/><p>{item.reason}</p><dl><div><dt>Incoming</dt><dd>{item.incoming_transfers}</dd></div><div><dt>Outgoing</dt><dd>{item.outgoing_transfers}</dd></div><div><dt>Sources</dt><dd>{item.distinct_sources}</dd></div><div><dt>Destinations</dt><dd>{item.distinct_destinations}</dd></div></dl><div className="drawer-actions-row" style={{marginTop:'12px'}}>{onTab&&<Button variant="secondary" onClick={()=>onTab('fund-flow')}>View on graph</Button>}{onCapture&&<Button variant="ghost" onClick={()=>onCapture({evidence_type:'NETWORK_NODE',title:`Topology Role: ${item.address.slice(0,10)} (${item.role})`,wallet_address:item.address,source_provider:'TraceX Topology',snapshot:item})}>Capture role as evidence</Button>}</div><small>{item.disclaimer}</small></article>)}</div>:<EmptyState title="No high-connectivity role detected" description="No address crossed the explicit collector, distributor, or hub thresholds in this bounded trace."/>}
       <details className="methodology"><summary>View classification methodology</summary><p>{analytics.methodology?.collector}</p><p>{analytics.methodology?.distributor}</p><p>{analytics.methodology?.hub}</p></details>
     </Panel>
@@ -308,7 +308,7 @@ export function AuditTrail({ investigation }) {
 export function ExternalIntel({ investigation }) {
   const intel = investigation.external_intelligence?.chainabuse;
   const unavailable = !intel || intel.status !== 'available';
-  return <Panel><SectionHeader eyebrow="Third-party source" title="External threat intelligence" description="Separated from TraceX blockchain facts and deterministic analytics."/>
+  return <Panel><SectionHeader eyebrow="Third-party source" title="External threat intelligence" description="Separated from TraceX on-chain activity and rule analytics."/>
     <div className={`intel-status ${unavailable ? 'intel-unavailable' : 'intel-available'}`}><div className="intel-provider"><span className="chain-mark">C</span><div><strong>Chainabuse</strong><small>External intelligence provider</small></div></div><Badge tone={unavailable ? 'warning' : 'success'} dot>{unavailable ? 'Temporarily unavailable' : 'Available'}</Badge></div>
     {unavailable ? <EmptyState icon="alerts" title="External intelligence temporarily unavailable" description="Core TraceX blockchain analysis remains available. Report status is unknown—not zero."/> : <div className="intel-grid"><MetricCard label="External reports" value={intel.report_count ?? 0} tone={Number(intel.report_count) > 0 ? 'amber' : 'teal'}/><MetricCard label="Categories" value={(intel.categories || []).length} tone="blue"/><div className="intel-detail"><span>Last checked</span><strong>{formatDate(intel.last_checked || intel.checked_at)}</strong><span>Cache</span><strong>{intel.cached ? 'Cached result' : 'Provider result'}</strong></div></div>}
     <p className="disclaimer">External reports are supporting intelligence and do not prove criminal ownership or activity.</p></Panel>;
@@ -368,7 +368,7 @@ export function FraudNetwork({ network, loading, error, onOpenCase, onCompare, o
             {onCapture && <Button variant="ghost" onClick={() => onCapture({ evidence_type: 'RELATED_CASE_RELATIONSHIP', title: `Cross-Case Match: ${item.case_label} (${item.similarity_score}/100)`, source_provider: 'TraceX Fraud Network', snapshot: { related_case_id: item.case_id, similarity_score: item.similarity_score, reasons: item.reasons } })}>Capture relationship as evidence</Button>}
           </footer>
         </div>
-      </article>)}</div> : <EmptyState title="No meaningful cross-case relationships detected" description="No stored investigation met the configured deterministic similarity threshold."/>}
+      </article>)}</div> : <EmptyState title="No meaningful cross-case relationships detected" description="No stored investigation met the configured similarity threshold."/>}
     </Panel>
     <Panel className="graph-panel">
       <GraphCanvas graph={network.graph} mode="network" title="Cross-case infrastructure graph" network={network} onOpenCase={onOpenCase} onCapture={onCapture}/>
@@ -452,5 +452,5 @@ export function CopilotPanel({ investigation, standalone = false }) {
   const [question,setQuestion]=useState(''),[messages,setMessages]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState('');
   const ask=async text=>{const value=(text||question).trim();if(!value||!investigation?.investigation_id)return;setMessages(items=>[...items,{role:'user',text:value}]);setQuestion('');setLoading(true);setError('');try{const result=await api.copilot(investigation.investigation_id,value);setMessages(items=>[...items,{role:'assistant',text:result.answer,model:result.model,guard:result.grounding_guard_applied}]);}catch(err){setError(err.message);}finally{setLoading(false);}};
   if(!investigation)return <EmptyState icon="copilot" title="Open an investigation first" description="Copilot requires a stored TraceX case so every answer can be grounded in authoritative evidence."/>;
-  return <Panel className={`copilot-panel ${standalone?'copilot-standalone':''}`}><div className="copilot-header"><span className="copilot-orb"><Icon name="copilot" size={24}/></span><div><span className="eyebrow">Evidence-grounded assistance</span><h2>TraceX Investigation Copilot</h2><p>Explains deterministic evidence. It does not discover or invent relationships.</p></div><Badge tone="purple" dot>Case context active</Badge></div><div className="prompt-row">{prompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}</button>)}</div><div className="copilot-thread">{!messages.length&&<div className="copilot-welcome"><Icon name="command" size={28}/><h3>Ask an evidence-focused question</h3><p>Copilot can explain observed blockchain facts, TraceX indicators, external intelligence, attribution, and related-case evidence.</p></div>}{messages.map((message,index)=><div key={index} className={`message message-${message.role}`}><span>{message.role==='assistant'?'TX':'YOU'}</span><div>{message.role==='assistant'&&<small>TRACEX EVIDENCE EXPLANATION · {message.model}</small>}<p>{message.text}</p>{message.guard&&<Badge tone="warning">Grounding safeguard applied</Badge>}</div></div>)}{loading&&<div className="message message-assistant"><span>TX</span><div><Skeleton lines={3}/></div></div>}</div>{error&&<ErrorState title="Copilot temporarily unavailable" message={`${error} Investigation data remains available.`}/>}<form className="copilot-input" onSubmit={event=>{event.preventDefault();ask();}}><textarea value={question} onChange={event=>setQuestion(event.target.value)} placeholder="Ask TraceX to explain the current evidence…" maxLength="2000"/><button disabled={loading||!question.trim()} aria-label="Ask Copilot"><Icon name="arrow"/></button></form></Panel>;
+  return <Panel className={`copilot-panel ${standalone?'copilot-standalone':''}`}><div className="copilot-header"><span className="copilot-orb"><Icon name="copilot" size={24}/></span><div><span className="eyebrow">Evidence-grounded assistance</span><h2>TraceX Investigation Copilot</h2><p>Explains verified blockchain evidence. It does not invent relationships.</p></div><Badge tone="purple" dot>Case context active</Badge></div><div className="prompt-row">{prompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}</button>)}</div><div className="copilot-thread">{!messages.length&&<div className="copilot-welcome"><Icon name="command" size={28}/><h3>Ask an evidence-focused question</h3><p>Copilot can explain observed blockchain facts, TraceX indicators, external intelligence, attribution, and related-case evidence.</p></div>}{messages.map((message,index)=><div key={index} className={`message message-${message.role}`}><span>{message.role==='assistant'?'TX':'YOU'}</span><div>{message.role==='assistant'&&<small>TRACEX EVIDENCE EXPLANATION · {message.model}</small>}<p>{message.text}</p>{message.guard&&<Badge tone="warning">Grounding safeguard applied</Badge>}</div></div>)}{loading&&<div className="message message-assistant"><span>TX</span><div><Skeleton lines={3}/></div></div>}</div>{error&&<ErrorState title="Copilot temporarily unavailable" message={`${error} Investigation data remains available.`}/>}<form className="copilot-input" onSubmit={event=>{event.preventDefault();ask();}}><textarea value={question} onChange={event=>setQuestion(event.target.value)} placeholder="Ask TraceX to explain the current evidence…" maxLength="2000"/><button disabled={loading||!question.trim()} aria-label="Ask Copilot"><Icon name="arrow"/></button></form></Panel>;
 }

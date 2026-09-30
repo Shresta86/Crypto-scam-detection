@@ -5,7 +5,7 @@ import {
 } from '../services/blockchain.js';
 import { ChainabuseService } from '../services/threat-intelligence.js';
 import { applyGroundingGuard, buildCopilotEvidence, GroqCopilotService } from '../services/copilot.js';
-import { intelligence, traceWallet } from '../server.js';
+import { enforceDeveloperRateLimit, intelligence, safeTokenMatch, traceWallet } from '../server.js';
 
 const wallet = '0x1111111111111111111111111111111111111111';
 const other = '0x2222222222222222222222222222222222222222';
@@ -154,4 +154,16 @@ test('Copilot receives deterministic fraud-network evidence and rejects invented
   assert.equal(result.grounding_guard_applied, true);
   assert.doesNotMatch(result.answer, new RegExp(inventedId));
   assert.match(result.answer, /CASE-BBBBBB/);
+});
+
+test('administrator token comparison rejects missing and mismatched values', () => {
+  assert.equal(safeTokenMatch('correct-token', 'correct-token'), true);
+  assert.equal(safeTokenMatch('wrong-token', 'correct-token'), false);
+  assert.equal(safeTokenMatch('', 'correct-token'), false);
+});
+
+test('developer API rate limit tracks requests per key', () => {
+  const keyId = `test-rate-${Date.now()}`;
+  for (let index = 0; index < 120; index += 1) enforceDeveloperRateLimit(keyId);
+  assert.throws(() => enforceDeveloperRateLimit(keyId), /limited/i);
 });

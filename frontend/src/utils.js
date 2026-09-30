@@ -31,3 +31,45 @@ export function counterpartySummary(transactions = []) {
   }
   return [...map.values()].map(item => ({ ...item, assets: [...item.assets] })).sort((a, b) => b.count - a.count);
 }
+
+// Visualization adapters only transform provider-backed case evidence. They do
+// not infer values, timestamps, or relationships that are absent from a case.
+export function visualizationEvents(transactions = [], { asset = 'all', riskOnly = false, indicators = [] } = {}) {
+  const supported = new Set((indicators || []).flatMap(item => item.supporting_transactions || []).filter(Boolean).map(String));
+  return [...transactions]
+    .filter(tx => asset === 'all' || tx.asset === asset)
+    .filter(tx => !riskOnly || supported.has(String(tx.hash || tx.transaction_hash || '')))
+    .filter(tx => tx.timestamp && tx.from && tx.to)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+}
+
+export function assetFlowSummary(transactions = [], asset = 'all') {
+  const scoped = (transactions || []).filter(tx => asset === 'all' || tx.asset === asset);
+  const byRoute = new Map();
+  for (const tx of scoped) {
+    if (!tx.from || !tx.to || !tx.asset) continue;
+    const key = `${String(tx.from).toLowerCase()}>${String(tx.to).toLowerCase()}|${tx.asset}`;
+    const current = byRoute.get(key) || { from: tx.from, to: tx.to, asset: tx.asset, count: 0, amount: 0, transactionHashes: [] };
+    current.count += 1;
+    current.amount += Number(tx.amount) || 0;
+    if (tx.hash || tx.transaction_hash) current.transactionHashes.push(tx.hash || tx.transaction_hash);
+    byRoute.set(key, current);
+  }
+  return [...byRoute.values()].sort((a, b) => b.count - a.count || b.amount - a.amount);
+}
+
+export function timelineBuckets(transactions = [], buckets = 18) {
+  const events = visualizationEvents(transactions);
+  if (!events.length) return [];
+  const first = new Date(events[0].timestamp).valueOf(), last = new Date(events.at(-1).timestamp).valueOf();
+  const span = Math.max(1, last - first);
+  const result = Array.from({ length: Math.min(buckets, events.length) }, (_, index) => ({ index, count: 0, incoming: 0, outgoing: 0, events: [] }));
+  for (const tx of events) {
+    const index = Math.min(result.length - 1, Math.floor(((new Date(tx.timestamp).valueOf() - first) / span) * result.length));
+    const item = result[index];
+    item.count += 1;
+    if (tx.direction === 'IN') item.incoming += 1; else item.outgoing += 1;
+    item.events.push(tx);
+  }
+  return result;
+}

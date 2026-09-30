@@ -24,7 +24,7 @@ export default function GraphCanvas({graph,title='Fund-flow graph',mode='wallet'
         'Click on any intermediary node to open its Intelligence Inspector.',
         'Click "Focus connections" or select an edge to highlight the active path while other nodes fade.',
         'Click "Show in transactions" to jump straight to the supporting transfer records.',
-        'Click "Capture as evidence" to preserve this node or transfer into your court-ready case ledger.'
+        'Click "Capture as evidence" to preserve this node or transfer in the case evidence ledger.'
       ]}
     />
     <div className="graph-toolbar">
@@ -68,4 +68,3 @@ function NodeInspector({node,transactions,related,onOpenCase,onCapture,onShowTra
     {node.case_id&&onOpenCase&&<button className="button button-secondary" onClick={()=>onOpenCase(node.case_id)}>Open investigation <Icon name="arrow"/></button>}
   </div></div>;
 }
-

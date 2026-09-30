@@ -40,6 +40,25 @@ export const api = {
   stopMonitor: wallet => request('/api/monitor/stop', { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ wallet_address: wallet, blockchain: 'ethereum' }) }),
   alerts: wallet => request(`/api/alerts${wallet ? `?wallet=${encodeURIComponent(wallet)}&blockchain=ethereum` : ''}`),
   updateAlert: (id, action) => request(`/api/alerts/${encodeURIComponent(id)}/${action}`, { method: 'POST' })
+  ,investigators: () => request('/api/investigators')
+  ,createInvestigator: payload => request('/api/investigators', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
+  ,investigatorWorkspace: id => request(`/api/investigators/${encodeURIComponent(id)}/workspace`)
+  ,assignInvestigator: (caseId, investigatorId) => request(`/api/cases/${encodeURIComponent(caseId)}/assignment`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ investigator_id: investigatorId }) })
+  ,developerKeys: () => request('/api/developer/keys')
+  ,createDeveloperKey: payload => request('/api/developer/keys', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
+  ,revokeDeveloperKey: id => request(`/api/developer/keys/${encodeURIComponent(id)}/revoke`, { method: 'POST' })
+  ,moneyFlow: (id, txHash) => request(`/api/cases/${encodeURIComponent(id)}/money-flow${txHash ? `?txHash=${encodeURIComponent(txHash)}` : ''}`)
+  ,fingerprint: (id, wallet) => request(`/api/cases/${encodeURIComponent(id)}/fingerprint${wallet ? `?wallet=${encodeURIComponent(wallet)}` : ''}`)
+  ,compareFingerprint: (id, walletA, walletB) => request(`/api/cases/${encodeURIComponent(id)}/fingerprint/compare`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ wallet_a: walletA, wallet_b: walletB }) })
+  ,infrastructureReuse: id => request(`/api/cases/${encodeURIComponent(id)}/infrastructure-reuse`)
+  ,hotspots: id => request(`/api/cases/${encodeURIComponent(id)}/hotspots`)
+  ,motifs: id => request(`/api/cases/${encodeURIComponent(id)}/motifs`)
+  ,dormancy: (id, thresholdDays) => request(`/api/cases/${encodeURIComponent(id)}/dormancy${thresholdDays ? `?thresholdDays=${thresholdDays}` : ''}`)
+  ,investigationDiff: (id, previousSnapshot) => request(`/api/cases/${encodeURIComponent(id)}/diff`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ previous_snapshot: previousSnapshot }) })
+  ,hypotheses: id => request(`/api/cases/${encodeURIComponent(id)}/hypotheses`)
+  ,createHypothesis: (id, payload) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
+  ,updateHypothesis: (id, hypId, payload) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses/${encodeURIComponent(hypId)}`, { method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(payload) })
+  ,deleteHypothesis: (id, hypId) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses/${encodeURIComponent(hypId)}`, { method: 'DELETE' })
 };
 
 export async function downloadReport(investigation) {
