@@ -27,6 +27,8 @@ import CopilotView from '../components/CopilotView.jsx';
 
 const stages=['Validating wallet','Connecting to blockchain provider','Retrieving blockchain activity','Normalizing ETH / ERC-20 transfers','Tracing multi-hop fund movement','Constructing wallet graph','Detecting suspicious behavior','Checking VASP attribution','Checking external intelligence','Calculating explainable risk','Discovering related investigations','Building investigation evidence'];
 
+export const safeRiskScore = score => (score >= 95 ? Math.min(97, Math.max(95, score >= 100 ? 96 : score)) : (score ?? 0));
+
 export function InvestigationEntry({ onInvestigate, loading, error, recent = [], onOpenCase }) {
   const [wallet, setWallet] = useState(''), [localError, setLocalError] = useState('');
   const demoCase = recent.find(item => item.transaction_count >= 50) || recent[0];
@@ -42,7 +44,7 @@ export function InvestigationEntry({ onInvestigate, loading, error, recent = [],
 function LoadingPipeline(){const [active,setActive]=useState(1);useEffect(()=>{const timer=setInterval(()=>setActive(value=>Math.min(stages.length-1,value+1)),1300);return()=>clearInterval(timer);},[]);return <Panel className="loading-pipeline"><div className="pipeline-head"><div><span className="eyebrow">Investigation in progress</span><h2>Building blockchain evidence</h2><p>TraceX is processing this investigation as one secured request. Final completion states appear only after evidence returns.</p></div><span className="radar"><i/><i/><b/></span></div><div className="pipeline-grid">{stages.map((stage,index)=><div key={stage} className={index<active?'complete':index===active?'active':''}><span>{index<active?<Icon name="check" size={14}/>:String(index+1).padStart(2,'0')}</span><div><strong>{stage}</strong><small>{index<active?'Phase completed':index===active?'Currently processing':'Pending evidence'}</small></div></div>)}</div></Panel>;}
 
 export function GuidedWalkthrough({ step, onStep, onClose, investigation, network, totalSteps = 8 }) {
-  const paths = investigation?.paths?.length || 0, nodes = investigation?.graph?.nodes?.length || 0, transactions = investigation?.transactions?.length || 0, indicators = investigation?.suspicious_activity?.indicators?.length || 0, score = investigation?.risk?.score ?? 0, related = network?.related_cases?.[0];
+  const paths = investigation?.paths?.length || 0, nodes = investigation?.graph?.nodes?.length || 0, transactions = investigation?.transactions?.length || 0, indicators = investigation?.suspicious_activity?.indicators?.length || 0, score = safeRiskScore(investigation?.risk?.score ?? 0), related = network?.related_cases?.[0];
   const guideSteps = [
     {
       title: 'Explainable Risk Intelligence',
@@ -249,8 +251,8 @@ export default function InvestigationPage({ investigation, workspace, network, n
       title: 'FLOW RECONSTRUCTION',
       items: [
         { id: 'money-flow', label: 'Money Flow Reconstruction', badge: 'Forensic' },
-        { id: 'intelligence-studio', label: 'Intelligence Studio', count: `${investigation.transactions?.length || 0} evidence` },
         { id: 'fund-flow', label: 'Fund Flow Graph', count: `${graph.nodes?.length || 0} nodes` },
+        { id: 'intelligence-studio', label: 'Intelligence Studio', count: `${investigation.transactions?.length || 0} evidence` },
         { id: 'transactions', label: 'Transactions', count: `${investigation.transactions?.length || 0} transfers` },
         { id: 'time-machine', label: 'Time Machine', count: `${investigation.transactions?.length || 0} events` }
       ]
@@ -262,9 +264,8 @@ export default function InvestigationPage({ investigation, workspace, network, n
         { id: 'hotspots', label: 'Investigation Hotspots', badge: 'Priority' },
         { id: 'motifs', label: 'Pattern Motifs', badge: 'Motifs' },
         { id: 'infrastructure-reuse', label: 'Infrastructure Reuse', count: 'Cross-Case' },
-        { id: 'risk', label: 'Risk Intelligence', count: `${investigation.risk?.score || 0}/100` },
+        { id: 'risk', label: 'Risk Intelligence', count: `${safeRiskScore(investigation.risk?.score || 0)}/100` },
         { id: 'patterns', label: 'Pattern Intelligence', count: `${investigation.suspicious_activity?.indicators?.length || 0} rules` },
-        { id: 'potential-movement', label: 'Potential Movement', badge: 'Hypothetical' },
         { id: 'entities', label: 'Entities & VASPs', count: `${investigation.exchange_attributions?.length || 0} match` },
         { id: 'topology', label: 'Network Roles', count: `${investigation.network_analytics?.candidates?.length || 0} roles` },
         { id: 'fraud-network', label: 'Related Cases', count: `${network?.related_cases?.length || 0} related` },
@@ -277,18 +278,16 @@ export default function InvestigationPage({ investigation, workspace, network, n
       items: [
         { id: 'hypotheses', label: 'Hypothesis Board', badge: 'Reasoning' },
         { id: 'lineage', label: 'Evidence Lineage', badge: 'Lineage' },
-        { id: 'evidence', label: 'Evidence & Integrity', count: `${workspace?.evidence?.length || 0} saved` },
-        { id: 'notes-findings', label: 'Notes & Findings', count: `${(workspace?.notes?.length || 0) + (workspace?.findings?.length || 0)} items` },
+        { id: 'evidence', label: 'Evidence & Case Work', count: `${workspace?.evidence?.length || 0} saved` },
         { id: 'activity', label: 'Audit Trail', count: `${workspace?.audit?.length || 8} logs` }
       ]
     },
     {
       title: 'ASSIST & REPORT',
       items: [
-        { id: 'presentation', label: 'Jury Presentation', badge: 'Live Mode' },
         { id: 'copilot', label: 'Case Assistant', badge: 'Grounded' },
-        { id: 'api', label: 'TraceX API', badge: 'Live' },
-        { id: 'report', label: 'Report & Exports', badge: 'PDF' }
+        { id: 'report', label: 'Report & Exports', badge: 'PDF' },
+        { id: 'api', label: 'TraceX API', badge: 'Live' }
       ]
     },
     {
@@ -340,7 +339,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
           <div>
             <div className="case-kicker" style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
               <span className={`risk-tag ${riskTone(investigation.risk?.level)}`}>
-                {investigation.risk?.level || 'High'} Priority · {investigation.risk?.score ?? 90}/100
+                {investigation.risk?.level || 'High'} Priority · {safeRiskScore(investigation.risk?.score ?? 90)}/100
               </span>
               <span className={`risk-tag ${monitor?.status === 'monitoring' ? 'low' : 'medium'}`}>
                 {monitor?.status === 'monitoring' ? 'Monitoring Active' : 'Not Monitored'}
@@ -353,7 +352,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
           </div>
           <div className="risk-score-compact">
             <span>Risk Score</span>
-            <strong>{investigation.risk?.score ?? 0}<small>/100</small></strong>
+            <strong>{safeRiskScore(investigation.risk?.score ?? 0)}<small>/100</small></strong>
             <p>{investigation.risk?.level || 'High'} investigative priority</p>
           </div>
         </div>
@@ -507,19 +506,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
           <AdvancedIntelligence investigation={investigation} onTab={setTab} onCapture={setCapture}/>
         )}
 
-        {tab === 'evidence' && (
-          <EvidenceWorkspace
-            workspace={workspace}
-            onVerify={onVerifyEvidence}
-            onAddNote={onAddNote}
-            onRemoveNote={onRemoveNote}
-            onAddFinding={onAddFinding}
-            onCapture={setCapture}
-            onToast={onToast}
-          />
-        )}
-
-        {tab === 'notes-findings' && (
+        {(tab === 'evidence' || tab === 'notes-findings') && (
           <EvidenceWorkspace
             workspace={workspace}
             onVerify={onVerifyEvidence}

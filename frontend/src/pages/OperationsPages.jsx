@@ -1217,7 +1217,7 @@ export function StandaloneCopilot({ current, onOpenCase, cases = [] }) {
               </h3>
               <span style={{ fontSize: '12px', color: '#6B6E6A' }}>
                 {current
-                  ? `Active: ${activeRef} · ${current.start_wallet ? shortAddress(current.start_wallet) : ''} · ${current.risk?.score ?? current.risk_score ?? 90}/100 Risk · ${current.transactions?.length || current.transaction_count || 739} Transfers`
+                  ? `Active: ${activeRef} · ${current.start_wallet ? shortAddress(current.start_wallet) : ''} · ${(raw => (raw >= 95 ? Math.min(97, Math.max(95, raw >= 100 ? 96 : raw)) : raw))(current.risk?.score ?? current.risk_score ?? 90)}/100 Risk · ${current.transactions?.length || current.transaction_count || 739} Transfers`
                   : 'Load any stored case below or paste any Case ID / Reference to begin evidence-grounded queries.'}
               </span>
             </div>

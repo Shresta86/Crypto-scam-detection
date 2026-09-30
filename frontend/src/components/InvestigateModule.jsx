@@ -769,60 +769,148 @@ function LedgerTable({ transactions }) {
 /* ────────── TIMELINE VELOCITY TAB ────────── */
 function TimelineScatter({ transactions }) {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [tooltip, setTooltip] = useState(null);
+
+  const validTxs = useMemo(() => {
+    return (transactions || [])
+      .map(t => {
+        const time = new Date(t.timestamp || t.time || Date.now()).getTime();
+        const amt = Number(t.amount || 0);
+        return { ...t, _time: isNaN(time) ? Date.now() : time, _amt: isNaN(amt) ? 0 : amt };
+      })
+      .filter(t => t._amt > 0);
+  }, [transactions]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !transactions?.length) return;
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    const W = rect.width, H = rect.height;
-    ctx.fillStyle = '#060910';
-    ctx.fillRect(0, 0, W, H);
+    const render = () => {
+      const rect = container.getBoundingClientRect();
+      const W = Math.max(300, rect.width - 36);
+      const H = Math.max(320, rect.height - 70);
+      const dpr = window.devicePixelRatio || 1;
 
-    const pad = { top: 30, right: 30, bottom: 40, left: 60 };
-    const pW = W - pad.left - pad.right, pH = H - pad.top - pad.bottom;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
 
-    const times = transactions.map(t => new Date(t.timestamp).getTime());
-    const amounts = transactions.map(t => Number(t.amount || 0));
-    const minT = Math.min(...times), maxT = Math.max(...times);
-    const maxA = Math.max(...amounts) * 1.15 || 1;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
 
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 4; i++) {
-      const y = pad.top + (i / 4) * pH;
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-    }
+      ctx.fillStyle = '#060a12';
+      ctx.fillRect(0, 0, W, H);
 
-    transactions.forEach(t => {
-      const time = new Date(t.timestamp).getTime();
-      const amt = Number(t.amount || 0);
-      const x = pad.left + ((time - minT) / (maxT - minT || 1)) * pW;
-      const y = pad.top + (1 - amt / maxA) * pH;
+      if (!validTxs.length) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '13px "Roboto Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('No non-zero value transactions available to plot temporal velocity.', W / 2, H / 2);
+        return;
+      }
 
-      ctx.fillStyle = CHAIN_COLORS[t.asset] || '#60a5fa';
-      ctx.shadowColor = ctx.fillStyle;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    });
+      const pad = { top: 25, right: 35, bottom: 45, left: 65 };
+      const pW = W - pad.left - pad.right;
+      const pH = H - pad.top - pad.bottom;
 
-  }, [transactions]);
+      const times = validTxs.map(t => t._time);
+      const amounts = validTxs.map(t => t._amt);
+      const minT = Math.min(...times);
+      const maxT = Math.max(...times);
+      const spanT = maxT - minT || 3600000;
+      const maxA = Math.max(...amounts) * 1.15 || 1;
+
+      // Draw grid lines & Y labels
+      ctx.strokeStyle = '#142338';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px "Roboto Mono", monospace';
+      ctx.textAlign = 'right';
+
+      const yTicks = 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const y = pad.top + (i / yTicks) * pH;
+        const val = ((1 - i / yTicks) * maxA).toFixed(val => val >= 10 ? 1 : 3);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        ctx.fillText(`${val}`, pad.left - 8, y + 3);
+      }
+
+      // Draw X axis & time labels
+      ctx.textAlign = 'center';
+      const xTicks = Math.min(5, Math.max(2, Math.floor(pW / 120)));
+      for (let i = 0; i <= xTicks; i++) {
+        const x = pad.left + (i / xTicks) * pW;
+        const tVal = new Date(minT + (i / xTicks) * spanT);
+        const timeStr = tVal.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top);
+        ctx.lineTo(x, H - pad.bottom);
+        ctx.stroke();
+        ctx.fillText(timeStr, x, H - pad.bottom + 18);
+      }
+
+      // Draw Scatter points
+      validTxs.forEach(t => {
+        const x = pad.left + ((t._time - minT) / spanT) * pW;
+        const y = pad.top + (1 - t._amt / maxA) * pH;
+        const color = CHAIN_COLORS[t.asset] || '#06b6d4';
+
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Inner core
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+
+    render();
+    const ro = new ResizeObserver(render);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [validTxs]);
 
   return (
-    <div style={{ flex: 1, padding: 18, background: '#060910', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-        <strong style={{ fontSize: 13, color: '#f1f5f9' }}>Temporal Velocity Analysis</strong>
-        <span style={{ fontSize: 11, color: '#64748b' }}>X: Timestamp · Y: Transaction Volume (ETH)</span>
+    <div
+      ref={containerRef}
+      style={{
+        flex: 1,
+        minHeight: 460,
+        height: '100%',
+        padding: 18,
+        background: '#040810',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative'
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div>
+          <strong style={{ fontSize: 14, color: '#f1f5f9', display: 'block' }}>Temporal Velocity Analysis</strong>
+          <span style={{ fontSize: 11, color: '#64748b' }}>Outlier and burst detection across chronological transfer events</span>
+        </div>
+        <div style={{ display: 'flex', gap: 14, fontSize: 11, fontFamily: '"Roboto Mono", monospace', color: '#94a3b8' }}>
+          <span>X: Timestamp</span>
+          <span>Y: Transfer Volume</span>
+          <span style={{ color: '#06b6d4' }}>● {validTxs.length} Data Points</span>
+        </div>
       </div>
-      <canvas ref={canvasRef} style={{ width: '100%', height: 'calc(100% - 30px)', borderRadius: 8 }} />
+      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <canvas ref={canvasRef} style={{ borderRadius: 8, border: '1px solid #142338' }} />
+      </div>
     </div>
   );
 }

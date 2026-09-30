@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Badge, Button, CopyValue, EmptyState, Panel, SectionHeader } from './Primitives.jsx';
+import Icon from './Icon.jsx';
 import { formatDate } from '../utils.js';
 
 const evidenceTypes=['TRANSACTION','WALLET','TRACED_PATH','RISK_INDICATOR','VASP_ATTRIBUTION','EXTERNAL_INTELLIGENCE','RELATED_CASE_RELATIONSHIP','NETWORK_NODE','BRIDGE_INTERACTION','ALERT','TIMELINE_EVENT','REPORT_SNAPSHOT'];

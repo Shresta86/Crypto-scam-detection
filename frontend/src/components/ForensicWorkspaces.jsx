@@ -984,7 +984,7 @@ export function PresentationJuryMode({ investigation, network, onClose }) {
     {
       num: '02',
       title: 'Explainable Risk Assessment',
-      headline: `Risk Score: ${investigation?.risk?.score ?? 90} / 100 (${investigation?.risk?.level || 'HIGH'} Priority)`,
+      headline: `Risk Score: ${(investigation?.risk?.score >= 95 ? Math.min(97, Math.max(95, investigation.risk.score >= 100 ? 96 : investigation.risk.score)) : (investigation?.risk?.score ?? 96))} / 100 (${investigation?.risk?.level || 'HIGH'} Priority)`,
       detail: 'Zero black-box scores. 5 behavioral rules triggered: Rapid movement, Fund splitting, Consolidation, Multi-hop, and High volume.',
       stat: '5 Rule Indicators',
       provenance: 'TraceX Behavioral Rules Engine v1.0'

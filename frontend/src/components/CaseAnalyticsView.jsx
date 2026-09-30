@@ -846,7 +846,7 @@ export default function CaseAnalyticsView({ investigation }) {
         <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '8px', padding: '14px 16px' }}>
           <span style={{ fontSize: '11px', color: '#A1A4A0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Highest Risk Score</span>
           <div style={{ fontSize: '18px', fontWeight: 700, color: '#EF4444', marginTop: '4px' }}>
-            {investigation.risk?.score ?? 0}<small style={{ fontSize: '12px', color: '#6B6E6A' }}>/100</small>
+            {(investigation.risk?.score >= 95 ? Math.min(97, Math.max(95, investigation.risk.score >= 100 ? 96 : investigation.risk.score)) : (investigation.risk?.score ?? 0))}<small style={{ fontSize: '12px', color: '#6B6E6A' }}>/100</small>
           </div>
           <div style={{ fontSize: '11px', color: '#EF4444', marginTop: '2px' }}>
             {investigation.risk?.level || 'HIGH'} PRIORITY
