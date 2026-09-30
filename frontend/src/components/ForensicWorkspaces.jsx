@@ -910,7 +910,7 @@ export function EvidenceLineageWorkspace({ investigation, workspace }) {
       { step: '02 SAVED EVIDENCE ITEM', label: 'Evidence EV-0002 (Risk Snapshot · SHA-256 Verified)', type: 'EVIDENCE' },
       { step: '03 DETECTION RULE', label: 'Rule: rapid_movement (+25 pts) · Outgoing transfer <= 600s after receipt', type: 'RULE' },
       { step: '04 OBSERVED TRANSACTIONS', label: 'Tx 0x43273aba... (1.00 ETH) & Tx 0xdc80ad91... (0.975 ETH)', type: 'TRANSACTIONS' },
-      { step: '05 PROVIDER SOURCE', label: 'Alchemy Asset Transfers API · Normalization Schema v1', type: 'PROVIDER' },
+      { step: '05 DATA SOURCE', label: 'Chain data Asset Transfers · Normalization Schema v1', type: 'PROVIDER' },
       { step: '06 BLOCKCHAIN RECORD', label: 'Ethereum Mainnet Block #26059466 · Canonical State', type: 'CHAIN' }
     ],
     vasp_attribution: [
@@ -979,13 +979,13 @@ export function PresentationJuryMode({ investigation, network, onClose }) {
       headline: `Suspect Address: ${investigation?.start_wallet}`,
       detail: `TraceX retrieved and normalized ${investigation?.transactions?.length || 0} blockchain transfer records across Ethereum Mainnet.`,
       stat: `${investigation?.transactions?.length || 0} Transfers`,
-      provenance: 'Provider: Alchemy Asset Transfers · Block height #26059466'
+      provenance: 'Source: Chain data Asset Transfers · Block height #26059466'
     },
     {
       num: '02',
       title: 'Explainable Risk Assessment',
       headline: `Risk Score: ${investigation?.risk?.score ?? 90} / 100 (${investigation?.risk?.level || 'HIGH'} Priority)`,
-      detail: 'Zero black-box AI scores. 5 behavioral rules triggered: Rapid movement, Fund splitting, Consolidation, Multi-hop, and High volume.',
+      detail: 'Zero black-box scores. 5 behavioral rules triggered: Rapid movement, Fund splitting, Consolidation, Multi-hop, and High volume.',
       stat: '5 Rule Indicators',
       provenance: 'TraceX Behavioral Rules Engine v1.0'
     },
@@ -1101,7 +1101,7 @@ export function CommandPalette({ isOpen, onClose, onNavigateTab, cases = [] }) {
     { label: 'Transactions Explorer', tab: 'transactions', cat: 'EVIDENCE' },
     { label: 'Risk Intelligence Breakdown', tab: 'risk', cat: 'INTELLIGENCE' },
     { label: 'Cross-Case Fraud Network', tab: 'fraud-network', cat: 'NETWORK' },
-    { label: 'Copilot Investigation Assistant', tab: 'copilot', cat: 'ASSIST' },
+    { label: 'Case Assistant', tab: 'copilot', cat: 'ASSIST' },
     { label: 'Official Investigation Report (PDF)', tab: 'report', cat: 'EXPORT' },
     { label: 'Jury / Courtroom Presentation Mode', tab: 'presentation', cat: 'PRESENT' }
   ];

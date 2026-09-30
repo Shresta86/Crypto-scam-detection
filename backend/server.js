@@ -22,6 +22,10 @@ import {
   boundedSnapshot, CASE_PRIORITIES, CASE_STATUSES, caseCompleteness, EVIDENCE_TYPES,
   FINDING_STATUSES, integrityHash, NOTE_TYPES, sanitizeText, validateStatusTransition
 } from './services/case-workspace.js';
+import {
+  buildCaseKnowledgeGraph, getLatestKnowledgeGraph, getActiveBuildJob,
+  getKnowledgeGraphHistory, findShortestPath
+} from './knowledgeGraph.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -563,6 +567,129 @@ app.get('/api/cases/:caseId/workspace', async (req, res, next) => {
       AuditEvent.countDocuments({ case_id: caseId, event_type: 'REPORT_GENERATED' })
     ]);
     res.json({ case: caseView(doc), evidence, notes, findings, audit, completeness: caseCompleteness({ investigation: result, evidenceCount: evidence.length, noteCount: notes.length, findingCount: findings.length, monitoring: Boolean(monitor), reportGenerated: reportEvents > 0 }) });
+  } catch (error) { next(error); }
+});
+
+// CASE KNOWLEDGE GRAPH ROUTES
+app.post('/api/cases/:caseId/graph/build', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+
+    // Asynchronously trigger build job
+    buildCaseKnowledgeGraph(doc, {
+      identifyExchange,
+      CaseNetworkIndex,
+      Alert,
+      EvidenceItem,
+      InvestigatorNote,
+      InvestigatorFinding,
+      InvestigatorHypothesis
+    }).catch(err => console.error('[KnowledgeGraph] Background build error:', err));
+
+    res.json({
+      success: true,
+      case_id: caseId,
+      status: 'BUILDING',
+      message: 'Case knowledge graph build pipeline started'
+    });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/graph/status', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+    const active = getActiveBuildJob(caseId);
+    if (active) {
+      return res.json({
+        case_id: caseId,
+        status: active.status,
+        current_stage: active.current_stage,
+        stage_status: active.stage_status,
+        node_count: active.nodes?.size || 0,
+        edge_count: active.edges?.size || 0,
+        version: active.version,
+        graph_hash: active.graph_hash,
+        error_message: active.error_message
+      });
+    }
+
+    const latest = await getLatestKnowledgeGraph(caseId);
+    if (latest) {
+      return res.json({
+        case_id: caseId,
+        status: latest.status,
+        current_stage: latest.current_stage,
+        stage_status: latest.stage_status,
+        node_count: latest.nodes?.length || 0,
+        edge_count: latest.edges?.length || 0,
+        version: latest.version,
+        graph_hash: latest.graph_hash
+      });
+    }
+
+    res.json({
+      case_id: caseId,
+      status: 'IDLE',
+      current_stage: 0,
+      node_count: 0,
+      edge_count: 0
+    });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/graph', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+    const version = req.query.version;
+    const graph = await getLatestKnowledgeGraph(caseId, version);
+    if (!graph) {
+      return res.json({
+        case_id: caseId,
+        status: 'IDLE',
+        nodes: [],
+        edges: [],
+        metadata: null
+      });
+    }
+    res.json(graph);
+  } catch (error) { next(error); }
+});
+
+app.get('/api/cases/:caseId/graph/history', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+    const history = await getKnowledgeGraphHistory(caseId);
+    res.json({ case_id: caseId, history });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/cases/:caseId/graph/query', async (req, res, next) => {
+  try {
+    const doc = await requireCase(req.params.caseId);
+    const caseId = String(doc._id);
+    const { startNode, endNode } = req.body;
+    const graph = await getLatestKnowledgeGraph(caseId);
+    if (!graph) throw new AppError(404, 'graph_not_found', 'No knowledge graph built for this case yet.');
+
+    if (startNode && endNode) {
+      const pathResult = findShortestPath(graph.nodes, graph.edges, startNode, endNode);
+      return res.json({
+        type: 'PATH',
+        found: Boolean(pathResult),
+        pathNodes: pathResult?.pathNodes || [],
+        pathEdges: pathResult?.pathEdges || []
+      });
+    }
+
+    res.json({
+      type: 'GENERAL',
+      nodes: graph.nodes,
+      edges: graph.edges
+    });
   } catch (error) { next(error); }
 });
 

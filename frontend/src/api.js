@@ -57,8 +57,12 @@ export const api = {
   ,investigationDiff: (id, previousSnapshot) => request(`/api/cases/${encodeURIComponent(id)}/diff`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ previous_snapshot: previousSnapshot }) })
   ,hypotheses: id => request(`/api/cases/${encodeURIComponent(id)}/hypotheses`)
   ,createHypothesis: (id, payload) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
-  ,updateHypothesis: (id, hypId, payload) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses/${encodeURIComponent(hypId)}`, { method: 'PATCH', headers: jsonHeaders, body: JSON.stringify(payload) })
   ,deleteHypothesis: (id, hypId) => request(`/api/cases/${encodeURIComponent(id)}/hypotheses/${encodeURIComponent(hypId)}`, { method: 'DELETE' })
+  ,knowledgeGraph: (id, version) => request(`/api/cases/${encodeURIComponent(id)}/graph${version ? `?version=${version}` : ''}`)
+  ,buildKnowledgeGraph: id => request(`/api/cases/${encodeURIComponent(id)}/graph/build`, { method: 'POST' })
+  ,knowledgeGraphStatus: id => request(`/api/cases/${encodeURIComponent(id)}/graph/status`)
+  ,knowledgeGraphHistory: id => request(`/api/cases/${encodeURIComponent(id)}/graph/history`)
+  ,queryKnowledgeGraph: (id, payload) => request(`/api/cases/${encodeURIComponent(id)}/graph/query`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
 };
 
 export async function downloadReport(investigation) {

@@ -83,7 +83,7 @@ export default function HomePage({
           <span style={{ fontSize: '12px', color: '#6B6E6A' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#A1A4A0' }}>
             <span style={{ color: '#6B6E6A' }}>RPC:</span>
-            <span style={{ color: '#EDEDEB' }}>Alchemy Verified · 14ms</span>
+            <span style={{ color: '#EDEDEB' }}>Chain data verified · 14ms</span>
           </div>
           <span style={{ fontSize: '12px', color: '#6B6E6A' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#A1A4A0' }}>
@@ -563,7 +563,7 @@ export default function HomePage({
                 <span style={{ fontSize: '11px', color: '#3FB68B', fontWeight: 600 }}>LAYER 1 · INGESTION</span>
                 <h4 style={{ margin: 0, fontSize: '13px', color: '#EDEDEB' }}>Multi-Provider RPC</h4>
                 <p style={{ margin: 0, fontSize: '12px', color: '#6B6E6A', lineHeight: 1.4 }}>
-                  Dual provider failover between Alchemy and Etherscan ensures uninterrupted transaction normalization.
+                  Dual-source failover between primary and secondary chain data sources ensures uninterrupted transaction normalization.
                 </p>
               </div>
 
@@ -585,9 +585,9 @@ export default function HomePage({
             </div>
 
             <div style={{ background: '#0A0B0B', border: '1px solid #232624', borderRadius: '6px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#A1A4A0' }}>INVESTIGATION COPILOT CAPABILITY</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#A1A4A0' }}>CASE ASSISTANT CAPABILITY</span>
               <p style={{ margin: 0, fontSize: '12px', color: '#6B6E6A', lineHeight: 1.5 }}>
-                Integrated Groq / LLaMA-3 copilot answers queries grounded exclusively in observed blockchain transactions and saved evidence items. No speculative statements or hallucinated affiliations are permitted.
+                Integrated case assistant answers queries grounded exclusively in observed blockchain transactions and saved evidence items. No speculative statements or hallucinated affiliations are permitted.
               </p>
             </div>
 

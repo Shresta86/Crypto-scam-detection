@@ -123,7 +123,7 @@ export function EvidenceCapture({ draft, onSave, onClose }) {
               <h3>Source & Provenance</h3>
               <p>Record the origin of this evidence to maintain authentic chain of custody.</p>
               <label>Source Provider
-                <input value={form.source_provider} onChange={e => setForm({ ...form, source_provider: e.target.value })} placeholder="e.g. Alchemy, Etherscan, TraceX Tracing"/>
+                <input value={form.source_provider} onChange={e => setForm({ ...form, source_provider: e.target.value })} placeholder="e.g. Chain data, Threat reports, TraceX Tracing"/>
               </label>
               <label>Wallet Address
                 <input value={form.wallet_address} onChange={e => setForm({ ...form, wallet_address: e.target.value })} placeholder="0x..."/>

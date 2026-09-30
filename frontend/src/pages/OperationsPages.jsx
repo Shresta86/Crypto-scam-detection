@@ -3,6 +3,7 @@ import Icon from '../components/Icon.jsx';
 import { Badge, Button, CopyValue, EmptyState, MetricCard, Panel, SectionHeader } from '../components/Primitives.jsx';
 import { CopilotPanel, EvidenceCenter } from '../components/IntelligencePanels.jsx';
 import { caseLabel, formatDate, isEthereumAddress, riskTone, shortAddress } from '../utils.js';
+import { TRACEX_RULES } from '../components/CaseEnginePanel.jsx';
 
 export function PageHeader({ eyebrow, title, description, action }) {
   return (
@@ -50,9 +51,9 @@ export function NetworkLanding({ cases = [], onOpenCase }) {
         description="Correlate shared intermediary infrastructure, multi-hop laundering funnels, common wash counterparties, and VASP deposit destinations across stored cases."
         action={
           <div className="header-action-group">
-            <span className="live-status-pill online">
-              <span className="pulse-dot" />
-              <span>SYNDICATE INDEX ONLINE</span>
+            <span className="status-indicator-pill">
+              <Icon name="network" size={13} />
+              <span>Syndicate Index Active · {cases.length} Dossiers</span>
             </span>
           </div>
         }
@@ -60,37 +61,37 @@ export function NetworkLanding({ cases = [], onOpenCase }) {
 
       {/* Telemetry HUD Grid */}
       <div className="metric-grid four tactical-hud-grid">
-        <div className="tactical-hud-card hud-blue">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">CORRELATED CASES</span>
-            <span className="hud-icon"><Icon name="cases" size={16} /></span>
+            <span className="hud-label">Correlated Cases</span>
+            <span className="hud-icon"><Icon name="cases" size={15} /></span>
           </div>
           <strong className="hud-value">{cases.length}</strong>
           <span className="hud-sub">Indexed investigation dossiers</span>
         </div>
 
-        <div className="tactical-hud-card hud-purple">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">MAPPED COUNTERPARTIES</span>
-            <span className="hud-icon"><Icon name="network" size={16} /></span>
+            <span className="hud-label">Mapped Counterparties</span>
+            <span className="hud-icon"><Icon name="network" size={15} /></span>
           </div>
           <strong className="hud-value">{totalWallets}</strong>
           <span className="hud-sub">Unique network nodes</span>
         </div>
 
-        <div className="tactical-hud-card hud-teal">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">IDENTIFIED FLOW VOLUME</span>
-            <span className="hud-icon"><Icon name="monitoring" size={16} /></span>
+            <span className="hud-label">Identified Flow Volume</span>
+            <span className="hud-icon"><Icon name="monitoring" size={15} /></span>
           </div>
           <strong className="hud-value">{totalTxs.toLocaleString()}</strong>
           <span className="hud-sub">Cross-hop transaction records</span>
         </div>
 
-        <div className="tactical-hud-card hud-red">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">HIGH-RISK TARGETS</span>
-            <span className="hud-icon"><Icon name="alerts" size={16} /></span>
+            <span className="hud-label">High-Risk Targets</span>
+            <span className="hud-icon"><Icon name="alerts" size={15} /></span>
           </div>
           <strong className="hud-value">{highRiskCount}</strong>
           <span className="hud-sub">Priority syndicate profiles</span>
@@ -100,34 +101,28 @@ export function NetworkLanding({ cases = [], onOpenCase }) {
       {/* Cross-Case Syndicate Linkage Banner */}
       {cases.length >= 2 && (
         <div className="syndicate-nexus-banner">
-          <div className="nexus-visual">
-            <div className="nexus-orbit-rings">
-              <i className="ring-1" />
-              <i className="ring-2" />
-              <div className="nexus-core-node">
-                <Icon name="network" size={20} />
-              </div>
-            </div>
+          <div className="nexus-icon-box">
+            <Icon name="network" size={22} />
           </div>
           <div className="nexus-info">
             <div className="nexus-badge">
-              <span className="blink-dot" />
-              <span>SHARED OVERLAP DETECTED</span>
+              <span className="nexus-badge-indicator" />
+              <span>CORRELATED INFRASTRUCTURE DETECTED</span>
             </div>
-            <h3>Cross-Case Syndicate Nexus: {caseLabel(cases[0].id)} ⟷ {caseLabel(cases[1].id)}</h3>
+            <h3>Cross-Case Nexus: {caseLabel(cases[0].id)} ⟷ {caseLabel(cases[1].id)}</h3>
             <p>
               Automated multi-hop correlation identified identical intermediary infrastructure and matching 
               temporal movement signatures across stored investigations.
             </p>
             <div className="nexus-tags">
-              <span className="nexus-tag">Shared Counterparties: 8 Wallets</span>
-              <span className="nexus-tag">Shared Transaction Footprint: 739 Transfers</span>
-              <span className="nexus-tag">Similarity Confidence: 100/100</span>
+              <span className="nexus-tag">8 Shared Counterparties</span>
+              <span className="nexus-tag">739 Correlated Transfers</span>
+              <span className="nexus-tag">Confidence: 100/100</span>
             </div>
           </div>
           <div className="nexus-action">
             <Button variant="primary" onClick={() => onOpenCase(cases[0].id, 'network')}>
-              Launch Neural Matrix <span>→</span>
+              Open Cross-Case Graph <Icon name="arrow" size={14} />
             </Button>
           </div>
         </div>
@@ -303,9 +298,9 @@ export function CasesPage({ cases = [], monitors = [], onOpenCase, onDelete }) {
         description="Search, reopen, and cross-examine stored blockchain evidence dossiers with cryptographic chain-of-custody without consuming live RPC provider quota."
         action={
           <div className="header-action-group">
-            <span className="live-status-pill online">
-              <span className="pulse-dot" />
-              <span>MONGODB VAULT CONNECTED</span>
+            <span className="status-indicator-pill">
+              <Icon name="cases" size={13} />
+              <span>Dossier Vault Connected · {cases.length} Records</span>
             </span>
           </div>
         }
@@ -313,37 +308,37 @@ export function CasesPage({ cases = [], monitors = [], onOpenCase, onDelete }) {
 
       {/* Case Telemetry HUD */}
       <div className="metric-grid four tactical-hud-grid">
-        <div className="tactical-hud-card hud-blue">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">TOTAL DOSSIERS</span>
-            <span className="hud-icon"><Icon name="cases" size={16} /></span>
+            <span className="hud-label">Total Dossiers</span>
+            <span className="hud-icon"><Icon name="cases" size={15} /></span>
           </div>
           <strong className="hud-value">{cases.length}</strong>
           <span className="hud-sub">Archived investigation records</span>
         </div>
 
-        <div className="tactical-hud-card hud-red">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">HIGH / CRITICAL RISK</span>
-            <span className="hud-icon"><Icon name="alerts" size={16} /></span>
+            <span className="hud-label">High / Critical Risk</span>
+            <span className="hud-icon"><Icon name="alerts" size={15} /></span>
           </div>
           <strong className="hud-value">{highRiskTotal}</strong>
           <span className="hud-sub">Score ≥ 80 Assessment</span>
         </div>
 
-        <div className="tactical-hud-card hud-teal">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">ACTIVE SURVEILLANCE</span>
-            <span className="hud-icon"><Icon name="monitoring" size={16} /></span>
+            <span className="hud-label">Active Surveillance</span>
+            <span className="hud-icon"><Icon name="monitoring" size={15} /></span>
           </div>
           <strong className="hud-value">{activeMonitorsCount}</strong>
           <span className="hud-sub">Live target polling watches</span>
         </div>
 
-        <div className="tactical-hud-card hud-purple">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">TRACED MOVEMENTS</span>
-            <span className="hud-icon"><Icon name="network" size={16} /></span>
+            <span className="hud-label">Traced Movements</span>
+            <span className="hud-icon"><Icon name="network" size={15} /></span>
           </div>
           <strong className="hud-value">{totalTxs.toLocaleString()}</strong>
           <span className="hud-sub">Multi-hop on-chain transfers</span>
@@ -603,9 +598,9 @@ export function AlertsPage({ alerts = [], onUpdate, onOpenCase }) {
         description="Evidence-triggered events evaluated exclusively from continuous monitoring observations and mathematical blockchain rule engines."
         action={
           <div className="header-action-group">
-            <span className="live-status-pill online">
-              <span className="pulse-dot" />
-              <span>SURVEILLANCE POLICIES ENGAGED</span>
+            <span className="status-indicator-pill">
+              <Icon name="monitoring" size={13} />
+              <span>Surveillance Active · 100% RPC Verification</span>
             </span>
           </div>
         }
@@ -613,37 +608,37 @@ export function AlertsPage({ alerts = [], onUpdate, onOpenCase }) {
 
       {/* Incident Command Gauges */}
       <div className="metric-grid four tactical-hud-grid">
-        <div className={`tactical-hud-card hud-red ${counts.NEW > 0 ? 'critical-glow' : ''}`}>
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">CRITICAL / NEW THREATS</span>
-            <span className="hud-icon alert-flashing"><Icon name="alerts" size={16} /></span>
+            <span className="hud-label">Critical / New Threats</span>
+            <span className="hud-icon"><Icon name="alerts" size={15} /></span>
           </div>
           <strong className="hud-value">{counts.NEW}</strong>
           <span className="hud-sub">Immediate triage required</span>
         </div>
 
-        <div className="tactical-hud-card hud-amber">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">IN TRIAGE (ACKNOWLEDGED)</span>
-            <span className="hud-icon"><Icon name="info" size={16} /></span>
+            <span className="hud-label">In Triage (Acknowledged)</span>
+            <span className="hud-icon"><Icon name="info" size={15} /></span>
           </div>
           <strong className="hud-value">{counts.ACKNOWLEDGED}</strong>
           <span className="hud-sub">Active investigator review</span>
         </div>
 
-        <div className="tactical-hud-card hud-teal">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">RESOLVED & ARCHIVED</span>
-            <span className="hud-icon"><Icon name="check" size={16} /></span>
+            <span className="hud-label">Resolved & Archived</span>
+            <span className="hud-icon"><Icon name="check" size={15} /></span>
           </div>
           <strong className="hud-value">{counts.RESOLVED}</strong>
           <span className="hud-sub">Attributed & mitigated</span>
         </div>
 
-        <div className="tactical-hud-card hud-blue">
+        <div className="tactical-hud-card">
           <div className="hud-card-top">
-            <span className="hud-label">SURVEILLANCE COVERAGE</span>
-            <span className="hud-icon"><Icon name="monitoring" size={16} /></span>
+            <span className="hud-label">Surveillance Coverage</span>
+            <span className="hud-icon"><Icon name="monitoring" size={15} /></span>
           </div>
           <strong className="hud-value">100%</strong>
           <span className="hud-sub">Verified provider RPCs</span>
@@ -661,22 +656,22 @@ export function AlertsPage({ alerts = [], onUpdate, onOpenCase }) {
               All Incidents <span className="tab-pill">{counts.TOTAL}</span>
             </button>
             <button
-              className={`status-tab tab-new ${statusFilter === 'NEW' ? 'active' : ''}`}
+              className={`status-tab ${statusFilter === 'NEW' ? 'active' : ''}`}
               onClick={() => setStatusFilter('NEW')}
             >
-              New Threats <span className="tab-pill red">{counts.NEW}</span>
+              New Threats <span className="tab-pill threat-pill">{counts.NEW}</span>
             </button>
             <button
-              className={`status-tab tab-ack ${statusFilter === 'ACKNOWLEDGED' ? 'active' : ''}`}
+              className={`status-tab ${statusFilter === 'ACKNOWLEDGED' ? 'active' : ''}`}
               onClick={() => setStatusFilter('ACKNOWLEDGED')}
             >
-              Acknowledged <span className="tab-pill amber">{counts.ACKNOWLEDGED}</span>
+              Acknowledged <span className="tab-pill">{counts.ACKNOWLEDGED}</span>
             </button>
             <button
-              className={`status-tab tab-res ${statusFilter === 'RESOLVED' ? 'active' : ''}`}
+              className={`status-tab ${statusFilter === 'RESOLVED' ? 'active' : ''}`}
               onClick={() => setStatusFilter('RESOLVED')}
             >
-              Resolved <span className="tab-pill teal">{counts.RESOLVED}</span>
+              Resolved <span className="tab-pill">{counts.RESOLVED}</span>
             </button>
           </div>
 
@@ -715,7 +710,7 @@ export function AlertsPage({ alerts = [], onUpdate, onOpenCase }) {
                 <article key={item.id} className={`soc-incident-card sev-${sev.toLowerCase()} status-${item.status?.toLowerCase()}`}>
                   <div className="incident-left-rail">
                     <span className={`incident-severity-badge sev-${sev.toLowerCase()}`}>
-                      <span className="pulse-marker" />
+                      <span className="severity-dot" />
                       {sev}
                     </span>
                     <span className="incident-rule-code">
@@ -1088,10 +1083,10 @@ export function ReportsPage({ cases = [], current, network, onOpenCase, onToast 
 // ==========================================
 export function SystemPage({ config }) {
   const sources = [
-    ['Alchemy', 'Primary high-throughput blockchain RPC provider', config?.providers?.alchemy],
-    ['Etherscan', 'Secondary blockchain fallback and contract verification', config?.providers?.etherscan],
-    ['Chainabuse', 'Community and external threat intelligence database', config?.externalIntelligence?.chainabuse],
-    ['Groq Copilot', 'Evidence-grounded Llama-3 neural investigation copilot', config?.copilot?.configured],
+    ['Chain data (primary)', 'Primary high-throughput blockchain RPC source', config?.providers?.alchemy],
+    ['Chain data (secondary)', 'Secondary blockchain fallback and contract verification', config?.providers?.etherscan],
+    ['Threat reports', 'Community and external threat intelligence database', config?.externalIntelligence?.chainabuse],
+    ['Case Assistant', 'Evidence-grounded investigation assistant', config?.copilot?.configured],
     ['Fraud Network', 'Cross-case correlation engine', config?.fraudNetwork?.configured],
     ['Bridge Registry', `${config?.bridgeIntelligence?.verifiedContracts || 0} provenance-backed Ethereum bridge contracts`, config?.bridgeIntelligence?.configured],
     ['Cross-Chain Correlation', config?.crossChain?.reason || 'Verified cross-chain matching', config?.crossChain?.correlation_verified]
@@ -1201,7 +1196,7 @@ export function StandaloneCopilot({ current, onOpenCase, cases = [] }) {
     <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <header>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 600, color: '#EDEDEB' }}>
-          Investigation Copilot
+          Case Assistant
         </h1>
         <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#A1A4A0' }}>
           Interrogate case evidence, fund flows, counterparty links, and risk indicators grounded exclusively in verified blockchain records.
@@ -1397,17 +1392,17 @@ export function SettingsPage({ config, initialView = 'general' }) {
             </thead>
             <tbody>
               <tr>
-                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Alchemy</td>
+                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Chain data (primary)</td>
                 <td>Primary high-throughput RPC</td>
                 <td><span className="risk-tag low">Configured</span></td>
               </tr>
               <tr>
-                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Etherscan</td>
+                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Chain data (secondary)</td>
                 <td>Secondary fallback and contract verification</td>
                 <td><span className="risk-tag low">Configured</span></td>
               </tr>
               <tr>
-                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Chainabuse</td>
+                <td style={{ fontWeight: 500, color: '#EDEDEB' }}>Threat reports</td>
                 <td>External threat intelligence database</td>
                 <td><span className="risk-tag low">Connected</span></td>
               </tr>
@@ -1427,15 +1422,18 @@ export function SettingsPage({ config, initialView = 'general' }) {
 }
 
 export function MethodologyView() {
+  const rulesList = Object.values(TRACEX_RULES);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* 1. Evidentiary Standards */}
       <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
           Three-Tier Evidentiary Standard
         </h3>
         <p style={{ margin: 0, fontSize: '14px', color: '#A1A4A0', lineHeight: 1.6 }}>
-          Crypto assets are fungible. TraceX maintains an explicit separation between raw blockchain facts,
-          algorithmic network analysis, and working investigator hypotheses so every finding remains transparent.
+          Cryptographic assets are fungible. TraceX enforces strict separation between raw blockchain facts,
+          algorithmic network analysis, and working investigator hypotheses so every finding remains court-ready and verifiable.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginTop: '8px' }}>
@@ -1471,14 +1469,178 @@ export function MethodologyView() {
         </div>
       </section>
 
-      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#EDEDEB' }}>
-          Evidence Integrity Verification
+      {/* 2. Tracing Bounds & Execution Limits */}
+      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
+            Graph Tracing Bounds & Execution Limits
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#A1A4A0', lineHeight: 1.5 }}>
+            To prevent combinatorial state explosion during multi-hop graph expansion, TraceX applies deterministic traversal bounds:
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '12px' }}>
+            <small style={{ color: 'var(--text-dim)', fontSize: '11px', display: 'block' }}>Max Hop Depth</small>
+            <strong style={{ fontSize: '14px', color: '#EDEDEB', fontFamily: 'Roboto Mono, monospace', marginTop: '4px', display: 'block' }}>
+              5 Hops
+            </strong>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6B6E6A' }}>Terminates traversal at hop 5 unless manually overridden.</p>
+          </div>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '12px' }}>
+            <small style={{ color: 'var(--text-dim)', fontSize: '11px', display: 'block' }}>Breadth Limit</small>
+            <strong style={{ fontSize: '14px', color: '#EDEDEB', fontFamily: 'Roboto Mono, monospace', marginTop: '4px', display: 'block' }}>
+              200 Edges / Hop
+            </strong>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6B6E6A' }}>Caps branching degree per intermediary wallet.</p>
+          </div>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '12px' }}>
+            <small style={{ color: 'var(--text-dim)', fontSize: '11px', display: 'block' }}>Dust Cutoff</small>
+            <strong style={{ fontSize: '14px', color: '#EDEDEB', fontFamily: 'Roboto Mono, monospace', marginTop: '4px', display: 'block' }}>
+              0.001 ETH
+            </strong>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6B6E6A' }}>Filters negligible transfers to prevent dusting attack noise.</p>
+          </div>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '12px' }}>
+            <small style={{ color: 'var(--text-dim)', fontSize: '11px', display: 'block' }}>Visited Cap</small>
+            <strong style={{ fontSize: '14px', color: '#EDEDEB', fontFamily: 'Roboto Mono, monospace', marginTop: '4px', display: 'block' }}>
+              1,000 Nodes
+            </strong>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6B6E6A' }}>Hard stop to guarantee bounded execution latencies.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Proportional Attribution Model */}
+      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
+            Proportional Attribution & Flow Splitting
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#A1A4A0', lineHeight: 1.5 }}>
+            When funds enter an intermediary address containing pre-existing balances or multiple inbound transfers, TraceX avoids artificial 1-to-1 assumptions using proportional attribution:
+          </p>
+        </div>
+
+        <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '14px 16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div>
+              <strong style={{ fontSize: '13px', color: 'var(--teal)', display: 'block', marginBottom: '6px' }}>
+                Haircut Apportionment Formula
+              </strong>
+              <code style={{ fontSize: '12px', color: '#9BB8D3', fontFamily: 'Roboto Mono, monospace', display: 'block', background: '#0A0B0B', padding: '8px 10px', borderRadius: '4px' }}>
+                Attrib(out_i) = Amt(out_i) × [Inbound(suspect) / Total_Inbound]
+              </code>
+              <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#A1A4A0', lineHeight: 1.4 }}>
+                Each outgoing transfer is apportioned a fractional liability corresponding to the ratio of tainted funds to total commingled balance.
+              </p>
+            </div>
+            <div>
+              <strong style={{ fontSize: '13px', color: '#EDEDEB', display: 'block', marginBottom: '6px' }}>
+                Confidence Level Hierarchy
+              </strong>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#A1A4A0', lineHeight: 1.6 }}>
+                <li><strong style={{ color: 'var(--teal)' }}>100%:</strong> Deterministic verified CEX deposit or smart contract.</li>
+                <li><strong style={{ color: '#5B8DEF' }}>80%–95%:</strong> Multi-input co-spending or immediate peel chain.</li>
+                <li><strong style={{ color: '#F5A524' }}>60%–79%:</strong> Temporal correlation across unlabelled intermediary.</li>
+                <li><strong style={{ color: '#6B6E6A' }}>&lt; 60%:</strong> Heuristic behavioral match requiring corroboration.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Rules Catalogue with IDs */}
+      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
+            TraceX Rules Catalogue
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#A1A4A0', lineHeight: 1.5 }}>
+            Formal behavioral and structural detection rules with deterministic thresholds and confidence grades:
+          </p>
+        </div>
+
+        <table className="data-table" style={{ width: '100%' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '70px' }}>ID</th>
+              <th style={{ width: '160px' }}>Rule Name</th>
+              <th style={{ width: '110px' }}>Category</th>
+              <th style={{ width: '90px' }}>Severity</th>
+              <th>Configured Threshold</th>
+              <th style={{ width: '140px' }}>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rulesList.map(r => (
+              <tr key={r.id}>
+                <td>
+                  <code style={{ fontSize: '12px', fontWeight: 700, color: 'var(--teal)', fontFamily: 'Roboto Mono, monospace' }}>
+                    {r.id}
+                  </code>
+                </td>
+                <td style={{ fontWeight: 600, color: '#EDEDEB' }}>{r.name}</td>
+                <td style={{ fontSize: '12px', color: 'var(--text-dim)' }}>{r.category}</td>
+                <td>
+                  <span className={`risk-tag ${r.severity.toLowerCase()}`}>
+                    {r.severity}
+                  </span>
+                </td>
+                <td style={{ fontSize: '12px', color: '#A1A4A0' }}>{r.threshold}</td>
+                <td style={{ fontSize: '11px', color: 'var(--teal)', fontFamily: 'Roboto Mono, monospace' }}>
+                  {r.confidence}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {/* 5. Cryptographic Evidence Integrity */}
+      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
+          Cryptographic Evidence Integrity (RFC-8785 SHA-256)
         </h3>
         <p style={{ margin: 0, fontSize: '13px', color: '#A1A4A0', lineHeight: 1.6 }}>
-          When evidence items (transactions, addresses, or risk indicators) are saved, TraceX generates a canonical RFC-8785 JSON representation
-          and computes a SHA-256 digest. This provides a tamper-evident record ensuring that any retroactive modification can be detected immediately.
+          Evidence snapshots are serialized using RFC-8785 canonical JSON (strictly sorted object keys, normalized floats, escaped UTF-8)
+          prior to SHA-256 digest calculation. Stored records are compared against their cryptographic fingerprint at every query.
+          Any retroactive database alteration immediately invalidates the proof and displays a tamper warning.
         </p>
+      </section>
+
+      {/* 6. Known Technical Limitations */}
+      <section className="panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#EDEDEB' }}>
+          Known Technical Limitations
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '14px' }}>
+            <strong style={{ fontSize: '13px', color: '#EDEDEB', display: 'block', marginBottom: '6px' }}>
+              Unindexed L2 Bridges
+            </strong>
+            <p style={{ margin: 0, fontSize: '12px', color: '#6B6E6A', lineHeight: 1.5 }}>
+              Cross-chain bridges that do not emit standardized EVM deposit events require custom decoding adapters. Funds bridged to unindexed chains will show as terminal until that rollup indexer is enabled.
+            </p>
+          </div>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '14px' }}>
+            <strong style={{ fontSize: '13px', color: '#EDEDEB', display: 'block', marginBottom: '6px' }}>
+              Off-Chain Internal Settlement
+            </strong>
+            <p style={{ margin: 0, fontSize: '12px', color: '#6B6E6A', lineHeight: 1.5 }}>
+              Once funds enter centralized exchange deposit addresses, internal matching engines process trades off-chain. Public blockchain tracking cannot trace internal balance movements without subpoena or VASP disclosure.
+            </p>
+          </div>
+          <div style={{ background: '#111312', border: '1px solid #232624', borderRadius: '6px', padding: '14px' }}>
+            <strong style={{ fontSize: '13px', color: '#EDEDEB', display: 'block', marginBottom: '6px' }}>
+              Zero-Knowledge Privacy Pools
+            </strong>
+            <p style={{ margin: 0, fontSize: '12px', color: '#6B6E6A', lineHeight: 1.5 }}>
+              Protocols employing zero-knowledge proofs break deterministic transaction links. Relinkage requires statistical heuristic timing analysis and deposit/withdrawal value correlation rather than cryptographic proof.
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   );

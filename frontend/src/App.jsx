@@ -101,7 +101,8 @@ export default function App() {
         api.alerts(data.start_wallet).then(setAlerts)
       ]);
 
-      if (tab === 'fund-flow') navigate(`/cases/${caseMongoId}/flow`);
+      if (tab === 'knowledge-graph' || tab === 'graph') navigate(`/cases/${caseMongoId}/graph`);
+      else if (tab === 'fund-flow') navigate(`/cases/${caseMongoId}/flow`);
       else if (tab === 'transactions') navigate(`/cases/${caseMongoId}/transactions`);
       else if (tab === 'topology') navigate(`/cases/${caseMongoId}/patterns`);
       else if (tab === 'time-machine') navigate(`/cases/${caseMongoId}/timeline`);
@@ -120,7 +121,7 @@ export default function App() {
   useEffect(() => {
     const match = pathname.match(/^\/(?:cases|network)\/([^/?#]+)/i);
     if (match && current?.investigation_id !== match[1] && current?.case?.case_reference !== match[1]) {
-      loadCase(match[1], pathname.startsWith('/network/') ? 'network' : undefined);
+      loadCase(match[1], pathname.endsWith('/graph') ? 'knowledge-graph' : (pathname.startsWith('/network/') ? 'network' : undefined));
     }
   }, [pathname, current?.investigation_id, current?.case?.case_reference, loadCase]);
 
@@ -398,7 +399,8 @@ function renderRoute(context) {
 
     // Derive tab from nested route or query parameter
     let tab = queryTab || 'overview';
-    if (route.endsWith('/flow')) tab = 'fund-flow';
+    if (route.endsWith('/graph')) tab = 'knowledge-graph';
+    else if (route.endsWith('/flow')) tab = 'fund-flow';
     else if (route.endsWith('/transactions')) tab = 'transactions';
     else if (route.endsWith('/patterns')) tab = 'topology';
     else if (route.endsWith('/timeline')) tab = 'time-machine';

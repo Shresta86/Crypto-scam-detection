@@ -1046,3 +1046,649 @@ input::placeholder, textarea::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-3);
 }
+
+/* ==========================================================================
+   INSTITUTIONAL GRAPH CANVAS & STATUS PILLS (Zero Neon AI Artifacts)
+   ========================================================================== */
+.status-indicator-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.graph-stage {
+  background-color: var(--bg) !important;
+  background-image: linear-gradient(rgba(35, 38, 36, 0.4) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(35, 38, 36, 0.4) 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
+}
+
+.graph-toolbar {
+  background: var(--surface-1) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.graph-toolbar h3 {
+  color: var(--text-1) !important;
+}
+
+.graph-toolbar p, .graph-toolbar .eyebrow {
+  color: var(--text-3) !important;
+}
+
+.graph-edge line {
+  stroke: var(--border-strong) !important;
+  stroke-width: 1.5 !important;
+  opacity: 0.8 !important;
+}
+
+.graph-edge:hover line, .graph-edge.focused line {
+  stroke: var(--accent) !important;
+  stroke-width: 2 !important;
+  opacity: 1 !important;
+}
+
+.graph-edge text {
+  fill: var(--text-3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 8px !important;
+}
+
+.graph-node circle, .graph-node rect, .graph-node path {
+  stroke-width: 1.5 !important;
+}
+
+.graph-node .focus-halo {
+  stroke: var(--accent) !important;
+  stroke-opacity: 0.3 !important;
+  fill: none !important;
+}
+
+.node-label {
+  fill: var(--text-2) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+}
+
+.graph-node:hover .node-label, .graph-node.focused .node-label {
+  fill: var(--text-1) !important;
+  font-weight: 600 !important;
+}
+
+.graph-legend {
+  background: var(--surface-1) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-control) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.graph-legend span {
+  color: var(--text-2) !important;
+  font-size: 10px !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 500 !important;
+}
+
+.path-focus-strip {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-card) !important;
+  color: var(--text-1) !important;
+}
+
+/* ==========================================================================
+   SIDEBAR CASE LOOKUP (JUMP BY CASE #)
+   ========================================================================== */
+.sidebar-case-lookup {
+  margin: var(--space-2) var(--space-2) var(--space-1);
+}
+
+.sidebar-lookup-wrap {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 0 4px;
+  height: 28px;
+  transition: border-color var(--transition-fast);
+}
+
+.sidebar-lookup-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.sidebar-lookup-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 0 4px;
+  outline: none;
+  min-width: 0;
+}
+
+.sidebar-lookup-input::placeholder {
+  color: var(--text-3);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+.sidebar-lookup-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  padding: 2px 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-lookup-btn:hover {
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   CASE KNOWLEDGE GRAPH WORKSPACE (FLAGSHIP)
+   Institutional Dark · Strict Lineage & Provenance
+   ========================================================================== */
+.case-knowledge-graph-workspace {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--topbar-height) - 1px);
+  background-color: var(--bg);
+  overflow: hidden;
+}
+
+/* Summary Bar */
+.kg-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface-1);
+  gap: 16px;
+  flex-shrink: 0;
+}
+.kg-summary-text {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+  flex: 1;
+}
+.kg-summary-stats {
+  font: 500 11px 'Roboto Mono', monospace;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* Toolbar */
+.kg-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg);
+  gap: 12px;
+  flex-shrink: 0;
+}
+.kg-toolbar-left,
+.kg-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* View Switcher */
+.kg-view-switch {
+  display: flex;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+.kg-view-switch .view-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.kg-view-switch .view-btn:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+.kg-view-switch .view-btn.active {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+.kg-view-switch .view-btn:hover:not(.active) {
+  color: var(--text-2);
+}
+
+/* Search */
+.kg-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 4px 10px;
+  min-width: 180px;
+  color: var(--text-3);
+}
+.kg-search-wrap input {
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text-1);
+  font-size: 12px;
+  flex: 1;
+  font-family: inherit;
+}
+.kg-search-wrap input::placeholder {
+  color: var(--text-3);
+}
+.kg-search-wrap button {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Rebuild Button */
+.kg-rebuild-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.kg-rebuild-btn:hover {
+  border-color: var(--text-3);
+  color: var(--text-1);
+}
+.kg-rebuild-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.icon-button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 5px 7px;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.icon-button:hover {
+  color: var(--text-2);
+  border-color: var(--text-3);
+}
+
+/* Main Layout */
+.kg-main-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Canvas Container */
+.kg-canvas-container {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.kg-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+.kg-canvas:active {
+  cursor: grabbing;
+}
+
+/* Legend (bottom-left overlay) */
+.kg-legend {
+  position: absolute;
+  bottom: 48px;
+  left: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 2;
+}
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-dot.legend-rect {
+  border-radius: 2px;
+}
+.legend-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 3px 0;
+}
+.legend-line {
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--text-3);
+  flex-shrink: 0;
+}
+.legend-line.dashed {
+  border-top-style: dashed;
+}
+
+/* Bottom Scrubber */
+.kg-bottom-scrubber {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  z-index: 2;
+}
+.scrubber-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.scrubber-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 10px 'Roboto Mono', monospace;
+  color: var(--text-3);
+}
+.hash-tag {
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 9px;
+  color: var(--accent);
+  cursor: help;
+}
+
+/* Inspector Rail */
+.kg-inspector-rail {
+  width: 300px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.inspector-head h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icon-btn-text {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.icon-btn-text:hover { color: var(--text-2); }
+
+.inspector-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Node identity block */
+.node-identity {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.node-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font: 600 10px 'Roboto Mono', monospace;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(63, 182, 139, 0.12);
+  border-radius: 3px;
+  align-self: flex-start;
+}
+.node-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.node-provenance-tag {
+  font: 400 10px 'Roboto Mono', monospace;
+  color: var(--text-3);
+  background: var(--surface-2);
+  padding: 4px 8px;
+  border-radius: 3px;
+  word-break: break-all;
+}
+
+/* Inspector sections */
+.inspector-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.inspector-section h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px 0;
+}
+
+.inspector-attr-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+}
+.attr-key {
+  font-size: 11px;
+  color: var(--text-3);
+}
+.attr-val {
+  font: 500 11px 'Roboto Mono', monospace;
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+/* Findings list */
+.inspector-findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.finding-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  background: var(--surface-2);
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.finding-item:hover {
+  background: var(--border);
+}
+
+/* Build Progress Stages */
+.kg-build-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.kg-build-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.kg-build-stage-row.active {
+  background: rgba(63, 182, 139, 0.08);
+  border: 1px solid rgba(63, 182, 139, 0.2);
+}
+.kg-build-stage-row.done {
+  opacity: 0.6;
+}
+.stage-num {
+  font: 600 12px 'Roboto Mono', monospace;
+  color: var(--accent);
+  min-width: 20px;
+}
+.stage-label {
+  font-size: 12px;
+  color: var(--text-1);
+  flex: 1;
+}
+.stage-stat {
+  font: 400 10px 'Roboto Mono', monospace;
+  color: var(--text-3);
+}
+
+/* Empty State */
+.knowledge-graph-empty-stage {
+  height: calc(100vh - var(--topbar-height) - 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+}
+
+.empty-graph-card {
+  max-width: 480px;
+  text-align: center;
+  background-color: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.empty-graph-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.empty-graph-card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0;
+}
+
+.empty-graph-card p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.build-graph-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--accent);
+  color: #0A0B0B;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.build-graph-btn:hover {
+  filter: brightness(1.1);
+}

@@ -43,6 +43,7 @@ export default function AppShell({
   const [cmdQuery, setCmdQuery] = useState('');
   const [cmdIndex, setCmdIndex] = useState(0);
   const cmdInputRef = useRef(null);
+  const [caseLookupInput, setCaseLookupInput] = useState('');
 
   // Toggle collapsed state and persist
   const toggleCollapse = () => {
@@ -101,7 +102,9 @@ export default function AppShell({
         { label: 'Cases', path: '/cases' },
         { label: caseLabel(caseId), path: `/cases/${caseId}` }
       ];
-      if (pathname.endsWith('/flow') || activeTab === 'fund-flow') {
+      if (pathname.endsWith('/graph') || activeTab === 'knowledge-graph') {
+        crumbs.push({ label: 'Knowledge graph' });
+      } else if (pathname.endsWith('/flow') || activeTab === 'fund-flow') {
         crumbs.push({ label: 'Fund flow' });
       } else if (pathname.endsWith('/transactions') || activeTab === 'transactions') {
         crumbs.push({ label: 'Transactions' });
@@ -122,7 +125,7 @@ export default function AppShell({
       return [{ label: 'Intelligence', path: '/network' }, { label: 'Network' }];
     }
     if (pathname === '/copilot') {
-      return [{ label: 'Intelligence', path: '/network' }, { label: 'Copilot' }];
+      return [{ label: 'Intelligence', path: '/network' }, { label: 'Ask' }];
     }
     if (pathname === '/monitoring') {
       return [{ label: 'Operations', path: '/monitoring' }, { label: 'Monitoring' }];
@@ -151,19 +154,32 @@ export default function AppShell({
     { label: 'View all cases', group: 'Navigation', icon: 'cases', action: () => navigate('/cases') },
     { label: 'Open sample case TX-2026-5C7986', group: 'Actions', icon: 'cases', action: () => onOpenCase?.('6aba9bf3a9851671145c7986') },
     { label: 'Network Intelligence', group: 'Intelligence', icon: 'network', action: () => navigate('/network') },
-    { label: 'Investigation Copilot', group: 'Intelligence', icon: 'copilot', action: () => navigate('/copilot') },
+    { label: 'Case Assistant', group: 'Intelligence', icon: 'messageText', action: () => navigate('/copilot') },
     { label: 'Wallet Monitoring', group: 'Operations', icon: 'monitoring', action: () => navigate('/monitoring') },
     { label: 'Security Alerts', group: 'Operations', icon: 'alerts', action: () => navigate('/alerts') },
     { label: 'Developer API Keys', group: 'Developers', icon: 'keys', action: () => navigate('/developers/keys') },
     { label: 'Developer API Sandbox', group: 'Developers', icon: 'console', action: () => navigate('/developers/console') },
     { label: 'System Settings', group: 'Settings', icon: 'settings', action: () => navigate('/settings') },
     { label: 'Investigation Methodology', group: 'Settings', icon: 'info', action: () => navigate('/settings/methodology') },
+    ...(currentCase ? [
+      { label: `Knowledge graph (${caseLabel(currentCase.investigation_id)})`, group: 'Active case', icon: 'waypoints', action: () => navigate(`/cases/${currentCase.investigation_id}/graph`) },
+      { label: `Build knowledge graph (${caseLabel(currentCase.investigation_id)})`, group: 'Actions', icon: 'network', action: () => navigate(`/cases/${currentCase.investigation_id}/graph`) }
+    ] : []),
     // Filterable Cases
     ...cases.map(c => ({
       label: `Open Case ${caseLabel(c.id)} (${c.risk_score}/100 - ${shortAddress(c.wallet_address)})`,
       group: 'Cases',
       icon: 'cases',
       action: () => onOpenCase?.(c.id)
+    })),
+    ...cases.map(c => ({
+      label: `Knowledge graph for Case ${caseLabel(c.id)}`,
+      group: 'Knowledge Graph',
+      icon: 'waypoints',
+      action: () => {
+        onOpenCase?.(c.id);
+        navigate(`/cases/${c.id}/graph`);
+      }
     }))
   ];
 
@@ -267,10 +283,17 @@ export default function AppShell({
                 </div>
                 <div className="active-case-subnav">
                   <button
-                    className={`active-case-subitem ${activeTab === 'overview' && pathname.startsWith('/cases/') ? 'active' : ''}`}
+                    className={`active-case-subitem ${activeTab === 'overview' && pathname.startsWith('/cases/') && !pathname.endsWith('/graph') ? 'active' : ''}`}
                     onClick={() => navigate(`/cases/${currentCase.investigation_id}?tab=overview`)}
                   >
                     Overview
+                  </button>
+                  <button
+                    className={`active-case-subitem ${activeTab === 'knowledge-graph' || pathname.endsWith('/graph') ? 'active' : ''}`}
+                    onClick={() => navigate(`/cases/${currentCase.investigation_id}/graph`)}
+                    title="Case Knowledge Graph"
+                  >
+                    Knowledge graph
                   </button>
                   <button
                     className={`active-case-subitem ${activeTab === 'fund-flow' ? 'active' : ''}`}
@@ -317,6 +340,22 @@ export default function AppShell({
           <div className="nav-section">
             {!collapsed && <div className="nav-section-label">Intelligence</div>}
             <button
+              className={`nav-item ${pathname.includes('/graph') ? 'active' : ''}`}
+              onClick={() => {
+                if (currentCase) {
+                  navigate(`/cases/${currentCase.investigation_id}/graph`);
+                } else if (cases && cases.length > 0) {
+                  navigate(`/cases/${cases[0].id || cases[0]._id}/graph`);
+                } else {
+                  navigate('/cases');
+                }
+              }}
+              title="Case Knowledge Graph"
+            >
+              <span className="nav-item-icon"><Icon name="waypoints" size={16} /></span>
+              {!collapsed && <span className="nav-item-label">Knowledge graph</span>}
+            </button>
+            <button
               className={`nav-item ${pathname.startsWith('/network') ? 'active' : ''}`}
               onClick={() => navigate('/network')}
               title="Network"
@@ -327,11 +366,44 @@ export default function AppShell({
             <button
               className={`nav-item ${pathname === '/copilot' ? 'active' : ''}`}
               onClick={() => navigate('/copilot')}
-              title="Copilot"
+              title="Case assistant"
             >
-              <span className="nav-item-icon"><Icon name="copilot" size={16} /></span>
-              {!collapsed && <span className="nav-item-label">Copilot</span>}
+              <span className="nav-item-icon"><Icon name="messageText" size={16} /></span>
+              {!collapsed && <span className="nav-item-label">Ask</span>}
             </button>
+            {!collapsed && (
+              <form
+                className="sidebar-case-lookup"
+                onSubmit={e => {
+                  e.preventDefault();
+                  const trimmed = caseLookupInput.trim();
+                  if (!trimmed) return;
+                  const matched = cases.find(c =>
+                    c.id?.toLowerCase() === trimmed.toLowerCase() ||
+                    c.case_reference?.toLowerCase() === trimmed.toLowerCase() ||
+                    caseLabel(c.id).toLowerCase() === trimmed.toLowerCase()
+                  );
+                  const targetId = matched ? matched.id : trimmed;
+                  onOpenCase?.(targetId);
+                  navigate(`/cases/${targetId}/graph`);
+                  setCaseLookupInput('');
+                }}
+              >
+                <div className="sidebar-lookup-wrap">
+                  <input
+                    type="text"
+                    placeholder="Graph by Case #…"
+                    value={caseLookupInput}
+                    onChange={e => setCaseLookupInput(e.target.value)}
+                    className="sidebar-lookup-input"
+                    title="Enter Case # (e.g. TX-2026-5C7986) to open Knowledge Graph"
+                  />
+                  <button type="submit" className="sidebar-lookup-btn" title="Open Case Graph">
+                    <Icon name="arrow" size={12} />
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* OPERATIONS SECTION */}
@@ -385,13 +457,10 @@ export default function AppShell({
         {/* Sidebar Footer */}
         <div className="sidebar-footer">
           {!collapsed && (
-            <div className="providers-status-row" title="Providers status">
-              <span>Providers</span>
+            <div className="providers-status-row" title="Primary: healthy · Secondary: healthy">
+              <span>Data sources</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <span className="provider-dot" /> Alchemy
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <span className="provider-dot" /> Etherscan
+                <span className="provider-dot" /> Healthy
               </span>
             </div>
           )}

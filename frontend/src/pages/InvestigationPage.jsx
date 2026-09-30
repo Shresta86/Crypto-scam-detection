@@ -20,6 +20,8 @@ import {
   CommandPalette
 } from '../components/ForensicWorkspaces.jsx';
 import { caseLabel, formatDate, formatNumber, isEthereumAddress, riskTone, unique, shortAddress } from '../utils.js';
+import CaseKnowledgeGraph from '../components/CaseKnowledgeGraph.jsx';
+import { CaseEnginePipelinePanel, RuleDetailsModal } from '../components/CaseEnginePanel.jsx';
 
 const stages=['Validating wallet','Connecting to blockchain provider','Retrieving blockchain activity','Normalizing ETH / ERC-20 transfers','Tracing multi-hop fund movement','Constructing wallet graph','Detecting suspicious behavior','Checking VASP attribution','Checking external intelligence','Calculating explainable risk','Discovering related investigations','Building investigation evidence'];
 
@@ -28,7 +30,7 @@ export function InvestigationEntry({ onInvestigate, loading, error, recent = [],
   const demoCase = recent.find(item => item.transaction_count >= 50) || recent[0];
   const submit = event => { event.preventDefault(); const value = wallet.trim(); if (!isEthereumAddress(value)) { setLocalError('Invalid Ethereum address. Must start with 0x followed by 40 hex characters.'); return; } setLocalError(''); onInvestigate(value); };
   return <div className="investigation-entry page-enter">
-    <div className="hero-grid"><div className="hero-copy"><Badge tone="blue" dot>TRACEX • BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE</Badge><h1>Report the Wallet.<br/>Trace the Money.<br/><span>Reveal the Network.</span></h1><p>Turn a victim-reported Ethereum wallet into structured, explainable, evidence-oriented fund-movement intelligence across multi-hop transactions and shared infrastructure.</p><div className="trust-row"><span><Icon name="check"/>Provider-backed evidence</span><span><Icon name="check"/>Explainable risk score</span><span><Icon name="check"/>Grounded AI copilot</span></div>{demoCase && <div className="demo-case-banner"><span><Icon name="cases"/></span><div><strong>Ready for jury demonstration:</strong><span>{caseLabel(demoCase.id)} ({demoCase.transaction_count} transfers · {demoCase.wallet_count} wallets)</span></div><Button variant="secondary" onClick={() => onOpenCase(demoCase.id)}>Open stored demo case</Button></div>}</div><Panel className="search-console"><div className="console-top"><div><span className="eyebrow">Start investigation</span><h2>Enter suspect wallet</h2></div><Badge tone="neutral">ETH · MAINNET</Badge></div><form onSubmit={submit}><label htmlFor="wallet-address">Ethereum suspect wallet address</label><div className={`wallet-input ${localError ? 'invalid' : ''}`}><span>0x</span><input id="wallet-address" value={wallet} onChange={event => setWallet(event.target.value)} placeholder="Enter 40 hexadecimal characters (e.g. d8da6bf...)" autoComplete="off"/><button disabled={loading}><Icon name="investigate"/>{loading ? 'Tracing…' : 'Start investigation'}</button></div>{localError && <p className="field-error">{localError}</p>}<small>Format: 0x followed by 40 hexadecimal characters. Supported chain: Ethereum Mainnet.</small></form><div className="console-foot"><span><i/>Alchemy primary · Etherscan fallback</span><span>Bounded trace: 2 hops · 8 wallets</span></div></Panel></div>
+    <div className="hero-grid"><div className="hero-copy"><Badge tone="blue" dot>TRACEX • BLOCKCHAIN FINANCIAL CRIME INTELLIGENCE</Badge><h1>Report the Wallet.<br/>Trace the Money.<br/><span>Reveal the Network.</span></h1><p>Turn a victim-reported Ethereum wallet into structured, explainable, evidence-oriented fund-movement intelligence across multi-hop transactions and shared infrastructure.</p><div className="trust-row"><span><Icon name="check"/>Provider-backed evidence</span><span><Icon name="check"/>Explainable risk score</span><span><Icon name="check"/>Grounded case assistant</span></div>{demoCase && <div className="demo-case-banner"><span><Icon name="cases"/></span><div><strong>Ready for jury demonstration:</strong><span>{caseLabel(demoCase.id)} ({demoCase.transaction_count} transfers · {demoCase.wallet_count} wallets)</span></div><Button variant="secondary" onClick={() => onOpenCase(demoCase.id)}>Open stored demo case</Button></div>}</div><Panel className="search-console"><div className="console-top"><div><span className="eyebrow">Start investigation</span><h2>Enter suspect wallet</h2></div><Badge tone="neutral">ETH · MAINNET</Badge></div><form onSubmit={submit}><label htmlFor="wallet-address">Ethereum suspect wallet address</label><div className={`wallet-input ${localError ? 'invalid' : ''}`}><span>0x</span><input id="wallet-address" value={wallet} onChange={event => setWallet(event.target.value)} placeholder="Enter 40 hexadecimal characters (e.g. d8da6bf...)" autoComplete="off"/><button disabled={loading}><Icon name="investigate"/>{loading ? 'Tracing…' : 'Start investigation'}</button></div>{localError && <p className="field-error">{localError}</p>}<small>Format: 0x followed by 40 hexadecimal characters. Supported chain: Ethereum Mainnet.</small></form><div className="console-foot"><span><i/>Chain data primary · secondary fallback</span><span>Bounded trace: 2 hops · 8 wallets</span></div></Panel></div>
     {error && <Panel className="provider-recovery"><div className="recovery-header"><Icon name="system" size={24}/><div><h3>{error.code === 'no_activity' ? 'No supported Ethereum activity found' : 'LIVE PROVIDER TEMPORARILY UNAVAILABLE'}</h3><p>{error.message || 'TraceX could not complete the live blockchain request.'}</p><small>Your existing investigation evidence remains available in MongoDB storage. You can continue the demonstration using stored provider-backed cases.</small></div></div><div className="inline-actions">{isEthereumAddress(wallet.trim()) && <Button variant="secondary" onClick={() => onInvestigate(wallet.trim())}>Retry live analysis</Button>}{recent[0] && <Button onClick={() => onOpenCase(recent[0].id)}>Open recent investigation</Button>}<Button variant="ghost" onClick={() => navigate('/cases')}>View stored cases</Button></div></Panel>}
     {loading && <LoadingPipeline/>}
     {!loading && recent.length > 0 && <section className="recent-section"><SectionHeader eyebrow="Stored provider-backed evidence" title="Recent investigations" description="Reopen complete case context without consuming provider quota." action={<button className="text-button" onClick={() => navigate('/cases')}>View all cases <Icon name="arrow"/></button>}/><div className="recent-grid">{recent.slice(0, 3).map(item => <button key={item.id} onClick={() => onOpenCase(item.id)}><div><span className={`risk-line risk-${riskTone(item.risk_level)}`}/><span className="eyebrow">{caseLabel(item.id)}</span><strong>{item.wallet_address}</strong></div><div className="recent-meta"><span>{item.transaction_count} transactions</span><span>{item.wallet_count} wallets</span><Badge tone={riskTone(item.risk_level)}>{item.risk_level} · {item.risk_score}</Badge></div><Icon name="arrow"/></button>)}</div></section>}
@@ -83,7 +85,7 @@ export function GuidedWalkthrough({ step, onStep, onClose, investigation, networ
       jurySay: '"TraceX computes a SHA-256 hash immediately upon capture so any future alteration can be detected."'
     },
     {
-      title: 'Grounded Copilot & PDF Report',
+      title: 'Case Assistant & PDF Report',
       target: 'report',
       desc: 'Evidence brief with integrity summary, methodology, limitations, and 1-click PDF generation.',
       jurySay: '"TraceX packages the investigation into a professional evidence-oriented intelligence report."'
@@ -141,7 +143,7 @@ export function FeatureTestLab({ onNavigate, currentCase, network, workspace, mo
     { name: 'SHA-256 Integrity Verification', tab: 'evidence', status: 'READY', desc: 'Cryptographic verification proving snapshot has not been mutated.' },
     { name: 'Investigator Notes & Findings', tab: 'notes-findings', status: 'READY', desc: 'Distinguishes working notes from evidence-backed formal findings.' },
     { name: 'Real-Time Wallet Monitoring', tab: 'monitoring', status: monitor?.status==='monitoring'?'ACTIVE':'READY', desc: 'Deduplicated polling watching suspect wallet for fresh transfers.' },
-    { name: 'Grounded Groq Copilot', tab: 'copilot', status: 'READY', desc: 'Evidence-grounded assistant with 6 one-click starter prompts.' },
+    { name: 'Evidence-Grounded Case Assistant', tab: 'copilot', status: 'READY', desc: 'Evidence-grounded assistant with 6 one-click starter prompts.' },
     { name: 'Professional PDF Brief Export', tab: 'report', status: 'READY', desc: 'Generates an evidence-oriented PDF report with integrity summary and limitations.' }
   ];
 
@@ -207,6 +209,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
 
   const [cmdOpen, setCmdOpen] = useState(false);
   const [presentationOpen, setPresentationOpen] = useState(false);
+  const [inspectingRule, setInspectingRule] = useState(null);
 
   useEffect(() => {
     const handler = e => {
@@ -236,7 +239,8 @@ export default function InvestigationPage({ investigation, workspace, network, n
     {
       title: 'OVERVIEW',
       items: [
-        { id: 'overview', label: 'Case Briefing', badge: 'Map' }
+        { id: 'overview', label: 'Case Briefing', badge: 'Map' },
+        { id: 'knowledge-graph', label: 'Knowledge Graph', badge: 'Flagship' }
       ]
     },
     {
@@ -280,7 +284,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
       title: 'ASSIST & REPORT',
       items: [
         { id: 'presentation', label: 'Jury Presentation', badge: 'Live Mode' },
-        { id: 'copilot', label: 'Copilot Assistant', badge: 'Grounded' },
+        { id: 'copilot', label: 'Case Assistant', badge: 'Grounded' },
         { id: 'api', label: 'TraceX API', badge: 'Live' },
         { id: 'report', label: 'Report & Exports', badge: 'PDF' }
       ]
@@ -351,7 +355,7 @@ export default function InvestigationPage({ investigation, workspace, network, n
         <div className="case-facts">
           <div><span>Network</span><strong>Ethereum Mainnet</strong></div>
           <div><span>Investigated</span><strong>{formatDate(investigation.timestamp)}</strong></div>
-          <div><span>Provider</span><strong>{investigation.provider?.selected?.toUpperCase() || 'ALCHEMY'}{investigation.provider?.fallback_used ? ' (FALLBACK)' : ''}</strong></div>
+          <div><span>Source</span><strong>{investigation.provider?.selected ? 'CHAIN DATA' : 'CHAIN DATA'}{investigation.provider?.fallback_used ? ' (FALLBACK)' : ''}</strong></div>
           <div><span>Evidence Storage</span><strong>Local MongoDB</strong></div>
         </div>
 
@@ -405,8 +409,19 @@ export default function InvestigationPage({ investigation, workspace, network, n
         {tab === 'overview' && (
           <div className="stack">
             <CaseInspector workspace={workspace} investigators={investigators} onUpdate={onUpdateCase} onAssign={onAssignInvestigator} onToast={onToast}/>
-            <OverviewIntelligence investigation={investigation} network={network} monitor={monitor} onTab={setTab} onMonitor={onMonitor} onCapture={setCapture}/>
+            <CaseEnginePipelinePanel investigation={investigation} workspace={workspace} onInspectRule={setInspectingRule}/>
+            <OverviewIntelligence investigation={investigation} network={network} monitor={monitor} onTab={setTab} onMonitor={onMonitor} onCapture={setCapture} onInspectRule={setInspectingRule}/>
           </div>
+        )}
+
+        {tab === 'knowledge-graph' && (
+          <CaseKnowledgeGraph
+            caseId={investigation.investigation_id || investigation._id}
+            caseDoc={investigation}
+            onOpenCase={onOpenCase}
+            onCaptureEvidence={onAddEvidence}
+            onToast={onToast}
+          />
         )}
 
         {tab === 'fund-flow' && (
@@ -581,6 +596,15 @@ export default function InvestigationPage({ investigation, workspace, network, n
             setCmdOpen(false);
           }}
           onClose={() => setCmdOpen(false)}
+        />
+      )}
+
+      {inspectingRule && (
+        <RuleDetailsModal
+          rule={inspectingRule}
+          investigation={investigation}
+          onClose={() => setInspectingRule(null)}
+          onCapture={onAddEvidence}
         />
       )}
 
