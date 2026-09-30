@@ -979,3 +979,70 @@ pre,
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   UNIVERSAL DARK THEME GUARANTEES (Zero White/Unstyled Elements)
+   ========================================================================== */
+body, html, #root, .app-root, .content-column, .outlet-container {
+  background-color: var(--bg) !important;
+  color: var(--text-1) !important;
+}
+
+.panel,
+.card,
+.feature-test-card,
+.forensic-workspace-section,
+.tactical-selected-case-card,
+.tactical-hud-card,
+.source-mesh-card,
+.alerts-feed-panel,
+.cases-page-view,
+.network-landing-view,
+.system-page-view,
+.reports-page-view,
+.investigation-pipeline-map,
+.evidence-layout,
+.similar-cases,
+.copilot-panel {
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+table {
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+th {
+  background-color: var(--surface-2);
+  color: var(--text-2);
+}
+
+td {
+  color: var(--text-2);
+}
+
+input, select, textarea {
+  background-color: var(--surface-1) !important;
+  color: var(--text-1) !important;
+  border: 1px solid var(--border) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-3) !important;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+}

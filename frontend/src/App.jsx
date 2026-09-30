@@ -118,11 +118,11 @@ export default function App() {
   }, [loadNetwork, loadWorkspace]);
 
   useEffect(() => {
-    const match = pathname.match(/^\/(?:cases|network)\/([a-f0-9]{24})/i);
-    if (match && current?.investigation_id !== match[1]) {
+    const match = pathname.match(/^\/(?:cases|network)\/([^/?#]+)/i);
+    if (match && current?.investigation_id !== match[1] && current?.case?.case_reference !== match[1]) {
       loadCase(match[1], pathname.startsWith('/network/') ? 'network' : undefined);
     }
-  }, [pathname, current?.investigation_id, loadCase]);
+  }, [pathname, current?.investigation_id, current?.case?.case_reference, loadCase]);
 
   const investigate = async wallet => {
     setLoading(true);
@@ -392,7 +392,7 @@ function renderRoute(context) {
   }
 
   // NESTED CASE ROUTES
-  if (/^\/cases\/[a-f0-9]{24}/i.test(route)) {
+  if (/^\/cases\/[^/]+/i.test(route)) {
     if (loading && !current) return <LoadingPage />;
     if (error && !current) return <ErrorState message={error.message} />;
 
@@ -463,7 +463,7 @@ function renderRoute(context) {
     );
   }
 
-  if (/^\/network\/[a-f0-9]{24}/i.test(route)) {
+  if (/^\/network\/[^/]+/i.test(route)) {
     if (loading && !current) return <LoadingPage />;
     return (
       <InvestigationPage
